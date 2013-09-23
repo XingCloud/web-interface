@@ -64,7 +64,6 @@ public class CommonQueryOptimizer extends CheckCacheOptimizer {
     // 计时用
     long t1, t2;
     FormulaQueryDescriptor existsDescriptor;
-    Interval interval = null;
 
     List<CommonIdResult> idResultList = new ArrayList<CommonIdResult>(containers.size());
     CommonIdResult idResult;
@@ -73,7 +72,6 @@ public class CommonQueryOptimizer extends CheckCacheOptimizer {
     t1 = System.currentTimeMillis();
     Map<FormulaQueryDescriptor, FormulaQueryDescriptor> m = null;
     for (FormulaParameterContainer fpc : containers) {
-      interval = fpc.getInterval();
       idResult = buildCommonDescriptor(fpc);
       if (LOGGER.isDebugEnabled()) {
         logIdResultDebug(idResult);
@@ -105,8 +103,6 @@ public class CommonQueryOptimizer extends CheckCacheOptimizer {
     t2 = System.currentTimeMillis();
     LOGGER.info("[OPTIMIZER] - Build descriptors and distinguish them use " + (t2 - t1) + " milliseconds");
 
-    // 判断是否执行批量查询的标准
-    boolean isHourMin5Query = interval.getDays() < 1;
     Map<FormulaQueryDescriptor, CacheState> descriptorStateMap = new HashMap<FormulaQueryDescriptor, CacheState>();
 
     // 查缓存
@@ -118,85 +114,8 @@ public class CommonQueryOptimizer extends CheckCacheOptimizer {
     } else {
       LOGGER.info("[OPTIMIZER] - Not all cache are hit, continue querying");
       ExecutorService service = XQueryExecutorServiceProvider.getService();
-
-      if (isHourMin5Query) {
-        Collection<FormulaQueryDescriptor> dayDistinctDescriptors = separate(distinctDescriptors);
-        Map<EventAndFilterBEPair, Collection<FormulaQueryDescriptor>> mergedDescriptorMap = mergeDescriptor(
-          dayDistinctDescriptors);
-        EventAndFilterBEPair pair;
-        Collection<FormulaQueryDescriptor> pairSet;
-
-        // 单纯的为了输出好看而单独打印
-        if (LOGGER.isDebugEnabled()) {
-          if (MapUtils.isNotEmpty(mergedDescriptorMap)) {
-            LOGGER.debug("Pair info summary");
-            for (Entry<EventAndFilterBEPair, Collection<FormulaQueryDescriptor>> entry : mergedDescriptorMap
-              .entrySet()) {
-              pair = entry.getKey();
-              pairSet = entry.getValue();
-              LOGGER.debug(SEPARATOR_STRING_LOG + "[PAIR] " + pair);
-              for (FormulaQueryDescriptor fqd : pairSet) {
-                LOGGER.debug(repeat(SEPARATOR_STRING_LOG, 2) + "[DESCRIPTOR] " + fqd);
-              }
-            }
-          }
-        }
-
-        int counter = 0;
-        // 提交派生出来的Day任务
-        if (MapUtils.isNotEmpty(mergedDescriptorMap)) {
-          for (Entry<EventAndFilterBEPair, Collection<FormulaQueryDescriptor>> entry : mergedDescriptorMap.entrySet()) {
-            ++counter;
-            pairSet = entry.getValue();
-            if (counter <= MAX_BATCH_DESCRIPTORS_IN_QUEUE) {
-              service.execute(new QueueBatchQueryTask(pairSet));
-            } else {
-              LOGGER.warn("[OPTIMIZER] - Overload, submit next round " + entry.getKey());
-            }
-          }
-        }
-
-        // 提交Hour任务
-        counter = 0;
-        for (FormulaQueryDescriptor fqd : distinctDescriptors) {
-          ++counter;
-          if (counter <= MAX_DESCRIPTORS_IN_QUEUE) {
-            service.execute(new QueueSingleQueryTask(fqd));
-          } else {
-            LOGGER.warn("[OPTIMIZER] - Overload, submit next round " + fqd);
-          }
-        }
-      } else {
-        // 使用Merger对相同性质的查询合并(合并首尾衔接的日期)
-        Map<EventAndFilterBEPair, Collection<FormulaQueryDescriptor>> mergedDescriptorMap = mergeDescriptor(
-          distinctDescriptors);
-        EventAndFilterBEPair pair;
-        Collection<FormulaQueryDescriptor> pairSet;
-
-        // 单纯的为了输出好看而单独打印
-        if (LOGGER.isDebugEnabled()) {
-          LOGGER.debug("Pair info summary");
-          for (Entry<EventAndFilterBEPair, Collection<FormulaQueryDescriptor>> entry : mergedDescriptorMap.entrySet()) {
-            pair = entry.getKey();
-            pairSet = entry.getValue();
-            LOGGER.debug(SEPARATOR_STRING_LOG + "[PAIR] - " + pair);
-            for (FormulaQueryDescriptor fqd : pairSet) {
-              LOGGER.debug(Strings.repeat(SEPARATOR_STRING_LOG, 2) + "[DESCRIPTOR] - " + fqd);
-            }
-          }
-        }
-
-        int counter = 0;
-        for (Entry<EventAndFilterBEPair, Collection<FormulaQueryDescriptor>> entry : mergedDescriptorMap.entrySet()) {
-          ++counter;
-          pairSet = entry.getValue();
-          if (counter <= MAX_BATCH_DESCRIPTORS_IN_QUEUE) {
-            service.execute(new QueueBatchQueryTask(pairSet));
-          } else {
-            LOGGER.warn("[OPTIMIZER] - Overload, submit next round " + entry.getKey());
-          }
-        }
-      }
+      //需要查询的请求一并提交，Query Master会对logical plan做合并和优化
+      service.execute(new QueueBatchQueryTask(distinctDescriptors));
     }
 
     t1 = System.currentTimeMillis();

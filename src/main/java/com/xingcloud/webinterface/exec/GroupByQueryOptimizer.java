@@ -113,68 +113,8 @@ public class GroupByQueryOptimizer extends CheckCacheOptimizer {
       LOGGER.info("[OPTIMIZER] - All cache are hit, there is no any descriptors in query queue, ignore querying");
     } else {
       ExecutorService service = XQueryExecutorServiceProvider.getService();
-      if (BATCH_GROUPBY) {
-        LOGGER.info("[OPTIMIZER] - Not all cache hit, continue querying batch.");
-
-        //将EVENT分离出来, 他不能放在batch里执行
-        Collection<FormulaQueryDescriptor> eventGroupByDescriptors = separate(distinctDescriptors);
-
-        // 使用Merger对相同性质的查询合并(合并首尾衔接的日期)
-        Map<EventAndFilterBEPair, Collection<FormulaQueryDescriptor>> mergedDescriptorMap = mergeDescriptor(
-          distinctDescriptors);
-        EventAndFilterBEPair pair;
-        Collection<FormulaQueryDescriptor> pairSet;
-
-        // 单纯的为了输出好看而单独打印
-        if (LOGGER.isDebugEnabled()) {
-          LOGGER.debug("Pair info summary");
-          for (Entry<EventAndFilterBEPair, Collection<FormulaQueryDescriptor>> entry : mergedDescriptorMap.entrySet()) {
-            pair = entry.getKey();
-            pairSet = entry.getValue();
-            LOGGER.debug(SEPARATOR_STRING_LOG + "[PAIR] - " + pair);
-            for (FormulaQueryDescriptor fqd : pairSet) {
-              LOGGER.debug(Strings.repeat(SEPARATOR_STRING_LOG, 2) + "[DESCRIPTOR] - " + fqd);
-            }
-          }
-        }
-        int counter = 0;
-        if (CollectionUtils.isNotEmpty(eventGroupByDescriptors)) {
-          LOGGER.info("[OPTIMIZER] - Submit event group-by descriptors(Single).");
-          for (FormulaQueryDescriptor d : eventGroupByDescriptors) {
-            ++counter;
-            if (counter >= MAX_DESCRIPTORS_IN_QUEUE) {
-              LOGGER.warn("[OPTIMIZER] - Overload, submit next round " + d);
-              continue;
-            }
-            service.execute(new QueueSingleQueryTask(d));
-          }
-        }
-
-        counter = 0;
-        if (MapUtils.isNotEmpty(mergedDescriptorMap)) {
-          LOGGER.info("[OPTIMIZER] - Submit user properties group-by descriptors(Batch).");
-          for (Entry<EventAndFilterBEPair, Collection<FormulaQueryDescriptor>> entry : mergedDescriptorMap.entrySet()) {
-            ++counter;
-            pairSet = entry.getValue();
-            if (counter >= MAX_BATCH_DESCRIPTORS_IN_QUEUE) {
-              LOGGER.warn("[OPTIMIZER] - Overload, submit next round " + entry.getKey());
-              continue;
-            }
-            service.execute(new QueueBatchQueryTask(pairSet));
-          }
-        }
-      } else {
-        LOGGER.info("[OPTIMIZER] - Not all cache hit, continue querying one by one.");
-        int counter = 0;
-        for (FormulaQueryDescriptor d : distinctDescriptors) {
-          ++counter;
-          if (counter >= MAX_DESCRIPTORS_IN_QUEUE) {
-            LOGGER.warn("[OPTIMIZER] - Overload, submit next round " + d);
-            continue;
-          }
-          service.execute(new QueueSingleQueryTask(d));
-        }
-      }
+      //需要查询的请求一并提交，Query Master会对logical plan做合并和优化
+      service.execute(new QueueBatchQueryTask(distinctDescriptors));
     }
 
     t1 = System.currentTimeMillis();
