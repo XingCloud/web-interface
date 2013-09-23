@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Root>
+  <!-- Common configuration -->
+  <common debug="false">
+    <check-ui enabled="true" />
+    <new-segment enabled="true" />
+    <batch-groupby enabled="false" />
+  </common>
+
+  <tfs>
+    <tf>XCacheGet:500</tf>
+    <tf>XMonitor:40</tf>
+    <tf>XQuery:50</tf>
+  </tfs>
+
+  <!-- System monitor -->
+  <system-monitor enabled="false" sender="40">
+    <host>xa.xingcloud.com</host>
+    <port>80</port>
+    <path>/v4/xaa/random</path>
+  </system-monitor>
+
+  <!-- Some data sources for tomcat -->
+  <data-sources>
+    <adhoc enabled="false" />
+    <lp enabled="true" />
+    <mock enabled="false" />
+  </data-sources>
+
+  <cache>
+    <redis-cache enabled="true" />
+  </cache>
+
+  <web-services>
+    <web-service>QUERY-SQL@192.168.1.61:8182/qm/q</web-service>
+  </web-services>
+
+  <quartz>
+    <jobs>
+      <job>WebInterfaceJob.PayAmountSorting@com.xingcloud.webinterface.cron.AllProjectPayAmountJob</job>
+    </jobs>
+    <triggers>
+      <trigger>WebInterfaceTrigger.TR1@0 30 6 * * ?</trigger>
+    </triggers>
+    <schedules>
+      <schedule>WebInterfaceJob.PayAmountSorting@WebInterfaceTrigger.TR1</schedule>
+    </schedules>
+  </quartz>
+</Root>

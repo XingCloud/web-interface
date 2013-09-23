@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <property>
+    <name>hbase.rootdir</name>
+    <value>hdfs://ELEX-LA-WEB1:19000/hbase</value>
+  </property>
+  <property>
+    <name>hbase.cluster.distributed</name>
+    <value>true</value>
+  </property>
+  <property>
+    <name>hbase.zookeeper.quorum</name>
+    <value>ELEX-LA-WEB1,ELEX-LA-WEB9,ELEX-LA-WEB12</value>
+
+  </property>
+  <property skipInDoc="true">
+    <name>hbase.defaults.for.version</name>
+    <value>0.94.0</value>
+  </property>
+  <property>
+    <name>hbase.client.ipc.pool.type</name>
+    <value>RoundRobinPool</value>
+  </property>
+  <property>
+    <name>hbase.client.ipc.pool.size</name>
+    <value>10</value>
+  </property>
+  <property>
+    <name>hbase.rpc.timeout</name>
+    <value>3600000</value>
+  </property>
+</configuration>

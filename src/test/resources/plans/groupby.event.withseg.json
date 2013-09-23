@@ -1,0 +1,116 @@
+{
+  head : {
+    type : "APACHE_DRILL_LOGICAL",
+    version : 1,
+    generator : {
+      type : "AUTO",
+      info : "age"
+    }
+  },
+  storage : { },
+  query : [ {
+    op : "scan",
+    @id : 1,
+    memo : "Scan(Table=age.language, Prop=language, Val={EQ=en})",
+    storageengine : "mysql",
+    selection : [ {
+      table : "age.language",
+      filter : {
+        type : "VAL",
+        expression : " (val)  == ('en') "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      } ]
+    } ],
+    ref : "user"
+  }, {
+    op : "scan",
+    @id : 2,
+    memo : "deu_age,2013-09-12,2013-09-12,*.*",
+    storageengine : "hbase",
+    selection : [ {
+      table : "deu_age",
+      filter : {
+        type : "ROWKEY",
+        expression : " (date)  == ('20130912') "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      }, {
+        ref : "value",
+        expr : "value"
+      }, {
+        ref : "eventevent0",
+        expr : "eventevent0"
+      } ]
+    } ],
+    ref : "event"
+  }, {
+    op : "join",
+    @id : 3,
+    left : 1,
+    right : 2,
+    conditions : [ {
+      relationship : "==",
+      left : "uid",
+      right : "uid"
+    } ],
+    type : "INNER"
+  }, {
+    op : "segment",
+    @id : 4,
+    input : 3,
+    exprs : [ {
+      ref : "dimension",
+      expr : "eventevent0"
+    } ],
+    name : "sgmt"
+  }, {
+    op : "collapsingaggregate",
+    @id : 5,
+    input : 4,
+    within : "sgmt",
+    target : null,
+    carryovers : [ "dimension" ],
+    aggregations : [ {
+      ref : "count",
+      expr : "count(uid) "
+    }, {
+      ref : "user_num",
+      expr : "count_distinct(uid) "
+    }, {
+      ref : "sum",
+      expr : "sum(value) "
+    } ]
+  }, {
+    op : "project",
+    @id : 6,
+    input : 5,
+    projections : [ {
+      ref : "query_id",
+      expr : "'GROUP,age,2013-09-12,2013-09-12,*.*,{\"language\":\"en\"},VF-ALL-0-0,EVENT,event0'"
+    }, {
+      ref : "dimension",
+      expr : "dimension"
+    }, {
+      ref : "count",
+      expr : "count"
+    }, {
+      ref : "user_num",
+      expr : "user_num"
+    }, {
+      ref : "sum",
+      expr : "sum"
+    } ]
+  }, {
+    op : "store",
+    @id : 7,
+    input : 6,
+    target : null,
+    partition : null,
+    storageEngine : "DEFAULT-STORE"
+  } ]
+}

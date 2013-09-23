@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Root>
+  <redis-single host="10.1.16.222" port="6379">
+    <pool-config>
+      <max_active>4096</max_active>
+      <max_idle>1024</max_idle>
+      <max_wait>600000</max_wait>
+      <timeout>300000</timeout>
+    </pool-config>
+  </redis-single>
+</Root>

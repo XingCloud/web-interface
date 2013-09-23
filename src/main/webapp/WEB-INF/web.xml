@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+         version="2.5">
+  <!-- Welcome list, test for available -->
+  <welcome-file-list>
+    <welcome-file>index.html</welcome-file>
+  </welcome-file-list>
+
+  <!-- Start monitor threads -->
+  <listener>
+    <listener-class>com.xingcloud.webinterface.web.listener.StartUplistener
+    </listener-class>
+  </listener>
+
+  <!-- Shutdown hbase, mongodb, etc. -->
+  <listener>
+    <listener-class>com.xingcloud.webinterface.web.listener.ShutDownListener
+    </listener-class>
+  </listener>
+
+  <!-- Get event list -->
+  <servlet>
+    <servlet-name>GetEventListServlet</servlet-name>
+    <servlet-class>com.xingcloud.webinterface.web.servlet.GetEventListServlet
+    </servlet-class>
+    <init-param>
+      <param-name>CONTENT_TYPE</param-name>
+      <param-value>application/json; charset=utf-8</param-value>
+    </init-param>
+  </servlet>
+
+  <!-- Query project common metric by formula -->
+  <servlet>
+    <servlet-name>QueryServlet</servlet-name>
+    <servlet-class>com.xingcloud.webinterface.web.servlet.QueryServlet
+    </servlet-class>
+    <init-param>
+      <param-name>CONTENT_TYPE</param-name>
+      <param-value>application/json; charset=utf-8</param-value>
+    </init-param>
+  </servlet>
+
+  <!-- Custom user properties operation -->
+  <servlet>
+    <servlet-name>CustomUserPropertiesOperateServlet</servlet-name>
+    <servlet-class>
+      com.xingcloud.webinterface.web.servlet.CustomUserPropertiesOperateServlet
+    </servlet-class>
+    <init-param>
+      <param-name>CONTENT_TYPE</param-name>
+      <param-value>application/json; charset=utf-8</param-value>
+    </init-param>
+  </servlet>
+
+  <!-- Check if the cache exists by the given key -->
+  <servlet>
+    <servlet-name>CheckCacheBeingnessServlet</servlet-name>
+    <servlet-class>
+      com.xingcloud.webinterface.web.servlet.CheckCacheBeingnessServlet
+    </servlet-class>
+    <init-param>
+      <param-name>CONTENT_TYPE</param-name>
+      <param-value>text/plain</param-value>
+    </init-param>
+  </servlet>
+
+  <!-- Status -->
+  <servlet>
+    <servlet-name>CacheStatusServlet</servlet-name>
+    <servlet-class>com.xingcloud.webinterface.web.servlet.CheckCacheBeingnessServlet
+    </servlet-class>
+    <init-param>
+      <param-name>CONTENT_TYPE</param-name>
+      <param-value>text/plain</param-value>
+    </init-param>
+  </servlet>
+
+  <!-- For test -->
+  <servlet>
+    <servlet-name>TestServlet</servlet-name>
+    <servlet-class>com.xingcloud.webinterface.web.servlet.TestServlet
+    </servlet-class>
+    <init-param>
+      <param-name>CONTENT_TYPE</param-name>
+      <param-value>application/json; charset=utf-8</param-value>
+    </init-param>
+  </servlet>
+
+  <!-- For daily load pay amount rank -->
+  <servlet>
+    <servlet-name>PayAmountLoadServlet</servlet-name>
+    <servlet-class>com.xingcloud.webinterface.web.servlet.PayAmountLoadServlet
+    </servlet-class>
+    <init-param>
+      <param-name>CONTENT_TYPE</param-name>
+      <param-value>application/json; charset=utf-8</param-value>
+    </init-param>
+  </servlet>
+  <!-- For fire pay amount rank job -->
+  <servlet>
+    <servlet-name>PayAmountFireServlet</servlet-name>
+    <servlet-class>com.xingcloud.webinterface.web.servlet.PayAmountFireServlet
+    </servlet-class>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>GetEventListServlet</servlet-name>
+    <url-pattern>/evlist</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>QueryServlet</servlet-name>
+    <url-pattern>/query</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>CustomUserPropertiesOperateServlet</servlet-name>
+    <url-pattern>/cup</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>CheckCacheBeingnessServlet</servlet-name>
+    <url-pattern>/cc</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>CacheStatusServlet</servlet-name>
+    <url-pattern>/s</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>TestServlet</servlet-name>
+    <url-pattern>/t</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>PayAmountLoadServlet</servlet-name>
+    <url-pattern>/pay_rank</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>PayAmountFireServlet</servlet-name>
+    <url-pattern>/pay_fire</url-pattern>
+  </servlet-mapping>
+</web-app>

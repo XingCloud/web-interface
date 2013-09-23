@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Root>
+  <!-- Single cache -->
+  <redis>
+    <common>
+      <max_active>64</max_active>
+      <max_idle>32</max_idle>
+      <max_wait>-1</max_wait>
+      <expire>300</expire>
+      <timeout>10000</timeout>
+    </common>
+    <host>65.255.35.145</host>
+    <port>6379</port>
+  </redis>
+  <!--Sharded cache -->
+  <redis_sharded>
+    <shard>
+      <host>65.255.35.145</host>
+      <port>6379</port>
+    </shard>
+    <shard>
+      <host>65.255.35.145</host>
+      <port>6380</port>
+    </shard>
+    <shard>
+      <host>65.255.35.145</host>
+      <port>6381</port>
+    </shard>
+    <shard>
+      <host>65.255.35.145</host>
+      <port>6382</port>
+    </shard>
+    <common>
+      <max_active>64</max_active>
+      <max_idle>32</max_idle>
+      <max_wait>-1</max_wait>
+      <expire>300</expire>
+      <timeout>10000</timeout>
+    </common>
+  </redis_sharded>
+
+  <!-- New Config -->
+  <managers>
+    <manager name="UI-CHECK" db-count="0" type="stand-alone">
+      <pool-config host="65.255.35.145" port="6379">
+        <max_active>16</max_active>
+        <max_idle>4</max_idle>
+        <max_wait>-1</max_wait>
+        <expire>300</expire>
+        <timeout>300000</timeout>
+      </pool-config>
+    </manager>
+    <manager name="MAIN-CACHE" db-count="10" type="cluster">
+      <shards>
+        <shard host="65.255.35.145" port="6379" />
+        <shard host="65.255.35.145" port="6380" />
+        <shard host="65.255.35.145" port="6381" />
+        <shard host="65.255.35.145" port="6382" />
+      </shards>
+      <pool-config>
+        <max_active>16</max_active>
+        <max_idle>4</max_idle>
+        <max_wait>-1</max_wait>
+        <expire>300</expire>
+        <timeout>300000</timeout>
+      </pool-config>
+    </manager>
+  </managers>
+</Root>
