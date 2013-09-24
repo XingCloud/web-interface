@@ -1,7 +1,7 @@
 #!/bin/sh
 line="############################################"
 # Code base
-code_home=/home/hadoop/DataDrillerWebInterfaceWithDrill
+code_home=/home/hadoop/web_interface/
 # deploy bin home
 scripts_home=${code_home}/bin/
 # tomcat port
