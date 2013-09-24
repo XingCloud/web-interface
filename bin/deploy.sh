@@ -1,13 +1,20 @@
 #!/bin/sh
 line="############################################"
 # Code base
-code_home=/home/hadoop/web_interface/
+code_home=/home/hadoop/git_project_home/web-interface
 # deploy bin home
 scripts_home=${code_home}/bin/
 # tomcat port
 tport=$1
 # Artifact Id
 aid=dd
+
+if [ "" = "$2" ];then
+  branch=master
+else
+  echo "User defined branch found($2)"
+  branch=$2
+fi
 
 if [ "8081" = ${tport} ];then
   xa_env="production"
@@ -24,24 +31,28 @@ fi
 echo "[CHECK-POINT] - Begin deploying data driller web interface."
 echo ${line}
 echo "[CODE-HOME] - "${code_home}
+echo "[CURRENT-BRANCH] - "${branch}
 echo "[XA_ENV] - "${xa_env}
 echo "[TOMCAT-PORT] - "${tport}
 echo ${line}
 echo "[CHECK-POINT] - Update code from VCS"
-svn up ${code_home}
+
+cd ${code_home}
+git pull
+git checkout ${branch}
 
 if [ $? -ne 0 ];then
-  echo "SVN update failed."
+  echo "Git update/checkout failed."
   exit 1
 else
-  echo "Update done."
+  echo "Git Update/checkout successfully."
 fi
 
 echo ${line}
 echo "[CHECK-POINT] - Clean local adhoc repository."
 rm -rf /home/hadoop/.m2/repository/com/xingcloud/AdhocProcessorRPC
-echo ${line}
 
+echo ${line}
 echo "[------copy adhoc-processor jar to local repo------]"
 if [ "production" = ${xa_env} ];then
   rm -rf /home/hadoop/local_repo/production/*
