@@ -1,6 +1,5 @@
 package com.xingcloud.webinterface.plan;
 
-import static org.apache.drill.common.util.Selections.SELECTION_KEY_WORD_FILTER_TYPE;
 import static org.apache.drill.common.util.Selections.SELECTION_KEY_WORD_ROWKEY_EVENT_MAPPING;
 import static org.apache.drill.common.util.Selections.SELECTION_KEY_WORD_ROWKEY_INCLUDES;
 
@@ -18,9 +17,8 @@ public class RowkeyScanFilterDescriptor extends ScanFilterDescriptor {
   private LogicalExpression[] expressions;
   private LogicalExpression[] originalEventLevelMap;
 
-  public RowkeyScanFilterDescriptor(ScanFilterType type, LogicalExpression[] expressions,
-                                    LogicalExpression[] originalEventLevelMap) {
-    super(type);
+  public RowkeyScanFilterDescriptor(LogicalExpression[] expressions, LogicalExpression[] originalEventLevelMap) {
+    super();
     this.expressions = expressions;
     this.originalEventLevelMap = originalEventLevelMap;
   }
@@ -44,7 +42,6 @@ public class RowkeyScanFilterDescriptor extends ScanFilterDescriptor {
   @Override
   public Map<String, Object> toMap() {
     Map<String, Object> map = new HashMap<String, Object>(2);
-    map.put(SELECTION_KEY_WORD_FILTER_TYPE, this.type);
     map.put(SELECTION_KEY_WORD_ROWKEY_INCLUDES, this.expressions);
     if (ArrayUtils.isNotEmpty(this.originalEventLevelMap)) {
       map.put(SELECTION_KEY_WORD_ROWKEY_EVENT_MAPPING, this.originalEventLevelMap);

@@ -7,16 +7,10 @@ import org.apache.drill.common.expression.LogicalExpression;
  */
 public class ScanFilter {
 
-  private ScanFilterType type;
   private LogicalExpression expression;
 
-  public ScanFilter(ScanFilterType type, LogicalExpression expression) {
-    this.type = type;
+  public ScanFilter(LogicalExpression expression) {
     this.expression = expression;
-  }
-
-  public ScanFilterType getType() {
-    return type;
   }
 
   public LogicalExpression getExpression() {

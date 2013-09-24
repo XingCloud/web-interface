@@ -11,13 +11,12 @@
   query : [ {
     op : "scan",
     @id : 1,
-    memo : "Scan(Table=sof-dsk.register_time, Prop=register_time, Val={LTE=2013-09-12, GTE=2013-09-12})",
+    memo : "Scan(Table=sof-dsk.register_time, Prop=register_time, Val={GTE=2013-09-12, LTE=2013-09-12})",
     storageengine : "mysql",
     selection : [ {
       table : "sof-dsk.register_time",
       filter : {
-        type : "VAL",
-        expression : " ( (val)  <= (20130912235959) )  && ( (val)  >= (20130912000000) ) "
+        expression : " ( (val)  >= (20130912000000) )  && ( (val)  <= (20130912235959) ) "
       },
       projections : [ {
         ref : "uid",
@@ -33,7 +32,6 @@
     selection : [ {
       table : "deu_sof-dsk",
       filter : {
-        type : "ROWKEY",
         expression : " ( (date)  == ('20130912') )  && ( (event0)  == ('visit') ) "
       },
       projections : [ {

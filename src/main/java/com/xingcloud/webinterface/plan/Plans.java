@@ -471,7 +471,7 @@ public class Plans {
       les2 = null;
     }
 
-    return new RowkeyScanFilterDescriptor(ScanFilterType.ROWKEY, les, les2);
+    return new RowkeyScanFilterDescriptor(les, les2);
   }
 
   private static LogicalExpression toRowkeyFilter(Table table, String dateString,

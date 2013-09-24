@@ -167,8 +167,7 @@ public class Plans2 {
     FieldReference fr = buildColumn(KEY_WORD_UID);
     NamedExpression[] projections = new NamedExpression[]{new NamedExpression(fr, fr)};
 
-    LogicalExpression filterLE = toBinaryExpression(logicalExpressions, "and");
-    ScanFilter sf = new ScanFilter(ScanFilterType.VAL, filterLE);
+    ScanFilter sf = new ScanFilter(toBinaryExpression(logicalExpressions, "and"));
     ScanSelection ss = new ScanSelection(table, sf, projections);
     ScanSelection[] sss = new ScanSelection[]{ss};
     ObjectMapper mapper = DEFAULT_DRILL_CONFIG.getMapper();
@@ -354,8 +353,7 @@ public class Plans2 {
       d = datePair.getBeginDate();
       logicalExpressionMap.put("date", new ValueExpressions.QuotedString(d.replace("-", ""), UNKNOWN));
 
-      le = toBinaryExpression(logicalExpressionMap, "and");
-      sf = new ScanFilter(ScanFilterType.ROWKEY, le);
+      sf = new ScanFilter(toBinaryExpression(logicalExpressionMap, "and"));
       ss = new ScanSelection(toEventTableName(projectId), sf, projections);
       sss[cnt] = ss;
       ++cnt;
