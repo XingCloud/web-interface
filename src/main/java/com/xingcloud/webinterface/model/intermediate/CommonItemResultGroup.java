@@ -9,6 +9,7 @@ import com.xingcloud.webinterface.exception.NecessaryCollectionEmptyException;
 import com.xingcloud.webinterface.model.ResultTuple;
 import com.xingcloud.webinterface.model.formula.FormulaQueryDescriptor;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -59,7 +60,6 @@ public class CommonItemResultGroup extends CommonItemResult {
       if (keyTupleMap == null) {
         keyTupleMap = new HashMap<Object, KeyTuple>(tmpKTSet.size());
       }
-      System.out.println("keyTupleMap--------->"+keyTupleMap);
       for (KeyTuple kt : tmpKTSet) {
         k = kt.getKey();
         existsKeyTuple = keyTupleMap.get(k);
@@ -76,8 +76,9 @@ public class CommonItemResultGroup extends CommonItemResult {
     if (CollectionUtils.isNotEmpty(thisKeyTupleSet)) {
       thisKeyTupleSet.clear();
     }
-    System.out.println("thisKeyTupleSet--------->"+thisKeyTupleSet);
-    thisKeyTupleSet.addAll(keyTupleMap.values());
+    if(MapUtils.isNotEmpty(keyTupleMap)){
+      thisKeyTupleSet.addAll(keyTupleMap.values());
+    }
   }
 
   @Override
