@@ -150,18 +150,13 @@ public class CommonItemResult extends ItemResult {
     CacheState cacheState;
     Object status;
 
-    ResultTuple placeholder;
-    ResultTuple rt;
+    ResultTuple placeholder, rt;
 
-    boolean checkTotalNormal = false;
-    boolean checkNaturalNormal = false;
-    boolean checkTotalSelf = false;
-
+    boolean checkTotalNormal = false, checkNaturalNormal = false, checkTotalSelf = false;
     String displayString;
 
     Set<Object> tupleKeySetOfThisItem = null;
-    AggregationPolicy tap = getTotalAggregationPolicy();
-    AggregationPolicy nap = getNaturalAggregationPolicy();
+    AggregationPolicy tap = getTotalAggregationPolicy(), nap = getNaturalAggregationPolicy();
 
     // ACCUMULATION, AVERAGE等于Total, 需要检查Normal查询结果
     if (ACCUMULATION.equals(tap) || AVERAGE.equals(tap)) {

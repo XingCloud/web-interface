@@ -81,10 +81,8 @@ public class CommonIdResult extends IdResult {
 
     Set<KeyTuple> ktList;
 
-    Object k;
+    Object k, status = null, thisStatus = null;
     ResultTuple v;
-    Object status;
-    Object thisStatus = null;
 
     for (Entry<String, CommonItemResult> entry : itemResultMap.entrySet()) {
       name = entry.getKey();
@@ -142,8 +140,10 @@ public class CommonIdResult extends IdResult {
         outerFlippedMap.put(TOTAL, innerFlippedMap);
       }
       summary = cir.getTotalAggregation();
-      innerFlippedMap.put(name, summary.getResultTuple());
-      status = spreadStatus(summary.getStatus());
+      if (summary != null && summary.getResultTuple() != null) {
+        innerFlippedMap.put(name, summary.getResultTuple());
+        status = spreadStatus(summary.getStatus());
+      }
       if (status != null) {
         thisStatus = status;
       }
@@ -154,30 +154,41 @@ public class CommonIdResult extends IdResult {
         outerFlippedMap.put(NATURAL, innerFlippedMap);
       }
       summary = cir.getNaturalAggregation();
-      innerFlippedMap.put(name, summary.getResultTuple());
-      status = spreadStatus(summary.getStatus());
+      if (summary != null && summary.getResultTuple() != null) {
+        innerFlippedMap.put(name, summary.getResultTuple());
+        status = spreadStatus(summary.getStatus());
+      }
       if (status != null) {
         thisStatus = status;
       }
 
-      ResultTuple totalRT = cir.getTotalAggregation().getResultTuple();
-      String totalString;
-      if (totalRT.isNAPlaceholder()) {
-        totalString = "(" + NotAvailable.INSTANCE.toString() + ")";
-      } else if (totalRT.isPendingPlaceholder()) {
-        totalString = Pending.INSTANCE.toString() + ")";
+      String totalString , naturalString ;
+      if (cir.getTotalAggregation() != null) {
+        ResultTuple totalRT = cir.getTotalAggregation().getResultTuple();
+        if (totalRT.isNAPlaceholder()) {
+          totalString = "(" + NotAvailable.INSTANCE.toString() + ")";
+        } else if (totalRT.isPendingPlaceholder()) {
+          totalString = Pending.INSTANCE.toString() + ")";
+        } else {
+          totalString = totalRT.toString();
+        }
       } else {
-        totalString = totalRT.toString();
+        totalString = "(null)";
       }
-      ResultTuple naturalRT = cir.getNaturalAggregation().getResultTuple();
-      String naturalString;
-      if (naturalRT.isNAPlaceholder()) {
-        naturalString = "(" + NotAvailable.INSTANCE.toString() + ")";
-      } else if (naturalRT.isPendingPlaceholder()) {
-        naturalString = "(" + Pending.INSTANCE.toString() + ")";
+
+      if (cir.getNaturalAggregation() != null) {
+        ResultTuple naturalRT = cir.getNaturalAggregation().getResultTuple();
+        if (naturalRT.isNAPlaceholder()) {
+          naturalString = "(" + NotAvailable.INSTANCE.toString() + ")";
+        } else if (naturalRT.isPendingPlaceholder()) {
+          naturalString = "(" + Pending.INSTANCE.toString() + ")";
+        } else {
+          naturalString = naturalRT.toString();
+        }
       } else {
-        naturalString = naturalRT.toString();
+        naturalString = "(null)";
       }
+
       if (LOGGER.isDebugEnabled()) {
         LOGGER.debug(
           "[COMMON-ITEM-RESULT] - [" + id + ", " + name + "] - Total summary" + totalString + " and natural summary" + naturalString + " is filled. Status is " + thisStatus);

@@ -33,6 +33,10 @@ public class KeyTuple {
     this.status = status;
   }
 
+  public boolean hasValue() {
+    return resultTuple != null;
+  }
+
   public Object getStatus() {
     return status;
   }
