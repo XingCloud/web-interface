@@ -303,7 +303,7 @@ public class Plans {
       } else {
         eventRange = operation.getEventRange(projectId, event);
         if (eventRange == null) {
-          throw new PlanException("Cannot find any event for project " + projectId);
+          throw new PlanException("Cannot find any event for parameter(" + event + ") of project " + projectId);
         }
         includes = parameterEvent.isAmbiguous() ? operation.getEvents(projectId, event, true) : null;
       }
