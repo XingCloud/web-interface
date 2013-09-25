@@ -27,7 +27,7 @@
   }, {
     op : "scan",
     @id : 2,
-    memo : "deu_age,2013-09-01,2013-09-01,pay.*",
+    memo : "deu_age,2013-09-12,2013-09-12,pay.*",
     storageengine : "hbase",
     selection : [ {
       projections : [ {
@@ -38,8 +38,8 @@
         expr : "value"
       } ],
       rowkey : {
-        end : "20130901pay",
-        start : "20130901pay.fee.alipay"
+        end : "20130912pay",
+        start : "20130912pay.fee.alipay"
       },
       table : "deu_age"
     } ],
@@ -87,7 +87,7 @@
     input : 5,
     projections : [ {
       ref : "query_id",
-      expr : "'GROUP,age,2013-09-01,2013-09-01,pay.*,TOTAL_USER,VF-ALL-0-0,USER_PROPERTIES,register_time'"
+      expr : "'GROUP,age,2013-09-12,2013-09-12,pay.*,TOTAL_USER,VF-ALL-0-0,USER_PROPERTIES,register_time'"
     }, {
       ref : "dimension",
       expr : "dimension"

@@ -49,6 +49,10 @@ public class CommonFormulaQueryDescriptor extends FormulaQueryDescriptor {
 
   protected CommonQueryType commonQueryType;
 
+  private boolean hasFunctionalSegment() {
+    return false;
+  }
+
   public CommonFormulaQueryDescriptor() {
     super();
   }
@@ -139,13 +143,18 @@ public class CommonFormulaQueryDescriptor extends FormulaQueryDescriptor {
 
   @Override
   public LogicalPlan toLogicalPlain() throws PlanException {
+    boolean hasFunctionalSegment = hasFunctionalSegment();
     List<LogicalOperator> logicalOperators = new ArrayList<LogicalOperator>();
     boolean min5HourQuery = this.interval.getDays() < 1;
     String[] additionalProjections = min5HourQuery ? new String[]{KEY_WORD_TIMESTAMP} : null;
+    if(min5HourQuery){
+
+    } else{
+
+    }
     LogicalOperator eventTableScan = getEventScan(this.projectId, this.event, this.realBeginDate, this.realEndDate,
                                                   additionalProjections);
     logicalOperators.add(eventTableScan);
-
     Join join;
     JoinCondition[] joinConditions;
 
@@ -164,23 +173,26 @@ public class CommonFormulaQueryDescriptor extends FormulaQueryDescriptor {
     } else {
       scanRoot = eventTableScan;
     }
+
     // build min5 groupby
     Segment segment = null;
-    String func;
+    String segmentFunc, filterFunc;
     LogicalExpression singleGroupByLE;
     if (min5HourQuery) {
       switch (this.interval) {
         case MIN5:
-          func = "div300";
+          segmentFunc = "div300";
+          filterFunc = "sgmt300";
           break;
         case HOUR:
-          func = "div3600";
+          segmentFunc = "div3600";
+          filterFunc = "sgmt3600";
           break;
         default:
           throw new PlanException(
             "Cannot discriminate function because interval is not ateappropriate - " + this.interval);
       }
-      singleGroupByLE = DFR.createExpression(func, ExpressionPosition.UNKNOWN, buildColumn(KEY_WORD_TIMESTAMP));
+      singleGroupByLE = DFR.createExpression(segmentFunc, ExpressionPosition.UNKNOWN, buildColumn(KEY_WORD_TIMESTAMP));
       FieldReference fr = buildColumn(KEY_WORD_SGMT), fr2 = buildColumn(KEY_WORD_DIMENSION);
       segment = new Segment(new NamedExpression[]{new NamedExpression(singleGroupByLE, fr2)}, fr);
       segment.setInput(scanRoot);
@@ -224,16 +236,16 @@ public class CommonFormulaQueryDescriptor extends FormulaQueryDescriptor {
     if (min5HourQuery) {
       switch (this.interval) {
         case MIN5:
-          func = MIN5.name().toLowerCase();
+          segmentFunc = MIN5.name().toLowerCase();
           break;
         case HOUR:
-          func = HOUR.name().toLowerCase();
+          segmentFunc = HOUR.name().toLowerCase();
           break;
         default:
           throw new PlanException(
             "Cannot discriminate function because interval is not ateappropriate - " + this.interval);
       }
-      LogicalExpression finalFunc = DFR.createExpression(func, ExpressionPosition.UNKNOWN, buildColumn("dimension"));
+      LogicalExpression finalFunc = DFR.createExpression(segmentFunc, ExpressionPosition.UNKNOWN, buildColumn("dimension"));
       selections[1] = new NamedExpression(finalFunc, buildColumn("dimension"));
       selections[2] = new NamedExpression(buildColumn("count"), buildColumn("count"));
       selections[3] = new NamedExpression(buildColumn("user_num"), buildColumn("user_num"));

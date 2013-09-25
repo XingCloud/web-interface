@@ -18,7 +18,7 @@ public class TestMin5QueryLogicalPlanSeg extends TestLogicalPlanBase {
   @Test
   public void testBuildPlan() throws Exception {
     String name = "common.hour.withseg.json";
-    String segment = "{\"language\":[{\"op\":\"eq\",\"expr\":\"en\",\"type\":\"CONST\"}]}";
+    String segment = "{\"register_time\":[{\"op\":\"eq\",\"expr\":\"2013-09-25\",\"type\":\"CONST\"}]}";
     FormulaQueryDescriptor fqd = new CommonFormulaQueryDescriptor(TEST_TABLE, TEST_REAL_BEGIN_DATE, TEST_REAL_END_DATE,
                                                                   TEST_EVENT, segment, Filter.ALL, 1d, "2013-03-10",
                                                                   "2013-03-12", Interval.HOUR, CommonQueryType.NORMAL);

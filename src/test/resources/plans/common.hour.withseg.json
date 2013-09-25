@@ -11,7 +11,21 @@
   query : [ {
     op : "scan",
     @id : 1,
-    memo : "deu_age,2013-09-01,2013-09-01,pay.*",
+    memo : "Scan(Table=age.register_time, Prop=register_time, Val={LTE=2013-09-25, GTE=2013-09-25})",
+    storageengine : "mysql",
+    selection : {
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      } ],
+      filter : "val<=20130925235959 and val>=20130925000000",
+      table : "age.register_time"
+    },
+    ref : "user"
+  }, {
+    op : "scan",
+    @id : 2,
+    memo : "deu_age,2013-09-12,2013-09-12,pay.*",
     storageengine : "hbase",
     selection : [ {
       projections : [ {
@@ -25,26 +39,12 @@
         expr : "timestamp"
       } ],
       rowkey : {
-        end : "20130901pay",
-        start : "20130901pay.fee.alipay"
+        end : "20130912pay",
+        start : "20130912pay.fee.alipay"
       },
       table : "deu_age"
     } ],
     ref : "event"
-  }, {
-    op : "scan",
-    @id : 2,
-    memo : "Scan(Table=age.language, Prop=language, Val={EQ=en})",
-    storageengine : "mysql",
-    selection : {
-      projections : [ {
-        ref : "uid",
-        expr : "uid"
-      } ],
-      filter : "val='en'",
-      table : "age.language"
-    },
-    ref : "user"
   }, {
     op : "join",
     @id : 3,
@@ -62,7 +62,7 @@
     input : 3,
     exprs : [ {
       ref : "dimension",
-      expr : "hour(timestamp)"
+      expr : "div3600(timestamp)"
     } ],
     name : "sgmt"
   }, {
@@ -88,10 +88,10 @@
     input : 5,
     projections : [ {
       ref : "query_id",
-      expr : "'COMMON,age,2013-09-01,2013-09-01,pay.*,{\"language\":\"en\"},VF-ALL-0-0,HOUR'"
+      expr : "'COMMON,age,2013-09-12,2013-09-12,pay.*,{\"register_time\":\"2013-09-25\"},VF-ALL-0-0,HOUR'"
     }, {
       ref : "dimension",
-      expr : "dimension"
+      expr : "hour(dimension)"
     }, {
       ref : "count",
       expr : "count"
