@@ -31,8 +31,8 @@
     </repository>
   </repositories>
 
+  <!--
   <profiles>
-    <!-- Local debug -->
     <profile>
       <id>local_debug</id>
       <activation>
@@ -48,7 +48,6 @@
         </repository>
       </repositories>
     </profile>
-    <!-- pre-production -->
     <profile>
       <id>pre_production</id>
       <activation>
@@ -64,7 +63,6 @@
         </repository>
       </repositories>
     </profile>
-    <!-- Production -->
     <profile>
       <id>production</id>
       <activation>
@@ -81,6 +79,7 @@
       </repositories>
     </profile>
   </profiles>
+  -->
   <!-- Building config -->
   <build>
     <defaultGoal>package</defaultGoal>
@@ -287,11 +286,13 @@
     </dependency>
 
     <!-- Hadoop, HDFS, Hbase, ZK -->
+    <!--
     <dependency>
       <groupId>com.xingcloud</groupId>
       <artifactId>AdhocProcessorRPC</artifactId>
       <version>4.3</version>
     </dependency>
+    -->
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-client</artifactId>

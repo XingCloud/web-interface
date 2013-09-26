@@ -27,8 +27,8 @@ public class TestLogicalPlanBase {
   protected static final String TEST_EVENT_VISIT = "visit.*";
   protected static final String TEST_EVENT2 = "Age.Menu.*.Success";
   protected static final String TEST_EVENT3 = "click.*.*.1";
-  protected static final String TEST_REAL_BEGIN_DATE = "2013-09-12";
-  protected static final String TEST_REAL_END_DATE = "2013-09-12";
+  protected static final String TEST_REAL_BEGIN_DATE = "2013-09-25";
+  protected static final String TEST_REAL_END_DATE = "2013-09-25";
   private static final HessianProxyFactory WS_FACTORY = new HessianProxyFactory();
 
   protected static Object SERVICE;

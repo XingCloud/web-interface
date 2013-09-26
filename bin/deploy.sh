@@ -48,19 +48,19 @@ else
   echo "Git Update/checkout successfully."
 fi
 
-echo ${line}
-echo "[CHECK-POINT] - Clean local adhoc repository."
-rm -rf /home/hadoop/.m2/repository/com/xingcloud/AdhocProcessorRPC
+# echo ${line}
+# echo "[CHECK-POINT] - Clean local adhoc repository."
+# rm -rf /home/hadoop/.m2/repository/com/xingcloud/AdhocProcessorRPC
 
-echo ${line}
-echo "[------copy adhoc-processor jar to local repo------]"
-if [ "production" = ${xa_env} ];then
-  rm -rf /home/hadoop/local_repo/production/*
-  mvn install:install-file -Dfile=/home/hadoop/AdhocProcessorRPC/target/AdhocProcessorRPC-4.3.jar -DgroupId=com.xingcloud -DartifactId=AdhocProcessorRPC -Dversion=4.3 -Dpackaging=jar -DlocalRepositoryPath=/home/hadoop/local_repo/production
-else
-  rm -rf /home/hadoop/local_repo/pre_production/*
-  mvn install:install-file -Dfile=/home/hadoop/AdhocProcessorRPC/target/AdhocProcessorRPC-4.3.jar -DgroupId=com.xingcloud -DartifactId=AdhocProcessorRPC -Dversion=4.3 -Dpackaging=jar -DlocalRepositoryPath=/home/hadoop/local_repo/pre_production
-fi
+# echo ${line}
+# echo "[------copy adhoc-processor jar to local repo------]"
+# if [ "production" = ${xa_env} ];then
+#   rm -rf /home/hadoop/local_repo/production/*
+#   mvn install:install-file -Dfile=/home/hadoop/AdhocProcessorRPC/target/AdhocProcessorRPC-4.3.jar -DgroupId=com.xingcloud -DartifactId=AdhocProcessorRPC -Dversion=4.3 -Dpackaging=jar -DlocalRepositoryPath=/home/hadoop/local_repo/production
+# else
+#   rm -rf /home/hadoop/local_repo/pre_production/*
+#   mvn install:install-file -Dfile=/home/hadoop/AdhocProcessorRPC/target/AdhocProcessorRPC-4.3.jar -DgroupId=com.xingcloud -DartifactId=AdhocProcessorRPC -Dversion=4.3 -Dpackaging=jar -DlocalRepositoryPath=/home/hadoop/local_repo/pre_production
+# fi
 
 echo "[CHECK-POINT] - Packaging."
 mvn -f ${code_home}/pom.xml clean package -Dxa_env=${xa_env} -Dtport=${tport} -Daid=${aid} -DskipTests=true
@@ -89,13 +89,13 @@ echo "[CHECK-POINT] - Clean application - ${aid}"
 rm -rf ${tomcat_home}/webapps/${aid}
 rm -rf ${tomcat_home}/webapps/${aid}*.war
 
-echo "[CHECK-POINT] - Clean redis tags(db=0)."
+#echo "[CHECK-POINT] - Clean redis tags(db=0)."
 #python /home/hadoop/xa/scripts/clear_query_tag.py --host=192.168.1.61 --port=${redis_queue_port} --db=0
-echo "[CHECK-POINT] - Clean redis tags(db=1)."
+#echo "[CHECK-POINT] - Clean redis tags(db=1)."
 #python /home/hadoop/xa/scripts/clear_query_tag.py --host=192.168.1.61 --port=${redis_queue_port} --db=1
-echo "[CHECK-POINT] - Clean redis tags(db=2)."
+#echo "[CHECK-POINT] - Clean redis tags(db=2)."
 #python /home/hadoop/xa/scripts/clear_query_tag.py --host=192.168.1.61 --port=${redis_queue_port} --db=2
-sleep 1
+#sleep 1
 
 echo "[CHECK-POINT] - Copy application - ${aid}"
 cp ${code_home}/target/${aid}.war ${tomcat_home}/webapps
