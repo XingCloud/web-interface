@@ -1,14 +1,17 @@
 package com.xingcloud.webinterface.segment2;
 
 import static com.xingcloud.webinterface.calculate.func.DateAddFunction.DATE_ADD_FUNCTION_NAME;
+import static com.xingcloud.webinterface.enums.Interval.HOUR;
+import static com.xingcloud.webinterface.enums.Interval.MIN5;
 import static com.xingcloud.webinterface.enums.Operator.EQ;
 import static com.xingcloud.webinterface.enums.Operator.GT;
 import static com.xingcloud.webinterface.enums.Operator.GTE;
 import static com.xingcloud.webinterface.enums.Operator.IN;
 import static com.xingcloud.webinterface.enums.Operator.LT;
 import static com.xingcloud.webinterface.enums.Operator.LTE;
+import static com.xingcloud.webinterface.enums.Operator.SGMT300;
+import static com.xingcloud.webinterface.enums.Operator.SGMT3600;
 import static com.xingcloud.webinterface.enums.SegmentExprType.CONST;
-import static com.xingcloud.webinterface.enums.SegmentExprType.VAR;
 import static com.xingcloud.webinterface.model.formula.FormulaQueryDescriptor.JSON_NAME_FIELD_NAME_MAP;
 import static com.xingcloud.webinterface.utils.WebInterfaceConstants.DEFAULT_GSON_PLAIN;
 import static com.xingcloud.webinterface.utils.WebInterfaceConstants.SEGMENT_EXPR;
@@ -187,12 +190,19 @@ public class SegmentEvaluator {
       descriptor.setSegmentMap(null);
       return;
     }
-    boolean ignoreVar = false, hasVar = false;
+    Operator op = null;
+    boolean ignoreVar = false;
     if (descriptor.isCommon()) {
       Interval interval = ((CommonFormulaQueryDescriptor) descriptor).getInterval();
       float days = interval.getDays();
       if (days < 1) {
         ignoreVar = true;
+      }
+
+      if (HOUR.equals(interval)) {
+        op = SGMT3600;
+      } else if (MIN5.equals(interval)) {
+        op = SGMT300;
       }
     }
 
@@ -207,18 +217,17 @@ public class SegmentEvaluator {
 
     Operator operator;
     SegmentExprType type;
-    Object expression;
+    Object expression, singleSegment, val;
     Map<String, Map<Operator, Object>> segmentMap = new HashMap<String, Map<Operator, Object>>(m.size());
     Map<Operator, Object> singleSegmentMap;
-    Map<String, Object> sortedSegmentMap = new TreeMap<String, Object>();
-    Map<String, Object> map;
-    Object singleSegment;
+    Map<String, Object> map, sortedSegmentMap = new TreeMap<String, Object>();
+
     for (Object o : m.entrySet()) {
       e = (Map.Entry) o;
       userProperty = ((String) e.getKey()).toLowerCase();
       dbl = (BasicDBList) e.getValue();
       it = dbl.iterator();
-      singleSegmentMap = new HashMap<Operator, Object>();
+      singleSegmentMap = new HashMap<Operator, Object>(dbl.size());
       while (it.hasNext()) {
         dbo = (BasicDBObject) it.next();
         operator = Enum.valueOf(Operator.class, dbo.getString(SEGMENT_OP).toUpperCase());
@@ -226,9 +235,6 @@ public class SegmentEvaluator {
           throw new SegmentException("\"IN\" operator must be split to small piece before transform.");
         }
         type = Enum.valueOf(SegmentExprType.class, dbo.getString(SEGMENT_TYPE).toUpperCase());
-        if (VAR.equals(type)) {
-          hasVar = true;
-        }
         expression = dbo.get(SEGMENT_EXPR);
         // 常量型表达式, 5分钟/小时的date_handler直接返回
         if (ignoreVar || CONST.equals(type)) {
@@ -245,17 +251,21 @@ public class SegmentEvaluator {
             sortedSegmentMap.put(userProperty, map);
           }
           map.putAll((Map) singleSegment);
-          singleSegmentMap.put(operator, ((Map) singleSegment).get(operator.getMongoKeyword()));
+          val = ((Map) singleSegment).get(operator.getMongoKeyword());
+          if (val == null) {
+            singleSegmentMap.put(op, descriptor.getRealBeginDate());
+            if (descriptor.isCommon()) {
+              ((CommonFormulaQueryDescriptor) descriptor).setFunctionalSegment(true);
+            }
+          } else {
+            singleSegmentMap.put(operator, val);
+          }
         } else {
           sortedSegmentMap.put(userProperty, singleSegment);
           singleSegmentMap.put(operator, singleSegment);
         }
       }
       segmentMap.put(userProperty, singleSegmentMap);
-    }
-    if (ignoreVar && hasVar) {
-      segmentMap.clear();
-      segmentMap.put("N/A", null);
     }
     descriptor.setSegmentMap(segmentMap);
     descriptor.setSegment(DEFAULT_GSON_PLAIN.toJson(sortedSegmentMap));
@@ -267,26 +277,26 @@ public class SegmentEvaluator {
     segment = "{\"nation\":[{\"op\":\"eq\",\"expr\":\"zh\",\"type\":\"CONST\"}],\"register_time\":[{\"op\":\"gte\",\"expr\":\"$date_add(1)\",\"type\":\"VAR\"},{\"op\":\"lte\",\"expr\":\"$date_add(1)\",\"type\":\"VAR\"}]}";
     FormulaQueryDescriptor fqd = new CommonFormulaQueryDescriptor("age", "2013-03-15", "2013-03-15", "visit.*", segment,
                                                                   Filter.ALL, 1d, "2013-03-10", "2013-03-12",
-                                                                  Interval.HOUR, CommonQueryType.NORMAL);
+                                                                  Interval.MIN5, CommonQueryType.NORMAL);
     evaluate(fqd);
     System.out.println(fqd.getSegment());
     System.out.println(fqd.getSegmentMap());
-    System.out.println("---------------------------------");
-
-    segment = "{\"nation\":[{\"op\":\"eq\",\"expr\":\"zh\",\"type\":\"CONST\"}],\"register_time\":[{\"op\":\"eq\",\"expr\":\"2013-07-13\",\"type\":\"CONST\"}]}";
-    fqd = new CommonFormulaQueryDescriptor("age", "2013-03-15", "2013-03-15", "visit.*", segment, Filter.ALL, 1d,
-                                           "2013-03-10", "2013-03-12", Interval.HOUR, CommonQueryType.NORMAL);
-//    segment = "{\"identifier\":[{\"op\":\"eq\",\"expr\":\"2013-06-28\",\"type\":\"CONST\"}]}";
-    evaluate(fqd);
-    System.out.println(fqd.getSegment());
-    System.out.println(fqd.getSegmentMap());
-    System.out.println("---------------------------------");
-
-    fqd = new CommonFormulaQueryDescriptor("age", "2013-03-15", "2013-03-15", "visit.*", segment, Filter.ALL, 1d,
-                                           "2013-03-10", "2013-03-12", Interval.PERIOD, CommonQueryType.NORMAL);
-
-    evaluate(fqd);
-    System.out.println(fqd.getSegment());
-    System.out.println(fqd.getSegmentMap());
+//    System.out.println("---------------------------------");
+//
+//    segment = "{\"nation\":[{\"op\":\"eq\",\"expr\":\"zh\",\"type\":\"CONST\"}],\"register_time\":[{\"op\":\"eq\",\"expr\":\"2013-07-13\",\"type\":\"CONST\"}]}";
+//    fqd = new CommonFormulaQueryDescriptor("age", "2013-03-15", "2013-03-15", "visit.*", segment, Filter.ALL, 1d,
+//                                           "2013-03-10", "2013-03-12", Interval.HOUR, CommonQueryType.NORMAL);
+////    segment = "{\"identifier\":[{\"op\":\"eq\",\"expr\":\"2013-06-28\",\"type\":\"CONST\"}]}";
+//    evaluate(fqd);
+//    System.out.println(fqd.getSegment());
+//    System.out.println(fqd.getSegmentMap());
+//    System.out.println("---------------------------------");  0
+//
+//    fqd = new CommonFormulaQueryDescriptor("age", "2013-03-15", "2013-03-15", "visit.*", segment, Filter.ALL, 1d,
+//                                           "2013-03-10", "2013-03-12", Interval.PERIOD, CommonQueryType.NORMAL);
+//
+//    evaluate(fqd);
+//    System.out.println(fqd.getSegment());
+//    System.out.println(fqd.getSegmentMap());
   }
 }

@@ -2,17 +2,7 @@ package com.xingcloud.webinterface.model.formula;
 
 import static com.xingcloud.basic.Constants.SEPARATOR_CHAR_CACHE;
 import static com.xingcloud.webinterface.enums.GroupByType.USER_PROPERTIES;
-import static com.xingcloud.webinterface.plan.Plans.DFR;
-import static com.xingcloud.webinterface.plan.Plans.KEY_WORD_DIMENSION;
-import static com.xingcloud.webinterface.plan.Plans.KEY_WORD_EVENT;
-import static com.xingcloud.webinterface.plan.Plans.KEY_WORD_SGMT;
-import static com.xingcloud.webinterface.plan.Plans.KEY_WORD_UID;
-import static com.xingcloud.webinterface.plan.Plans.KEY_WORD_VALUE;
-import static com.xingcloud.webinterface.plan.Plans.buildPlanProperties;
-import static com.xingcloud.webinterface.plan.Plans.getChainedMysqlSegmentScan;
-import static com.xingcloud.webinterface.plan.Plans.getEventScan;
-import static com.xingcloud.webinterface.plan.Plans.getStore;
-import static com.xingcloud.webinterface.plan.Plans.getUserScan;
+import static com.xingcloud.webinterface.plan.Plans.*;
 import static org.apache.drill.common.enums.Aggregator.COUNT;
 import static org.apache.drill.common.enums.Aggregator.COUNT_DISTINCT;
 import static org.apache.drill.common.enums.Aggregator.SUM;

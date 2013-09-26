@@ -8,27 +8,29 @@ import java.util.EnumSet;
 import java.util.Set;
 
 public enum Operator {
-
+  // Hour function
+  SGMT300("sgmt300", "sgmt300", "sgmt300", true),
+  // Min5 function
+  SGMT3600("sgmt3600", "sgmt3600", "sgmt3600", true),
   // Do not filter anything.
   ALL(),
   // >
-  GT("gt", "$gt", ">"),
+  GT("gt", "$gt", ">", false),
   // <
-  LT("lt", "$lt", "<"),
+  LT("lt", "$lt", "<", false),
   // >=
-  GTE("gte", "$gte", ">="),
+  GTE("gte", "$gte", ">=", false),
   // <=
-  LTE("lte", "$lte", "<="),
+  LTE("lte", "$lte", "<=", false),
   // ==
-  EQ("eq", "eq", "=="),
+  EQ("eq", "eq", "==", false),
   // !=
-  NE("ne", "$ne", "!="),
-  IN("in", "in", "in"),
+  NE("ne", "$ne", "!=", false),
+  IN("in", "in", "in", false),
   // between ... and ...[x, y]
   BETWEEN;
 
   private static final Set<Operator> SET = EnumSet.allOf(Operator.class);
-
   public static final BiMap<Operator, String> OPERATOR_COMMON_KEYWORDS_BIMAP = HashBiMap.create();
   public static final BiMap<Operator, String> OPERATOR_MONGO_KEYWORDS_BIMAP = HashBiMap.create();
 
@@ -52,13 +54,20 @@ public enum Operator {
 
   private String mathOperator;
 
+  private boolean isFunctional;
+
   private Operator() {
   }
 
-  private Operator(String commonKeyword, String mongoKeyword, String mathOperator) {
+  private Operator(String commonKeyword, String mongoKeyword, String mathOperator, boolean isFunctional) {
     this.commonKeyword = commonKeyword;
     this.mongoKeyword = mongoKeyword;
     this.mathOperator = mathOperator;
+    this.isFunctional = isFunctional;
+  }
+
+  public boolean isFunctional() {
+    return isFunctional;
   }
 
   public String getCommonKeyword() {
@@ -102,8 +111,8 @@ public enum Operator {
   }
 
   public static void main(String[] args) throws UnknownObjectException {
-    Set<Operator> set= EnumSet.allOf(Operator.class);
-    for(Operator o: set){
+    Set<Operator> set = EnumSet.allOf(Operator.class);
+    for (Operator o : set) {
       System.out.println(o.getMathOperator());
     }
   }

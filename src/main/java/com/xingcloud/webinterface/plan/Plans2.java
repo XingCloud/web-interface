@@ -3,6 +3,8 @@ package com.xingcloud.webinterface.plan;
 import static com.xingcloud.webinterface.enums.Operator.EQ;
 import static com.xingcloud.webinterface.enums.Operator.GTE;
 import static com.xingcloud.webinterface.enums.Operator.LTE;
+import static com.xingcloud.webinterface.enums.Operator.SGMT300;
+import static com.xingcloud.webinterface.enums.Operator.SGMT3600;
 import static org.apache.drill.common.expression.ExpressionPosition.UNKNOWN;
 import static org.apache.drill.common.util.DrillConstants.SE_HBASE;
 import static org.apache.drill.common.util.DrillConstants.SE_MYSQL;
@@ -135,12 +137,22 @@ public class Plans2 {
       throw new PlanException("Empty segment value");
     }
     String table = toUserMysqlTableName(projectId, propertyName);
-    boolean transformDate = usingDateFunc(projectId, propertyName);
-    Object valueObject;
-
-    if (transformDate && valueMap.containsKey(EQ)) {
-      valueObject = valueMap.get(EQ);
-      valueMap.remove(EQ);
+    boolean transformDate = usingDateFunc(projectId, propertyName), hasFunctionalSegment = valueMap
+      .containsKey(SGMT300) || valueMap.containsKey(SGMT3600), hasEQ = valueMap.containsKey(EQ);
+    Object valueObject = null;
+    if (transformDate && (hasEQ || hasFunctionalSegment)) {
+      if (hasEQ) {
+        valueObject = valueMap.get(EQ);
+        valueMap.remove(EQ);
+      } else if (hasFunctionalSegment) {
+        valueObject = valueMap.get(SGMT300);
+        if (valueObject == null) {
+          valueObject = valueMap.get(SGMT3600);
+          valueMap.remove(SGMT3600);
+        } else {
+          valueMap.remove(SGMT300);
+        }
+      }
       valueMap.put(GTE, valueObject);
       valueMap.put(LTE, valueObject);
     }
@@ -165,7 +177,14 @@ public class Plans2 {
       logicalExpressions.add(le);
     }
     FieldReference fr = buildColumn(KEY_WORD_UID);
-    NamedExpression[] projections = new NamedExpression[]{new NamedExpression(fr, fr)};
+    NamedExpression[] projections;
+    if (hasFunctionalSegment) {
+      projections = new NamedExpression[2];
+      projections[0] = new NamedExpression(fr, fr);
+      projections[1] = new NamedExpression(buildColumn(field), buildColumn(propertyName));
+    } else {
+      projections = new NamedExpression[]{new NamedExpression(fr, fr)};
+    }
 
     ScanFilter sf = new ScanFilter(toBinaryExpression(logicalExpressions, "and"));
     ScanSelection ss = new ScanSelection(table, sf, projections);
@@ -192,7 +211,8 @@ public class Plans2 {
     Map.Entry<String, Map<Operator, Object>> entry = it.next();
     String propertyName = entry.getKey();
     Map<Operator, Object> singleSegmentMap = entry.getValue();
-    LogicalOperator lo1 = getSingleMysqlSegmentExprScan(projectId, propertyName, singleSegmentMap), lo2;
+    LogicalOperator lo1 = getSingleMysqlSegmentExprScan(projectId, propertyName,
+                                                        new HashMap<Operator, Object>(singleSegmentMap)), lo2;
     operators.add(lo1);
 
     Join join;
@@ -204,7 +224,7 @@ public class Plans2 {
       entry = it.next();
       propertyName = entry.getKey();
       singleSegmentMap = entry.getValue();
-      lo2 = getSingleMysqlSegmentExprScan(projectId, propertyName, singleSegmentMap);
+      lo2 = getSingleMysqlSegmentExprScan(projectId, propertyName, new HashMap<Operator, Object>(singleSegmentMap));
       operators.add(lo2);
 
       joinConditions = new JoinCondition[1];
@@ -214,6 +234,33 @@ public class Plans2 {
       lo1 = join;
     }
     return lo1;
+  }
+
+  public static LogicalExpression getChainedSegmentFilter(Map<String, Map<Operator, Object>> segmentMap,
+                                                          String rightFunc, String rightFuncColumn) throws
+    PlanException {
+    Collection<LogicalExpression> logicalExpressions = null;
+    Map<Operator, Object> valueMap;
+    Operator operator;
+    String functionString;
+    LogicalExpression left, right;
+    for (Map.Entry<String, Map<Operator, Object>> entry1 : segmentMap.entrySet()) {
+      valueMap = entry1.getValue();
+      for (Map.Entry<Operator, Object> entry2 : valueMap.entrySet()) {
+        operator = entry2.getKey();
+        if (operator.isFunctional()) {
+          functionString = operator.name().toLowerCase();
+          left = DFR.createExpression(functionString, UNKNOWN, buildColumn(entry1.getKey()));
+          right = DFR.createExpression(rightFunc, UNKNOWN, buildColumn(rightFuncColumn));
+          left = DFR.createExpression("==", UNKNOWN, left, right);
+          if (logicalExpressions == null) {
+            logicalExpressions = new ArrayList<LogicalExpression>();
+          }
+          logicalExpressions.add(left);
+        }
+      }
+    }
+    return toBinaryExpression(logicalExpressions, "and");
   }
 
   public static LogicalOperator getUserScan(String projectId, String groupBy) throws PlanException {

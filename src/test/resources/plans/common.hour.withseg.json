@@ -11,14 +11,14 @@
   query : [ {
     op : "scan",
     @id : 1,
-    memo : "Scan(Table=age.register_time, Prop=register_time, Val={LTE=2013-09-25, GTE=2013-09-25})",
+    memo : "Scan(Table=age.register_time, Prop=register_time, Val={GTE=2013-09-25, LTE=2013-09-25})",
     storageengine : "mysql",
     selection : {
       projections : [ {
         ref : "uid",
         expr : "uid"
       } ],
-      filter : "val<=20130925235959 and val>=20130925000000",
+      filter : "val>=20130925000000 and val<=20130925235959",
       table : "age.register_time"
     },
     ref : "user"

@@ -11,6 +11,7 @@ import static com.xingcloud.webinterface.plan.Plans.KEY_WORD_UID;
 import static com.xingcloud.webinterface.plan.Plans.KEY_WORD_VALUE;
 import static com.xingcloud.webinterface.plan.Plans.buildPlanProperties;
 import static com.xingcloud.webinterface.plan.Plans.getChainedMysqlSegmentScan;
+import static com.xingcloud.webinterface.plan.Plans.getChainedSegmentFilter;
 import static com.xingcloud.webinterface.plan.Plans.getEventScan;
 import static com.xingcloud.webinterface.plan.Plans.getStore;
 import static org.apache.drill.common.enums.Aggregator.COUNT;
@@ -49,8 +50,10 @@ public class CommonFormulaQueryDescriptor extends FormulaQueryDescriptor {
 
   protected CommonQueryType commonQueryType;
 
+  protected boolean functionalSegment;
+
   private boolean hasFunctionalSegment() {
-    return false;
+    return functionalSegment;
   }
 
   public CommonFormulaQueryDescriptor() {
@@ -92,6 +95,10 @@ public class CommonFormulaQueryDescriptor extends FormulaQueryDescriptor {
       sb.append(getCommonQueryType());
     }
     return sb.toString();
+  }
+
+  public void setFunctionalSegment(boolean functionalSegment) {
+    this.functionalSegment = functionalSegment;
   }
 
   public Interval getInterval() {
@@ -147,11 +154,6 @@ public class CommonFormulaQueryDescriptor extends FormulaQueryDescriptor {
     List<LogicalOperator> logicalOperators = new ArrayList<LogicalOperator>();
     boolean min5HourQuery = this.interval.getDays() < 1;
     String[] additionalProjections = min5HourQuery ? new String[]{KEY_WORD_TIMESTAMP} : null;
-    if(min5HourQuery){
-
-    } else{
-
-    }
     LogicalOperator eventTableScan = getEventScan(this.projectId, this.event, this.realBeginDate, this.realEndDate,
                                                   additionalProjections);
     logicalOperators.add(eventTableScan);
@@ -173,29 +175,38 @@ public class CommonFormulaQueryDescriptor extends FormulaQueryDescriptor {
     } else {
       scanRoot = eventTableScan;
     }
+    String segmentFunc;
+    switch (this.interval) {
+      case MIN5:
+        segmentFunc = "div300";
+        break;
+      case HOUR:
+        segmentFunc = "div3600";
+        break;
+      default:
+        segmentFunc = null;
+    }
+
+    org.apache.drill.common.logical.data.Filter logicalFilter = null;
+    if (hasFunctionalSegment) {
+      LogicalExpression filterExpression = getChainedSegmentFilter(getSegmentMap(), segmentFunc, KEY_WORD_TIMESTAMP);
+      logicalFilter = new org.apache.drill.common.logical.data.Filter(filterExpression);
+      logicalFilter.setInput(scanRoot);
+      logicalOperators.add(logicalFilter);
+    }
 
     // build min5 groupby
     Segment segment = null;
-    String segmentFunc, filterFunc;
     LogicalExpression singleGroupByLE;
     if (min5HourQuery) {
-      switch (this.interval) {
-        case MIN5:
-          segmentFunc = "div300";
-          filterFunc = "sgmt300";
-          break;
-        case HOUR:
-          segmentFunc = "div3600";
-          filterFunc = "sgmt3600";
-          break;
-        default:
-          throw new PlanException(
-            "Cannot discriminate function because interval is not ateappropriate - " + this.interval);
-      }
       singleGroupByLE = DFR.createExpression(segmentFunc, ExpressionPosition.UNKNOWN, buildColumn(KEY_WORD_TIMESTAMP));
       FieldReference fr = buildColumn(KEY_WORD_SGMT), fr2 = buildColumn(KEY_WORD_DIMENSION);
       segment = new Segment(new NamedExpression[]{new NamedExpression(singleGroupByLE, fr2)}, fr);
-      segment.setInput(scanRoot);
+      if (logicalFilter == null) {
+        segment.setInput(scanRoot);
+      } else {
+        segment.setInput(logicalFilter);
+      }
       logicalOperators.add(segment);
     }
 
@@ -245,7 +256,8 @@ public class CommonFormulaQueryDescriptor extends FormulaQueryDescriptor {
           throw new PlanException(
             "Cannot discriminate function because interval is not ateappropriate - " + this.interval);
       }
-      LogicalExpression finalFunc = DFR.createExpression(segmentFunc, ExpressionPosition.UNKNOWN, buildColumn("dimension"));
+      LogicalExpression finalFunc = DFR
+        .createExpression(segmentFunc, ExpressionPosition.UNKNOWN, buildColumn("dimension"));
       selections[1] = new NamedExpression(finalFunc, buildColumn("dimension"));
       selections[2] = new NamedExpression(buildColumn("count"), buildColumn("count"));
       selections[3] = new NamedExpression(buildColumn("user_num"), buildColumn("user_num"));
