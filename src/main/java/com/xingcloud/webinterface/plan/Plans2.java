@@ -266,6 +266,7 @@ public class Plans2 {
   public static LogicalOperator getUserScan(String projectId, String groupBy) throws PlanException {
     JSONOptions selection;
     String table = toUserMysqlTableName(projectId, groupBy);
+    List<Map<String, Object>> selectionMapList = new ArrayList<Map<String, Object>>(1);
     Map<String, Object> selectionMap = new HashMap<String, Object>(2);
     selectionMap.put("table", table);
     FieldReference uidFR = buildColumn(KEY_WORD_UID);
@@ -274,11 +275,10 @@ public class Plans2 {
     projections[1] = new NamedExpression(buildColumn(KEY_WORD_VAL), buildColumn(groupBy));
 
     selectionMap.put(KEY_WORD_PROJECTIONS, projections);
-    String str;
+    selectionMapList.add(selectionMap);
     ObjectMapper mapper = DEFAULT_DRILL_CONFIG.getMapper();
     try {
-      str = mapper.writeValueAsString(selectionMap);
-      selection = mapper.readValue(str, JSONOptions.class);
+      selection = mapper.readValue(mapper.writeValueAsString(selectionMapList), JSONOptions.class);
     } catch (Exception e) {
       throw new PlanException(e);
     }

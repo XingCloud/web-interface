@@ -13,7 +13,7 @@
     @id : 1,
     memo : "Table=age.register_time",
     storageengine : "mysql",
-    selection : {
+    selection : [ {
       projections : [ {
         ref : "uid",
         expr : "uid"
@@ -22,26 +22,25 @@
         expr : "val"
       } ],
       table : "age.register_time"
-    },
+    } ],
     ref : "user"
   }, {
     op : "scan",
     @id : 2,
-    memo : "deu_age,2013-09-12,2013-09-12,pay.*",
+    memo : "deu_age,2013-09-25,2013-09-25,pay.*",
     storageengine : "hbase",
     selection : [ {
+      table : "deu_age",
+      filter : {
+        expression : " ( (date)  == ('20130925') )  && ( (event0)  == ('pay') ) "
+      },
       projections : [ {
         ref : "uid",
         expr : "uid"
       }, {
         ref : "value",
         expr : "value"
-      } ],
-      rowkey : {
-        end : "20130912pay",
-        start : "20130912pay.fee.alipay"
-      },
-      table : "deu_age"
+      } ]
     } ],
     ref : "event"
   }, {
@@ -87,7 +86,7 @@
     input : 5,
     projections : [ {
       ref : "query_id",
-      expr : "'GROUP,age,2013-09-12,2013-09-12,pay.*,TOTAL_USER,VF-ALL-0-0,USER_PROPERTIES,register_time'"
+      expr : "'GROUP,age,2013-09-25,2013-09-25,pay.*,TOTAL_USER,VF-ALL-0-0,USER_PROPERTIES,register_time'"
     }, {
       ref : "dimension",
       expr : "dimension"

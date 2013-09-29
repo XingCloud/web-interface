@@ -39,7 +39,7 @@ public class TestRandomFQDSubmitter extends TestLogicalPlanBase {
     };
     Date targetDate = DateUtils.short2Date("2013-08-01");
     Random random = new Random();
-    int times = 10;
+    int times = 1;
     FormulaQueryDescriptor descriptor;
     boolean commonQuery;
     Date d1, d2;

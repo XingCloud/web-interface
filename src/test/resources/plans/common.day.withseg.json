@@ -11,12 +11,12 @@
   query : [ {
     op : "scan",
     @id : 1,
-    memo : "Scan(Table=sof-dsk.register_time, Prop=register_time, Val={GTE=2013-09-12, LTE=2013-09-12})",
+    memo : "Scan(Table=sof-dsk.register_time, Prop=register_time, Val={LTE=2013-09-12, GTE=2013-09-12})",
     storageengine : "mysql",
     selection : [ {
       table : "sof-dsk.register_time",
       filter : {
-        expression : " ( (val)  >= (20130912000000) )  && ( (val)  <= (20130912235959) ) "
+        expression : " ( (val)  <= (20130912235959) )  && ( (val)  >= (20130912000000) ) "
       },
       projections : [ {
         ref : "uid",
@@ -27,12 +27,12 @@
   }, {
     op : "scan",
     @id : 2,
-    memo : "deu_sof-dsk,2013-09-12,2013-09-12,visit.*",
+    memo : "deu_sof-dsk,2013-09-25,2013-09-25,visit.*",
     storageengine : "hbase",
     selection : [ {
       table : "deu_sof-dsk",
       filter : {
-        expression : " ( (date)  == ('20130912') )  && ( (event0)  == ('visit') ) "
+        expression : " ( (date)  == ('20130925') )  && ( (event0)  == ('visit') ) "
       },
       projections : [ {
         ref : "uid",
@@ -77,7 +77,7 @@
     input : 4,
     projections : [ {
       ref : "query_id",
-      expr : "'COMMON,sof-dsk,2013-09-12,2013-09-12,visit.*,{\"register_time\":\"2013-09-12\"},VF-ALL-0-0,PERIOD'"
+      expr : "'COMMON,sof-dsk,2013-09-25,2013-09-25,visit.*,{\"register_time\":\"2013-09-12\"},VF-ALL-0-0,PERIOD'"
     }, {
       ref : "count",
       expr : "count"
