@@ -26,22 +26,10 @@
     </layout>
   </appender>
 
-  <!-- ADHOC error log -->
-  <appender name="ADHOC-ERROR"
+  <!-- For logical plan string log -->
+  <appender name="LOG_LOGICAL_PLAN_STRING"
             class="org.apache.log4j.DailyRollingFileAppender">
-    <param name="File" value="/data/catalina/8081/logs/adhoc.error.log" />
-    <param name="Append" value="true" />
-    <param name="Threshold" value="info" />
-    <param name="DatePattern" value="'.'yyyy-MM-dd" />
-    <layout class="org.apache.log4j.PatternLayout">
-      <param name="ConversionPattern" value="%m%n" />
-    </layout>
-  </appender>
-
-  <!-- ADHOC info log -->
-  <appender name="ADHOC-INFO"
-            class="org.apache.log4j.DailyRollingFileAppender">
-    <param name="File" value="/data/catalina/8081/logs/adhoc.info.log" />
+    <param name="File" value="/data/catalina/8082/logs/plan.log" />
     <param name="Append" value="true" />
     <param name="Threshold" value="info" />
     <param name="DatePattern" value="'.'yyyy-MM-dd" />
@@ -74,6 +62,11 @@
     </layout>
   </appender>
 
+  <logger name="com.xingcloud.webinterface.exec.AbstractQueueQueryTask">
+    <level value="info" />
+    <appender-ref ref="LOG_LOGICAL_PLAN_STRING" />
+  </logger>
+
   <logger name="com.xingcloud.log.ContentLogger">
     <level value="info" />
     <appender-ref ref="LOG_PARAMETERS" />
@@ -82,16 +75,6 @@
   <logger name="com.xingcloud.log.InaccurateCacheLogger">
     <level value="info" />
     <appender-ref ref="LOG_INACCURATE_CACHE" />
-  </logger>
-
-  <logger name="com.xingcloud.adhocprocessorV2">
-    <level value="info" />
-    <appender-ref ref="CONSOLE" />
-  </logger>
-
-  <logger name="com.xingcloud.querycontroller">
-    <level value="info" />
-    <appender-ref ref="CONSOLE" />
   </logger>
 
   <logger name="com.xingcloud.webinterface">

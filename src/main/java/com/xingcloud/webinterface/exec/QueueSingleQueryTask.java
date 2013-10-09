@@ -41,13 +41,10 @@ public class QueueSingleQueryTask extends AbstractQueueQueryTask {
       ObjectMapper mapper = DEFAULT_DRILL_CONFIG.getMapper();
       logicalPlan = descriptor.toLogicalPlain();
       if (logicalPlan == null) {
-//        if (DS_ADHOC) {
-//          com.xingcloud.adhocprocessorV2.query.model.FormulaQueryDescriptor adhFqd = ConvertUtils
-//            .convertDescriptorInWebInterface2ADH(descriptor);
-//          Dispatcher.getInstance().addSingleTask(adhFqd);
-//        }
+        LOGGER.error("[QUERY] - Descriptor has generated null lp string - " + descriptor.getKey());
       } else {
         String planString = mapper.writeValueAsString(logicalPlan);
+        writeLPString2LocalLog(planString);
 //        LOGGER.info("[LP-STRING]\n" + planString);
         if (submit.submit(descriptor.getKey(), planString, PLAN)) {
           LOGGER.info("[QUERY] - LP added to remote queue - " + descriptor.getKey());

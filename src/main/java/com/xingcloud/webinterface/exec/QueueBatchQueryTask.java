@@ -54,6 +54,7 @@ public class QueueBatchQueryTask extends AbstractQueueQueryTask {
           logicalPlan = descriptor.toLogicalPlain();
           String planString = mapper.writeValueAsString(logicalPlan);
           batch.put(descriptor.getKey(), planString);
+          writeLPString2LocalLog(planString);
         } catch (PlanException e) {
           LOGGER.error("[QUERY] - LP mock added to remote queue - " + descriptor.getKey());
         }
@@ -64,28 +65,6 @@ public class QueueBatchQueryTask extends AbstractQueueQueryTask {
     if (batch.size() > 0) {
       submit.submitBatch(batch, PLAN);
     }
-
-//    if (queryHbaseCollection != null) {
-//      Set<com.xingcloud.adhocprocessorV2.query.model.FormulaQueryDescriptor> commonDescriptors = new HashSet<com.xingcloud.adhocprocessorV2.query.model.FormulaQueryDescriptor>(
-//        descriptors.size());
-//      Set<com.xingcloud.adhocprocessorV2.query.model.FormulaQueryDescriptor> groupByDescriptors = new HashSet<com.xingcloud.adhocprocessorV2.query.model.FormulaQueryDescriptor>(
-//        descriptors.size());
-//      for (FormulaQueryDescriptor descriptor : queryHbaseCollection) {
-//        if (descriptor.isCommon()) {
-//          commonDescriptors.add(convertDescriptorInWebInterface2ADH(descriptor));
-//        } else if (descriptor.isGroupBy()) {
-//          groupByDescriptors.add(convertDescriptorInWebInterface2ADH(descriptor));
-//        }
-//      }
-//      if (CollectionUtils.isNotEmpty(commonDescriptors)) {
-//        Dispatcher.getInstance().addBatchTask(commonDescriptors);
-//        LOGGER.info("[QUERY] - Batch common descriptors have been add to adh-queue.");
-//      }
-//      if (CollectionUtils.isNotEmpty(groupByDescriptors)) {
-//        Dispatcher.getInstance().addGroupByBatchTask(groupByDescriptors);
-//        LOGGER.info("[QUERY] - Batch group-by descriptors have been add to adh-queue.");
-//      }
-//    }
   }
 
 }
