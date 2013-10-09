@@ -1,10 +1,13 @@
 package com.xingcloud.webinterface.cache;
 
+import static com.xingcloud.basic.Constants.DEFAULT_TIME_ZONE;
 import static com.xingcloud.basic.mail.XMail.sendNewExceptionMail;
 import static com.xingcloud.basic.utils.DateUtils.timeElapse2String;
 import static com.xingcloud.webinterface.enums.CacheReference.OFFLINE;
 import static com.xingcloud.webinterface.enums.CacheReference.ONLINE;
 import static com.xingcloud.webinterface.enums.CacheState.EXPIRED;
+import static com.xingcloud.webinterface.enums.Interval.PERIOD;
+import static com.xingcloud.webinterface.model.ResultTuple.createNewEmptyResultTuple;
 import static com.xingcloud.webinterface.utils.ModelUtils.isIncremental;
 import static com.xingcloud.webinterface.utils.WebInterfaceCacheUtils.cacheMap2ResultTuple;
 import static com.xingcloud.webinterface.utils.WebInterfaceCacheUtils.getCacheState;
@@ -24,9 +27,15 @@ import com.xingcloud.webinterface.enums.Interval;
 import com.xingcloud.webinterface.exception.ParseIncrementalException;
 import com.xingcloud.webinterface.model.ResultTuple;
 import com.xingcloud.webinterface.model.StatefulCache;
+import com.xingcloud.webinterface.model.formula.CommonFormulaQueryDescriptor;
 import com.xingcloud.webinterface.model.formula.FormulaQueryDescriptor;
 import org.apache.log4j.Logger;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 public class RedisCacheChecker implements CacheChecker {
@@ -117,10 +126,18 @@ public class RedisCacheChecker implements CacheChecker {
       if (LOGGER.isDebugEnabled()) {
         LOGGER.debug("[CACHE] - HIT, EMPTY - " + key);
       }
-
-      return new StatefulCache(ONLINE, cacheStatus, tupleMap, seconds);
-//      return new StatefulCache(ONLINE, cacheStatus, buildPlaceHolderTupleMap(descriptor.getRealBeginDate(), null),
-//                               seconds);
+      if (descriptor.isCommon()) {
+        try {
+          CommonFormulaQueryDescriptor cfqd = (CommonFormulaQueryDescriptor) descriptor;
+          return new StatefulCache(ONLINE, cacheStatus,
+                                   buildPlaceHolderTupleMap(descriptor.getRealBeginDate(), cfqd.getInterval()),
+                                   seconds);
+        } catch (ParseException e) {
+          throw new XCacheException(e);
+        }
+      } else {
+        return new StatefulCache(ONLINE, cacheStatus, tupleMap, seconds);
+      }
     }
     if (!isUseful(descriptor, tupleMap)) {
       if (LOGGER.isDebugEnabled()) {
@@ -144,15 +161,33 @@ public class RedisCacheChecker implements CacheChecker {
     return new StatefulCache(cr, cacheStatus, tupleMap, seconds);
   }
 
-  private Map<Object, ResultTuple> buildPlaceHolderTupleMap(String date, Interval interval) {
+  private Map<Object, ResultTuple> buildPlaceHolderTupleMap(String date, Interval interval) throws ParseException {
+    Map<Object, ResultTuple> resultTupleMapPlaceHolder;
+    Calendar c = Calendar.getInstance(DEFAULT_TIME_ZONE);
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+    sdf.setTimeZone(DEFAULT_TIME_ZONE);
+    Date d = sdf.parse(date);
+    c.setTime(d);
     switch (interval) {
       case HOUR:
+        resultTupleMapPlaceHolder = new HashMap<Object, ResultTuple>(24);
+        for (int i = 0; i < 24; i++) {
+          resultTupleMapPlaceHolder.put(sdf.format(c.getTime()), createNewEmptyResultTuple());
+          c.add(Calendar.HOUR, 1);
+        }
         break;
       case MIN5:
+        resultTupleMapPlaceHolder = new HashMap<Object, ResultTuple>(288);
+        for (int i = 0; i < 288; i++) {
+          resultTupleMapPlaceHolder.put(sdf.format(c.getTime()), createNewEmptyResultTuple());
+          c.add(Calendar.MINUTE, 5);
+        }
         break;
       default:
-        return null;
+        resultTupleMapPlaceHolder = new HashMap<Object, ResultTuple>(1);
+        resultTupleMapPlaceHolder.put(PERIOD.name(), createNewEmptyResultTuple());
+        break;
     }
-    return null;
+    return resultTupleMapPlaceHolder;
   }
 }
