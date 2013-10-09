@@ -104,14 +104,4 @@ public class RowkeyBytes {
   public String toString() {
     return toStringBinary(rowkeyBytes);
   }
-
-  public static void main(String[] args) throws TException, MemCacheException, PlanException,
-    UnsupportedEncodingException {
-    Map<String, byte[]> values = new HashMap<String, byte[]>();
-    values.put("date", ByteUtils.toBytes("20130827"));
-    values.put("event0", ByteUtils.toBytes("a"));
-    Table table = Plans.getCachedMetaTable("deu_" + Plans.KEY_WORD_GENERIC_EVENT_TABLE_NAME);
-    RowkeyBytes rb = RowkeyBytes.create(table, values);
-    System.out.println(rb);
-  }
 }

@@ -1,15 +1,10 @@
 package com.xingcloud.webinterface.plan;
 
-import static com.xingcloud.basic.utils.DateUtils.dateAdd;
-import static com.xingcloud.meta.ByteUtils.toBytes;
-import static com.xingcloud.webinterface.cache.MemoryCachedObjects.MCO_META_TABLE;
 import static com.xingcloud.webinterface.enums.Operator.EQ;
 import static com.xingcloud.webinterface.enums.Operator.GTE;
 import static com.xingcloud.webinterface.enums.Operator.LTE;
 import static com.xingcloud.webinterface.enums.Operator.SGMT300;
 import static com.xingcloud.webinterface.enums.Operator.SGMT3600;
-import static com.xingcloud.webinterface.plan.KeyPartParameter.buildRangeKey;
-import static com.xingcloud.webinterface.plan.KeyPartParameter.buildSingleKey;
 import static org.apache.drill.common.expression.ExpressionPosition.UNKNOWN;
 import static org.apache.drill.common.util.DrillConstants.SE_HBASE;
 import static org.apache.drill.common.util.DrillConstants.SE_MYSQL;
@@ -19,14 +14,9 @@ import static org.apache.drill.common.util.FieldReferenceBuilder.buildTable;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xingcloud.events.XEvent;
 import com.xingcloud.events.XEventException;
-import com.xingcloud.events.XEventOperation;
-import com.xingcloud.events.XEventRange;
-import com.xingcloud.events.XEventUtils;
 import com.xingcloud.memcache.MemCacheException;
-import com.xingcloud.memcache.XMemCacheManager;
 import com.xingcloud.mysql.PropType;
 import com.xingcloud.mysql.UserProp;
-import com.xingcloud.webinterface.cache.MemoryCachedObjects;
 import com.xingcloud.webinterface.enums.Interval;
 import com.xingcloud.webinterface.enums.Operator;
 import com.xingcloud.webinterface.exception.PlanException;
@@ -51,11 +41,9 @@ import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.common.logical.data.Scan;
 import org.apache.drill.common.logical.data.Store;
-import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.thrift.TException;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -117,25 +105,38 @@ public class Plans {
     return GTE.equals(op);
   }
 
-  private static String object2String(boolean transformDate, boolean beginSuffix, Object o) {
+  private static Object object2String(boolean transformDate, boolean beginSuffix, Object o) {
     if (o instanceof Number || o instanceof Boolean) {
-      return o.toString();
+      return o;
     } else {
       if (transformDate) {
-        String dateString = o.toString().replace("-", "");
-        return beginSuffix ? dateString + "000000" : dateString + "235959";
+        String dateString = o.toString().replace("-", ""), longString;
+        longString = beginSuffix ? dateString + "000000" : dateString + "235959";
+        return Long.valueOf(longString);
       } else {
-        return "'" + o.toString() + "'";
+        return o.toString();
       }
     }
   }
 
-  private static LogicalOperator getSingleMysqlSegmentScan(String projectId, String propertyName,
-                                                           Map<Operator, Object> valueMap) throws PlanException {
+  private static LogicalExpression toLE(Object o) {
+    if (o instanceof String) {
+      return new ValueExpressions.QuotedString(o.toString(), ExpressionPosition.UNKNOWN);
+    } else if (o instanceof Number) {
+      return ValueExpressions.getNumericExpression(o.toString(), ExpressionPosition.UNKNOWN);
+    } else if (o instanceof Boolean) {
+      return new ValueExpressions.BooleanExpression(o.toString(), ExpressionPosition.UNKNOWN);
+    } else {
+      return new FieldReference(o.toString(), ExpressionPosition.UNKNOWN);
+    }
+  }
+
+  private static LogicalOperator getSingleMysqlSegmentExprScan(String projectId, String propertyName,
+                                                               Map<Operator, Object> valueMap) throws PlanException {
     if (MapUtils.isEmpty(valueMap)) {
       throw new PlanException("Empty segment value");
     }
-
+    String table = toUserMysqlTableName(projectId, propertyName);
     boolean transformDate = usingDateFunc(projectId, propertyName), hasFunctionalSegment = valueMap
       .containsKey(SGMT300) || valueMap.containsKey(SGMT3600), hasEQ = valueMap.containsKey(EQ);
     Object valueObject = null;
@@ -155,52 +156,43 @@ public class Plans {
       valueMap.put(GTE, valueObject);
       valueMap.put(LTE, valueObject);
     }
+    String sqlOperator;
+    List<LogicalExpression> logicalExpressions = new ArrayList<LogicalExpression>(valueMap.size());
+    String field = "val";
+    Object fieldValue;
+    FieldReference fieldReference = buildColumn(field);
+    LogicalExpression fieldValueReference;
+    Operator operator;
+    boolean usingBeginSuffix;
+    LogicalExpression le;
 
-    String valString = "val";
-    Map<String, Object> selectionMap = new HashMap<String, Object>(3);
-    String table = toUserMysqlTableName(projectId, propertyName);
-    selectionMap.put("table", table);
+    for (Map.Entry<Operator, Object> entry : valueMap.entrySet()) {
+      operator = entry.getKey();
+      sqlOperator = operator.getMathOperator();
+      usingBeginSuffix = usingBeginSuffix(operator);
+      valueObject = entry.getValue();
+      fieldValue = object2String(transformDate, usingBeginSuffix, valueObject);
+      fieldValueReference = toLE(fieldValue);
+      le = DFR.createExpression(sqlOperator, ExpressionPosition.UNKNOWN, fieldReference, fieldValueReference);
+      logicalExpressions.add(le);
+    }
     FieldReference fr = buildColumn(KEY_WORD_UID);
     NamedExpression[] projections;
     if (hasFunctionalSegment) {
       projections = new NamedExpression[2];
       projections[0] = new NamedExpression(fr, fr);
-      projections[1] = new NamedExpression(buildColumn(valString), buildColumn(propertyName));
+      projections[1] = new NamedExpression(buildColumn(field), buildColumn(propertyName));
     } else {
       projections = new NamedExpression[]{new NamedExpression(fr, fr)};
     }
-    selectionMap.put(KEY_WORD_PROJECTIONS, projections);
 
-    Iterator<Map.Entry<Operator, Object>> it = valueMap.entrySet().iterator();
-    Map.Entry<Operator, Object> entry = it.next();
-
-    Operator operator = entry.getKey();
-    Object conditionVal = entry.getValue();
-
-    StringBuilder filterSB = new StringBuilder();
-    boolean usingBeginSuffix = usingBeginSuffix(operator);
-    filterSB.append(valString);
-    filterSB.append(operator.getMathOperator());
-    filterSB.append(object2String(transformDate, usingBeginSuffix, conditionVal));
-
-    for (; ; ) {
-      if (!it.hasNext()) {
-        break;
-      }
-      entry = it.next();
-      operator = entry.getKey();
-      usingBeginSuffix = usingBeginSuffix(operator);
-      conditionVal = entry.getValue();
-      filterSB.append(" and ");
-      filterSB.append(valString);
-      filterSB.append(operator.getMathOperator());
-      filterSB.append(object2String(transformDate, usingBeginSuffix, conditionVal));
-    }
-    selectionMap.put("filter", filterSB.toString());
+    ScanFilter sf = new ScanFilter(toBinaryExpression(logicalExpressions, "and"));
+    ScanSelection ss = new ScanSelection(table, sf, projections);
+    ScanSelection[] sss = new ScanSelection[]{ss};
     ObjectMapper mapper = DEFAULT_DRILL_CONFIG.getMapper();
     String str;
     try {
-      str = mapper.writeValueAsString(selectionMap);
+      str = mapper.writeValueAsString(sss);
       Scan scan = new Scan(SE_MYSQL, mapper.readValue(str, JSONOptions.class), buildTable(KEY_WORD_USER));
       scan.setMemo("Scan(Table=" + table + ", Prop=" + propertyName + ", Val=" + valueMap + ")");
       return scan;
@@ -219,8 +211,8 @@ public class Plans {
     Map.Entry<String, Map<Operator, Object>> entry = it.next();
     String propertyName = entry.getKey();
     Map<Operator, Object> singleSegmentMap = entry.getValue();
-    LogicalOperator lo1 = getSingleMysqlSegmentScan(projectId, propertyName,
-                                                    new HashMap<Operator, Object>(singleSegmentMap)), lo2;
+    LogicalOperator lo1 = getSingleMysqlSegmentExprScan(projectId, propertyName,
+                                                        new HashMap<Operator, Object>(singleSegmentMap)), lo2;
     operators.add(lo1);
 
     Join join;
@@ -232,7 +224,7 @@ public class Plans {
       entry = it.next();
       propertyName = entry.getKey();
       singleSegmentMap = entry.getValue();
-      lo2 = getSingleMysqlSegmentScan(projectId, propertyName, new HashMap<Operator, Object>(singleSegmentMap));
+      lo2 = getSingleMysqlSegmentExprScan(projectId, propertyName, new HashMap<Operator, Object>(singleSegmentMap));
       operators.add(lo2);
 
       joinConditions = new JoinCondition[1];
@@ -271,6 +263,55 @@ public class Plans {
     return toBinaryExpression(logicalExpressions, "and");
   }
 
+  public static LogicalOperator getUserScan(String projectId, String groupBy) throws PlanException {
+    JSONOptions selection;
+    String table = toUserMysqlTableName(projectId, groupBy);
+    List<Map<String, Object>> selectionMapList = new ArrayList<Map<String, Object>>(1);
+    Map<String, Object> selectionMap = new HashMap<String, Object>(2);
+    selectionMap.put("table", table);
+    FieldReference uidFR = buildColumn(KEY_WORD_UID);
+    NamedExpression[] projections = new NamedExpression[2];
+    projections[0] = new NamedExpression(uidFR, uidFR);
+    projections[1] = new NamedExpression(buildColumn(KEY_WORD_VAL), buildColumn(groupBy));
+
+    selectionMap.put(KEY_WORD_PROJECTIONS, projections);
+    selectionMapList.add(selectionMap);
+    ObjectMapper mapper = DEFAULT_DRILL_CONFIG.getMapper();
+    try {
+      selection = mapper.readValue(mapper.writeValueAsString(selectionMapList), JSONOptions.class);
+    } catch (Exception e) {
+      throw new PlanException(e);
+    }
+    Scan scan = new Scan(SE_MYSQL, selection, buildTable("user"));
+    scan.setMemo("Table=" + table);
+    return scan;
+  }
+
+  public static LogicalOperator getEventScan(String projectId, String event, String realBeginDate, String realEndDate,
+                                             String... additionalProjections) throws PlanException {
+    JSONOptions selection;
+    XEvent parameterEvent;
+
+    try {
+      parameterEvent = XEvent.buildXEvent(projectId, event);
+    } catch (Exception e) {
+      throw new PlanException(e);
+    }
+
+    try {
+      selection = getEventSelections(projectId, parameterEvent, realBeginDate, realEndDate, additionalProjections);
+    } catch (Exception e) {
+      throw new PlanException(e);
+    }
+    if (selection == null) {
+      throw new PlanException("Selection of event table(" + projectId + ") is null.");
+    }
+    String eventTable = toEventTableName(projectId);
+    Scan scan = new Scan(SE_HBASE, selection, buildTable(KEY_WORD_EVENT));
+    scan.setMemo(eventTable + "," + realBeginDate + "," + realEndDate + "," + event);
+    return scan;
+  }
+
   private static LogicalExpression toBinaryExpression(Collection<LogicalExpression> logicalExpressions,
                                                       String binaryFunction) throws PlanException {
     if (StringUtils.isBlank(binaryFunction)) {
@@ -292,83 +333,29 @@ public class Plans {
     return le1;
   }
 
-  public static LogicalOperator getUserScan(String projectId, String groupBy) throws PlanException {
-    JSONOptions selection;
-    String table = toUserMysqlTableName(projectId, groupBy);
-    Map<String, Object> selectionMap = new HashMap<String, Object>(2);
-    selectionMap.put("table", table);
-    FieldReference uidFR = buildColumn(KEY_WORD_UID);
-    NamedExpression[] projections = new NamedExpression[2];
-    projections[0] = new NamedExpression(uidFR, uidFR);
-    projections[1] = new NamedExpression(buildColumn(KEY_WORD_VAL), buildColumn(groupBy));
-
-    selectionMap.put(KEY_WORD_PROJECTIONS, projections);
-    String str;
-    ObjectMapper mapper = DEFAULT_DRILL_CONFIG.getMapper();
-    try {
-      str = mapper.writeValueAsString(selectionMap);
-      selection = mapper.readValue(str, JSONOptions.class);
-    } catch (Exception e) {
-      throw new PlanException(e);
+  private static LogicalExpression toBinaryExpression(Map<String, LogicalExpression> map, String binaryFunction) throws
+    PlanException {
+    if (MapUtils.isEmpty(map)) {
+      return null;
     }
-    Scan scan = new Scan(SE_MYSQL, selection, buildTable("user"));
-    scan.setMemo("Table=" + table);
-    return scan;
+    Collection<LogicalExpression> logicalExpressions = new ArrayList<LogicalExpression>(map.size());
+
+    LogicalExpression leftColumn, functionCall;
+    for (Map.Entry<String, LogicalExpression> entry : map.entrySet()) {
+      leftColumn = buildColumn(entry.getKey());
+      functionCall = DFR.createExpression("==", ExpressionPosition.UNKNOWN, leftColumn, entry.getValue());
+      logicalExpressions.add(functionCall);
+    }
+
+    return toBinaryExpression(logicalExpressions, binaryFunction);
   }
 
-  public static LogicalOperator getEventScan(String projectId, String event, String realBeginDate, String realEndDate,
-                                             String... additionalProjections) throws PlanException {
-    JSONOptions selection;
-    XEvent parameterEvent;
-    XEventRange eventRange;
-    List<XEvent> includes = null;
-    XEventOperation operation = XEventOperation.getInstance();
-    try {
-      parameterEvent = XEvent.buildXEvent(projectId, event);
-      if (parameterEvent.isAll()) {
-        eventRange = null;
-      } else {
-        eventRange = operation.getEventRange(projectId, event);
-        if (eventRange == null) {
-          throw new PlanException("Cannot find any event for parameter(" + event + ") of project " + projectId);
-        }
-        includes = parameterEvent.isAmbiguous() ? operation.getEvents(projectId, event, true) : null;
-      }
-    } catch (Exception e) {
-      throw new PlanException(e);
-    }
-    try {
-      selection = getEventSelections(projectId, parameterEvent, eventRange, includes, realBeginDate, realEndDate,
-                                     additionalProjections);
-    } catch (Exception e) {
-      throw new PlanException(e);
-    }
-    if (selection == null) {
-      throw new PlanException("Selection of event table(" + projectId + ") is null.");
-    }
-    String eventTable = toEventTableName(projectId);
-    Scan scan = new Scan(SE_HBASE, selection, buildTable(KEY_WORD_EVENT));
-    scan.setMemo(eventTable + "," + realBeginDate + "," + realEndDate + "," + event);
-    return scan;
-  }
-
-  public static JSONOptions getEventSelections(String projectId, XEvent originalXEvent, XEventRange eventRange,
-                                               List<XEvent> includes, String realBeginDate, String realEndDate,
-                                               String... additionalProjections) throws IOException, ParseException,
-    TException, XEventException, MemCacheException, PlanException {
+  public static JSONOptions getEventSelections(String projectId, XEvent originalXEvent, String realBeginDate,
+                                               String realEndDate, String... additionalProjections) throws IOException,
+    ParseException, TException, XEventException, MemCacheException, PlanException {
 
     // 拆解日期至单天, 保证每个selection都是连续的范围
     List<BeginEndDatePair> dates = DateSplitter.split2Pairs(realBeginDate, realEndDate, Interval.DAY);
-
-    // 从ehcache/meta表获取table信息, 用于组装Rowkey范围, Rowkey的filters
-    String genericEventTableName = toEventTableName(KEY_WORD_GENERIC_EVENT_TABLE_NAME);
-    Table table;
-    try {
-      table = getCachedMetaTable(genericEventTableName);
-    } catch (MemCacheException e) {
-      throw e;
-    }
-
     // 额外的投影运算, 根据外部需要什么投影决定
     NamedExpression[] projections;
     boolean emptyProjections = ArrayUtils.isEmpty(additionalProjections);
@@ -388,125 +375,39 @@ public class Plans {
       }
     }
 
-    // 根据事件层级关系构建event的参数map
-    Map<String, KeyPartParameter> parameterMapEvent, parameterMapIncludesEvent;
-    List<KeyPartParameter> ranges;
+    // 构建事件的filter-expressions
+    Map<String, LogicalExpression> logicalExpressionMap;
     if (originalXEvent.isAll()) {
-      ranges = new ArrayList<KeyPartParameter>(1);
-      parameterMapEvent = new HashMap<String, KeyPartParameter>(1);
-      byte[] bytes = new byte[]{MIN_EVENT_BYTE};
-      ranges.add(buildSingleKey(bytes));
+      logicalExpressionMap = new HashMap<String, LogicalExpression>(1);
     } else {
-      ranges = new ArrayList<KeyPartParameter>(XEventUtils.DEFAULT_EVENT_LEVEL);
-      String[] fromS = eventRange.getFrom().getEventArray(), toS = eventRange.getTo().getEventArray();
-      byte[] bytes1, bytes2;
-      for (int i = 0; i < eventRange.maxLevel(); i++) {
-        if (StringUtils.equals(fromS[i], toS[i])) {
-          bytes1 = fromS[i] == null ? null : toBytes(fromS[i]);
-          ranges.add(buildSingleKey(bytes1));
-        } else {
-          bytes1 = fromS[i] == null ? null : toBytes(fromS[i]);
-          bytes2 = toS[i] == null ? null : toBytes(toS[i]);
-          ranges.add(buildRangeKey(bytes1, bytes2));
-        }
-      }
-      parameterMapEvent = new HashMap<String, KeyPartParameter>(6);
+      logicalExpressionMap = new HashMap<String, LogicalExpression>(originalXEvent.maxLevel() + 1);
     }
-    for (int i = 0; i < ranges.size(); i++) {
-      parameterMapEvent.put(KEY_WORD_EVENT + i, ranges.get(i));
-    }
-
-    //如果需要, 创建rowkey的filter
-    List<Map<String, KeyPartParameter>> includeList = null;
-    String[] eventArray;
-    boolean hasIncludes = CollectionUtils.isNotEmpty(includes);
-    Map<String, String> eventLevelMapping = null;
-    if (hasIncludes) {
-      eventLevelMapping = new HashMap<String, String>(XEventUtils.DEFAULT_EVENT_LEVEL);
-      eventArray = originalXEvent.getEventArray();
-      for (int i = 0; i < eventArray.length; i++) {
-        if (StringUtils.isNotBlank(eventArray[i])) {
-          eventLevelMapping.put(KEY_WORD_EVENT + i, eventArray[i]);
-        }
-      }
-      includeList = new ArrayList<Map<String, KeyPartParameter>>(includes.size());
-      for (XEvent xEvent : includes) {
-        parameterMapIncludesEvent = new HashMap<String, KeyPartParameter>(XEventUtils.DEFAULT_EVENT_LEVEL);
-        if (!xEvent.isNormal()) {
-          throw new PlanException("Cannot pass ALL or AMBIGUOUS X-Event to rowkey filters");
-        }
-        eventArray = xEvent.getEventArray();
-        for (int i = 0; i <= xEvent.maxLevel(); i++) {
-          parameterMapIncludesEvent.put(KEY_WORD_EVENT + i, buildSingleKey(toBytes(eventArray[i])));
-        }
-        includeList.add(parameterMapIncludesEvent);
+    String[] arr = originalXEvent.getEventArray();
+    for (int i = 0; i < arr.length; i++) {
+      if (StringUtils.isNotBlank(arr[i])) {
+        logicalExpressionMap.put(KEY_WORD_EVENT + i, new ValueExpressions.QuotedString(arr[i], UNKNOWN));
       }
     }
 
-    Map<String, KeyPartParameter> parameterMap;
-    Selection selection;
-    RowkeyRange rowkeyRange;
-    String eventTableName = toEventTableName(projectId);
-    List<Map<String, Object>> mapList = new ArrayList<Map<String, Object>>(dates.size());
-    String beginDate, d1, d2;
-    ScanFilterDescriptor rowkeyFilter;
+    String d;
+    LogicalExpression le;
+    ScanSelection ss;
+    ScanSelection[] sss = new ScanSelection[dates.size()];
+    ScanFilter sf;
+
+    int cnt = 0;
     for (BeginEndDatePair datePair : dates) {
-      parameterMap = new HashMap<String, KeyPartParameter>(XEventUtils.DEFAULT_EVENT_LEVEL + 1);
-      beginDate = datePair.getBeginDate();
-      d1 = beginDate.replace("-", "");
-      if (originalXEvent.isAll()) {
-        d2 = dateAdd(beginDate, 1).replace("-", "");
-        parameterMap.put("date", buildRangeKey(toBytes(d1), toBytes(d2)));
-      } else {
-        parameterMap.put("date", buildSingleKey(toBytes(d1)));
-      }
-      parameterMap.putAll(parameterMapEvent);
-      rowkeyRange = Selection.toRowkeyRange(table, parameterMap);
-      if (hasIncludes) {
-        rowkeyFilter = toRowkeyFilters(table, d1, eventLevelMapping, includeList);
-        selection = new Selection(eventTableName, rowkeyRange, projections, rowkeyFilter);
-      } else {
-        selection = new Selection(eventTableName, rowkeyRange, projections);
-      }
-      mapList.add(selection.toSelectionMap());
-    }
-    return DEFAULT_DRILL_CONFIG.getMapper().readValue(DEFAULT_DRILL_CONFIG.getMapper().writeValueAsBytes(mapList),
-                                                      JSONOptions.class);
-  }
+      d = datePair.getBeginDate();
+      logicalExpressionMap.put("date", new ValueExpressions.QuotedString(d.replace("-", ""), UNKNOWN));
 
-  private static ScanFilterDescriptor toRowkeyFilters(Table table, String dateString,
-                                                      Map<String, String> eventLevelMapping,
-                                                      List<Map<String, KeyPartParameter>> includeList) throws
-    UnsupportedEncodingException, TException {
-    LogicalExpression[] les = new LogicalExpression[includeList.size()];
-    for (int i = 0; i < includeList.size(); i++) {
-      les[i] = toRowkeyFilter(table, dateString, includeList.get(i));
-    }
-    LogicalExpression[] les2;
-
-    if (MapUtils.isNotEmpty(eventLevelMapping)) {
-      les2 = new LogicalExpression[eventLevelMapping.size()];
-      LogicalExpression fr, val;
-      int i = 0;
-      for (Map.Entry<String, String> entry : eventLevelMapping.entrySet()) {
-        fr = buildColumn(entry.getKey());
-        val = new ValueExpressions.QuotedString(entry.getValue(), ExpressionPosition.UNKNOWN);
-        les2[i] = DFR.createExpression("==", ExpressionPosition.UNKNOWN, fr, val);
-        ++i;
-      }
-    } else {
-      les2 = null;
+      sf = new ScanFilter(toBinaryExpression(logicalExpressionMap, "and"));
+      ss = new ScanSelection(toEventTableName(projectId), sf, projections);
+      sss[cnt] = ss;
+      ++cnt;
     }
 
-    return new RowkeyScanFilterDescriptor(les, les2);
-  }
-
-  private static LogicalExpression toRowkeyFilter(Table table, String dateString,
-                                                  Map<String, KeyPartParameter> include) throws
-    UnsupportedEncodingException, TException {
-    include.put("date", buildSingleKey(toBytes(dateString)));
-    RowkeyRange rowkeyRange = Selection.toRowkeyRange(table, include);
-    return new ValueExpressions.QuotedString(rowkeyRange.getStartKey(), ExpressionPosition.UNKNOWN);
+    return DEFAULT_DRILL_CONFIG.getMapper()
+                               .readValue(DEFAULT_DRILL_CONFIG.getMapper().writeValueAsBytes(sss), JSONOptions.class);
   }
 
   public static PlanProperties buildPlanProperties(String projectId) {
@@ -521,21 +422,6 @@ public class Plans {
 
   public static Store getStore() {
     return new Store("DEFAULT-STORE", null, null);
-  }
-
-  public static Table getCachedMetaTable(String tableName) throws TException, MemCacheException {
-    Table table;
-    XMemCacheManager memCacheManager = MemoryCachedObjects.getInstance().getCacheManager();
-    try {
-      table = memCacheManager.getCacheElement(MCO_META_TABLE, tableName, Table.class);
-    } catch (MemCacheException e) {
-      throw e;
-    }
-    if (table == null) {
-      table = Selection.CLIENT.getTable(tableName);
-      memCacheManager.putCacheElement(MCO_META_TABLE, tableName, table);
-    }
-    return table;
   }
 
 }

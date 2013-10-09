@@ -47,7 +47,7 @@ public class QueueBatchQueryTask extends AbstractQueueQueryTask {
     }
     ObjectMapper mapper = DEFAULT_DRILL_CONFIG.getMapper();
 
-    Map<String, String> batch = new HashMap<String, String>();
+    Map<String, String> batch = new HashMap<String, String>(descriptors.size());
     for (FormulaQueryDescriptor descriptor : descriptors) {
       if (DS_LP) {
         try {

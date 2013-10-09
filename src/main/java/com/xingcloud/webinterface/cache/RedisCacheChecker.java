@@ -20,6 +20,7 @@ import com.xingcloud.maincache.XCacheOperator;
 import com.xingcloud.maincache.redis.RedisXCacheOperator;
 import com.xingcloud.webinterface.enums.CacheReference;
 import com.xingcloud.webinterface.enums.CacheState;
+import com.xingcloud.webinterface.enums.Interval;
 import com.xingcloud.webinterface.exception.ParseIncrementalException;
 import com.xingcloud.webinterface.model.ResultTuple;
 import com.xingcloud.webinterface.model.StatefulCache;
@@ -116,7 +117,10 @@ public class RedisCacheChecker implements CacheChecker {
       if (LOGGER.isDebugEnabled()) {
         LOGGER.debug("[CACHE] - HIT, EMPTY - " + key);
       }
+
       return new StatefulCache(ONLINE, cacheStatus, tupleMap, seconds);
+//      return new StatefulCache(ONLINE, cacheStatus, buildPlaceHolderTupleMap(descriptor.getRealBeginDate(), null),
+//                               seconds);
     }
     if (!isUseful(descriptor, tupleMap)) {
       if (LOGGER.isDebugEnabled()) {
@@ -138,5 +142,17 @@ public class RedisCacheChecker implements CacheChecker {
       }
     }
     return new StatefulCache(cr, cacheStatus, tupleMap, seconds);
+  }
+
+  private Map<Object, ResultTuple> buildPlaceHolderTupleMap(String date, Interval interval) {
+    switch (interval) {
+      case HOUR:
+        break;
+      case MIN5:
+        break;
+      default:
+        return null;
+    }
+    return null;
   }
 }
