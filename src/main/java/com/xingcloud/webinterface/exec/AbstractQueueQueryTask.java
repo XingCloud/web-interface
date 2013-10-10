@@ -16,8 +16,8 @@ public abstract class AbstractQueueQueryTask implements Runnable {
     if (StringUtils.isBlank(planString)) {
       return;
     }
-    planString = planString.replace("\n", "");
-    LOGGER.info(planString);
+//    planString = planString.replace("\n", "");
+//    LOGGER.info(planString);
   }
 
 }
