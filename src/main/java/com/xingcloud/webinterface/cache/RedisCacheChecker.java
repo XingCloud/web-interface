@@ -2,6 +2,8 @@ package com.xingcloud.webinterface.cache;
 
 import static com.xingcloud.basic.Constants.DEFAULT_TIME_ZONE;
 import static com.xingcloud.basic.mail.XMail.sendNewExceptionMail;
+import static com.xingcloud.basic.utils.DateUtils.date2Long;
+import static com.xingcloud.basic.utils.DateUtils.short2Date;
 import static com.xingcloud.basic.utils.DateUtils.timeElapse2String;
 import static com.xingcloud.webinterface.enums.CacheReference.OFFLINE;
 import static com.xingcloud.webinterface.enums.CacheReference.ONLINE;
@@ -16,7 +18,6 @@ import static com.xingcloud.webinterface.utils.WebInterfaceConstants.INCREMENTAL
 import static com.xingcloud.webinterface.utils.WebInterfaceConstants.VOLATILE_STRING;
 
 import com.google.common.base.Strings;
-import com.xingcloud.basic.utils.DateUtils;
 import com.xingcloud.maincache.InterruptQueryException;
 import com.xingcloud.maincache.MapXCache;
 import com.xingcloud.maincache.XCacheException;
@@ -33,7 +34,6 @@ import com.xingcloud.webinterface.model.formula.FormulaQueryDescriptor;
 import org.apache.log4j.Logger;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -164,21 +164,19 @@ public class RedisCacheChecker implements CacheChecker {
   private Map<Object, ResultTuple> buildPlaceHolderTupleMap(String date, Interval interval) throws ParseException {
     Map<Object, ResultTuple> resultTupleMapPlaceHolder;
     Calendar c = Calendar.getInstance(DEFAULT_TIME_ZONE);
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-    sdf.setTimeZone(DEFAULT_TIME_ZONE);
-    c.setTime(DateUtils.short2Date(date));
+    c.setTime(short2Date(date));
     switch (interval) {
       case HOUR:
         resultTupleMapPlaceHolder = new HashMap<Object, ResultTuple>(24);
         for (int i = 0; i < 24; i++) {
-          resultTupleMapPlaceHolder.put(sdf.format(c.getTime()), createNewEmptyResultTuple());
+          resultTupleMapPlaceHolder.put(date2Long(c.getTime()), createNewEmptyResultTuple());
           c.add(Calendar.HOUR, 1);
         }
         break;
       case MIN5:
         resultTupleMapPlaceHolder = new HashMap<Object, ResultTuple>(288);
         for (int i = 0; i < 288; i++) {
-          resultTupleMapPlaceHolder.put(sdf.format(c.getTime()), createNewEmptyResultTuple());
+          resultTupleMapPlaceHolder.put(date2Long(c.getTime()), createNewEmptyResultTuple());
           c.add(Calendar.MINUTE, 5);
         }
         break;
