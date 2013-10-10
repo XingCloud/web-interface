@@ -16,6 +16,7 @@ import static com.xingcloud.webinterface.utils.WebInterfaceConstants.INCREMENTAL
 import static com.xingcloud.webinterface.utils.WebInterfaceConstants.VOLATILE_STRING;
 
 import com.google.common.base.Strings;
+import com.xingcloud.basic.utils.DateUtils;
 import com.xingcloud.maincache.InterruptQueryException;
 import com.xingcloud.maincache.MapXCache;
 import com.xingcloud.maincache.XCacheException;
@@ -34,7 +35,6 @@ import org.apache.log4j.Logger;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -166,8 +166,7 @@ public class RedisCacheChecker implements CacheChecker {
     Calendar c = Calendar.getInstance(DEFAULT_TIME_ZONE);
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
     sdf.setTimeZone(DEFAULT_TIME_ZONE);
-    Date d = sdf.parse(date);
-    c.setTime(d);
+    c.setTime(DateUtils.short2Date(date));
     switch (interval) {
       case HOUR:
         resultTupleMapPlaceHolder = new HashMap<Object, ResultTuple>(24);
