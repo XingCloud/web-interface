@@ -3,6 +3,7 @@ package com.xingcloud.webinterface.model;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.xingcloud.mysql.PropType;
+import com.xingcloud.mysql.UpdateFunc;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
@@ -24,17 +25,30 @@ public class CustomUserProperty implements Serializable {
   @Expose
   @SerializedName("groupby_pattern")
   private String slicePattern;
+  @Expose
+  @SerializedName("func")
+  private UpdateFunc func;
 
   public CustomUserProperty() {
     super();
   }
 
-  public CustomUserProperty(String projectId, String name, String nickname, PropType type, String slicePattern) {
+  public CustomUserProperty(String projectId, String name, String nickname, PropType type, String slicePattern,
+                            UpdateFunc func) {
     this.projectId = projectId;
     this.name = name;
     this.nickname = nickname;
     this.type = type;
     this.slicePattern = slicePattern;
+    this.func = func;
+  }
+
+  public UpdateFunc getFunc() {
+    return func;
+  }
+
+  public void setFunc(UpdateFunc func) {
+    this.func = func;
   }
 
   public String getProjectId() {
@@ -78,50 +92,47 @@ public class CustomUserProperty implements Serializable {
   }
 
   @Override
-  public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((name == null) ? 0 : name.hashCode());
-    result = prime * result + ((nickname == null) ? 0 : nickname.hashCode());
-    result = prime * result + ((projectId == null) ? 0 : projectId.hashCode());
-    result = prime * result + ((slicePattern == null) ? 0 : slicePattern.hashCode()
-    );
-    result = prime * result + ((type == null) ? 0 : type.hashCode());
-    return result;
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof CustomUserProperty)) {
+      return false;
+    }
+
+    CustomUserProperty that = (CustomUserProperty) o;
+
+    if (func != that.func) {
+      return false;
+    }
+    if (name != null ? !name.equals(that.name) : that.name != null) {
+      return false;
+    }
+    if (nickname != null ? !nickname.equals(that.nickname) : that.nickname != null) {
+      return false;
+    }
+    if (projectId != null ? !projectId.equals(that.projectId) : that.projectId != null) {
+      return false;
+    }
+    if (slicePattern != null ? !slicePattern.equals(that.slicePattern) : that.slicePattern != null) {
+      return false;
+    }
+    if (type != that.type) {
+      return false;
+    }
+
+    return true;
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
-    CustomUserProperty other = (CustomUserProperty) obj;
-    if (name == null) {
-      if (other.name != null)
-        return false;
-    } else if (!name.equals(other.name))
-      return false;
-    if (nickname == null) {
-      if (other.nickname != null)
-        return false;
-    } else if (!nickname.equals(other.nickname))
-      return false;
-    if (projectId == null) {
-      if (other.projectId != null)
-        return false;
-    } else if (!projectId.equals(other.projectId))
-      return false;
-    if (slicePattern == null) {
-      if (other.slicePattern != null)
-        return false;
-    } else if (!slicePattern.equals(other.slicePattern))
-      return false;
-    if (type != other.type)
-      return false;
-    return true;
+  public int hashCode() {
+    int result = projectId != null ? projectId.hashCode() : 0;
+    result = 31 * result + (name != null ? name.hashCode() : 0);
+    result = 31 * result + (nickname != null ? nickname.hashCode() : 0);
+    result = 31 * result + (type != null ? type.hashCode() : 0);
+    result = 31 * result + (slicePattern != null ? slicePattern.hashCode() : 0);
+    result = 31 * result + (func != null ? func.hashCode() : 0);
+    return result;
   }
 
   public String toString() {

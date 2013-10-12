@@ -8,7 +8,6 @@ import static com.xingcloud.webinterface.enums.SyncType.UPDATE;
 import com.google.common.base.Strings;
 import com.google.gson.reflect.TypeToken;
 import com.xingcloud.mysql.MySql_16seqid;
-import com.xingcloud.mysql.UpdateFunc;
 import com.xingcloud.mysql.UserProp;
 import com.xingcloud.webinterface.enums.SyncType;
 import com.xingcloud.webinterface.exception.ParseJsonException;
@@ -135,7 +134,7 @@ public class CustomUserPropertiesOperateServlet extends AbstractServlet {
       if (!manager.dbexists(cup.getProjectId())) {
         manager.createDBIfNotExist(cup.getProjectId());
       }
-      manager.createTable(cup.getProjectId(), cup.getName(), cup.getType(), UpdateFunc.cover);
+      manager.createTable(cup.getProjectId(), cup.getName(), cup.getType(), cup.getFunc());
     }
   }
 
@@ -155,7 +154,8 @@ public class CustomUserPropertiesOperateServlet extends AbstractServlet {
     List<CustomUserProperty> properties = new ArrayList<CustomUserProperty>(result.size());
     CustomUserProperty cup;
     for (UserProp up : result) {
-      cup = new CustomUserProperty(projectId, up.getPropName(), up.getPropAlias(), up.getPropType(), up.getPropSegm());
+      cup = new CustomUserProperty(projectId, up.getPropName(), up.getPropAlias(), up.getPropType(), up.getPropSegm(),
+                                   up.getPropFunc());
       cup.validateAndTrim();
       properties.add(cup);
     }

@@ -25,8 +25,11 @@ public class TestCommonQueryLogicalPlanSeg extends TestLogicalPlanBase {
       "}";
 
     segment = "{\"register_time\":[{\"op\":\"eq\",\"expr\":\"2013-09-12\",\"type\":\"CONST\"}]}";
+    segment = "{\"identifier\":[{\"op\":\"eq\",\"expr\":\"\\\\\"null\\\\\"\",\"type\":\"CONST\"}]}";
 
-    FormulaQueryDescriptor fqd = new CommonFormulaQueryDescriptor("sof-dsk", TEST_REAL_BEGIN_DATE, TEST_REAL_END_DATE,
+    System.out.println(segment);
+
+    FormulaQueryDescriptor fqd = new CommonFormulaQueryDescriptor("ram", TEST_REAL_BEGIN_DATE, TEST_REAL_END_DATE,
                                                                   TEST_EVENT_VISIT, segment, Filter.ALL, 1d,
                                                                   "2013-03-10", "2013-03-12", Interval.PERIOD,
                                                                   CommonQueryType.NORMAL);
@@ -37,6 +40,8 @@ public class TestCommonQueryLogicalPlanSeg extends TestLogicalPlanBase {
     System.out.println(planString);
     write2File(name, planString);
 
+    logicalPlan=Plans.DEFAULT_DRILL_CONFIG.getMapper().readValue(planString,LogicalPlan.class);
+    System.out.println(logicalPlan);
 //    Submit submit = (Submit) SERVICE;
 //    submit.submit(fqd.getKey(), planString, Submit.SubmitQueryType.PLAN);
   }

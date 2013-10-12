@@ -4,19 +4,19 @@
     version : 1,
     generator : {
       type : "AUTO",
-      info : "sof-dsk"
+      info : "ram"
     }
   },
   storage : { },
   query : [ {
     op : "scan",
     @id : 1,
-    memo : "Scan(Table=sof-dsk.register_time, Prop=register_time, Val={LTE=2013-09-12, GTE=2013-09-12})",
+    memo : "Scan(Table=ram.identifier, Prop=identifier, Val={EQ=\"null\"})",
     storageengine : "mysql",
     selection : [ {
-      table : "sof-dsk.register_time",
+      table : "ram.identifier",
       filter : {
-        expression : " ( (val)  <= (20130912235959) )  && ( (val)  >= (20130912000000) ) "
+        expression : " (val)  == ('\"null\"') "
       },
       projections : [ {
         ref : "uid",
@@ -27,12 +27,24 @@
   }, {
     op : "scan",
     @id : 2,
-    memo : "deu_sof-dsk,2013-09-25,2013-09-25,visit.*",
+    memo : "deu_ram,2013-10-01,2013-10-02,visit.*",
     storageengine : "hbase",
     selection : [ {
-      table : "deu_sof-dsk",
+      table : "deu_ram",
       filter : {
-        expression : " ( (date)  == ('20130925') )  && ( (event0)  == ('visit') ) "
+        expression : " ( (date)  == ('20131001') )  && ( (event0)  == ('visit') ) "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      }, {
+        ref : "value",
+        expr : "value"
+      } ]
+    }, {
+      table : "deu_ram",
+      filter : {
+        expression : " ( (date)  == ('20131002') )  && ( (event0)  == ('visit') ) "
       },
       projections : [ {
         ref : "uid",
@@ -77,7 +89,7 @@
     input : 4,
     projections : [ {
       ref : "query_id",
-      expr : "'COMMON,sof-dsk,2013-09-25,2013-09-25,visit.*,{\"register_time\":\"2013-09-12\"},VF-ALL-0-0,PERIOD'"
+      expr : "'COMMON,ram,2013-10-01,2013-10-02,visit.*,{\"identifier\":\"\\\"null\\\"\"},VF-ALL-0-0,PERIOD'"
     }, {
       ref : "count",
       expr : "count"
