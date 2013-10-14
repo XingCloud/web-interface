@@ -6,14 +6,10 @@ import static com.xingcloud.log.ContentLogger.logDescriptor;
 import static com.xingcloud.webinterface.enums.CommonQueryType.NATURAL;
 import static com.xingcloud.webinterface.enums.CommonQueryType.NORMAL;
 import static com.xingcloud.webinterface.enums.CommonQueryType.TOTAL;
-import static com.xingcloud.webinterface.exec.FormulaQueryDescriptorMerger.mergeDescriptor;
 import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_STR_TIME_USE_INTERGRATE_RESULT;
 import static com.xingcloud.webinterface.monitor.SystemMonitor.putMonitorInfo;
 import static com.xingcloud.webinterface.utils.IdResultBuilder.buildCommonDescriptor;
-import static com.xingcloud.webinterface.utils.WebInterfaceConstants.MAX_BATCH_DESCRIPTORS_IN_QUEUE;
-import static com.xingcloud.webinterface.utils.WebInterfaceConstants.MAX_DESCRIPTORS_IN_QUEUE;
 
-import com.google.common.base.Strings;
 import com.xingcloud.maincache.InterruptQueryException;
 import com.xingcloud.webinterface.enums.CacheState;
 import com.xingcloud.webinterface.enums.Interval;
@@ -23,7 +19,6 @@ import com.xingcloud.webinterface.exception.ParseIncrementalException;
 import com.xingcloud.webinterface.exception.SegmentException;
 import com.xingcloud.webinterface.exception.XParameterException;
 import com.xingcloud.webinterface.exception.XQueryException;
-import com.xingcloud.webinterface.model.EventAndFilterBEPair;
 import com.xingcloud.webinterface.model.ResultTuple;
 import com.xingcloud.webinterface.model.formula.CommonFormulaQueryDescriptor;
 import com.xingcloud.webinterface.model.formula.FormulaParameterContainer;
@@ -75,9 +70,8 @@ public class CommonQueryOptimizer extends CheckCacheOptimizer {
       idResult = buildCommonDescriptor(fpc);
       if (LOGGER.isDebugEnabled()) {
         logIdResultDebug(idResult);
-      } else {
-        logIdResultContent(idResult);
       }
+      logIdResultContent(idResult);
 
       idResultList.add(idResult);
       distinctDescriptors = idResult.distinctDescriptor();

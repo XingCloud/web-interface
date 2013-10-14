@@ -3,16 +3,11 @@ package com.xingcloud.webinterface.exec;
 import static com.google.common.base.Strings.repeat;
 import static com.xingcloud.basic.Constants.SEPARATOR_STRING_LOG;
 import static com.xingcloud.log.ContentLogger.logDescriptor;
-import static com.xingcloud.webinterface.conf.WebInterfaceConfig.BATCH_GROUPBY;
 import static com.xingcloud.webinterface.enums.GroupByType.EVENT;
-import static com.xingcloud.webinterface.exec.FormulaQueryDescriptorMerger.mergeDescriptor;
 import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_STR_TIME_USE_INTERGRATE_RESULT;
 import static com.xingcloud.webinterface.monitor.SystemMonitor.putMonitorInfo;
 import static com.xingcloud.webinterface.utils.IdResultBuilder.buildGroupByDescriptor;
-import static com.xingcloud.webinterface.utils.WebInterfaceConstants.MAX_BATCH_DESCRIPTORS_IN_QUEUE;
-import static com.xingcloud.webinterface.utils.WebInterfaceConstants.MAX_DESCRIPTORS_IN_QUEUE;
 
-import com.google.common.base.Strings;
 import com.xingcloud.maincache.InterruptQueryException;
 import com.xingcloud.webinterface.enums.AggregationPolicy;
 import com.xingcloud.webinterface.enums.GroupByType;
@@ -23,7 +18,6 @@ import com.xingcloud.webinterface.exception.RangingException;
 import com.xingcloud.webinterface.exception.SegmentException;
 import com.xingcloud.webinterface.exception.XParameterException;
 import com.xingcloud.webinterface.exception.XQueryException;
-import com.xingcloud.webinterface.model.EventAndFilterBEPair;
 import com.xingcloud.webinterface.model.ResultTuple;
 import com.xingcloud.webinterface.model.formula.FormulaParameterContainer;
 import com.xingcloud.webinterface.model.formula.FormulaQueryDescriptor;
@@ -77,9 +71,8 @@ public class GroupByQueryOptimizer extends CheckCacheOptimizer {
 
       if (LOGGER.isDebugEnabled()) {
         logIdResultDebug(idResult);
-      } else {
-        logIdResultContent(idResult);
       }
+      logIdResultContent(idResult);
 
       idResultList.add(idResult);
 
