@@ -52,7 +52,7 @@ public class GroupByQueryResult extends QueryResult {
   private Map<String, String> info;
 
   @Expose
-  private List<Object> keys;
+  private List<String> keys;
 
   @Expose
   @SerializedName("status")
@@ -368,14 +368,13 @@ public class GroupByQueryResult extends QueryResult {
       objectArrayList.add(o);
     }
 
-    if (CollectionUtils.isNotEmpty(objectArrayList)) {
-      List<Object> keys = new ArrayList<Object>(objectArrayList.size());
-      for (Object[] objectContent : objectArrayList) {
-        if (ArrayUtils.isNotEmpty(objectContent)) {
-          keys.add(objectContent[0]);
-          LOGGER.info("[FORMATTER] - Known key: " + objectContent[0]);
-        }
+    if (CollectionUtils.isNotEmpty(groupByKeyUnion)) {
+      List<String> keys = new ArrayList<String>(groupByKeyUnion.size());
+      for (Object obj : groupByKeyUnion) {
+        keys.add(obj.toString());
+        LOGGER.info("[FORMATTER] - Known key: " + obj);
       }
+      Collections.sort(keys);
       setKeys(keys);
     }
 
@@ -462,7 +461,7 @@ public class GroupByQueryResult extends QueryResult {
     this.pageSize = pageSize;
   }
 
-  public void setKeys(List<Object> keys) {
+  public void setKeys(List<String> keys) {
     this.keys = keys;
   }
 }
