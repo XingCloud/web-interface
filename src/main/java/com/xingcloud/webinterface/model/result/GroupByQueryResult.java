@@ -22,6 +22,8 @@ import com.xingcloud.webinterface.utils.comparator.GroupByKeyDescComparator;
 import com.xingcloud.webinterface.utils.comparator.GroupByValueAscComparator;
 import com.xingcloud.webinterface.utils.comparator.GroupByValueDescComparator;
 import com.xingcloud.webinterface.utils.range.XRange;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.log4j.Logger;
@@ -48,6 +50,9 @@ public class GroupByQueryResult extends QueryResult {
 
   @Expose
   private Map<String, String> info;
+
+  @Expose
+  private List<Object> keys;
 
   @Expose
   @SerializedName("status")
@@ -363,6 +368,17 @@ public class GroupByQueryResult extends QueryResult {
       objectArrayList.add(o);
     }
 
+    if (CollectionUtils.isNotEmpty(objectArrayList)) {
+      List<Object> keys = new ArrayList<Object>(objectArrayList.size());
+      for (Object[] objectContent : objectArrayList) {
+        if (ArrayUtils.isNotEmpty(objectContent)) {
+          keys.add(objectContent[0]);
+          LOGGER.info("[FORMATTER] - Known key: " + objectContent[0]);
+        }
+      }
+      setKeys(keys);
+    }
+
     setDatas(objectArrayList);
     Map<String, Object> statusMap = getStatusMap();
     for (Entry<String, Object> entry : statusMap.entrySet()) {
@@ -446,4 +462,7 @@ public class GroupByQueryResult extends QueryResult {
     this.pageSize = pageSize;
   }
 
+  public void setKeys(List<Object> keys) {
+    this.keys = keys;
+  }
 }
