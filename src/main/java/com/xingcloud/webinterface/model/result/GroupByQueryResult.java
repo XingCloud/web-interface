@@ -370,7 +370,8 @@ public class GroupByQueryResult extends QueryResult {
     if (CollectionUtils.isNotEmpty(groupByKeyUnion)) {
       List<String> keys = new ArrayList<String>(groupByKeyUnion.size());
       for (Object obj : groupByKeyUnion) {
-        if (Pending.isPendingPlaceholder(obj) || NotAvailable.isNotAvailablePlaceholder(obj)) {
+        if (NOT_AVAILABLE_STRING.equals(obj) || Pending.isPendingPlaceholder(obj) || NotAvailable
+          .isNotAvailablePlaceholder(obj)) {
           continue;
         }
         keys.add(obj.toString());
