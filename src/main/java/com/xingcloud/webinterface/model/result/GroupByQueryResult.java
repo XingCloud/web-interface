@@ -23,7 +23,6 @@ import com.xingcloud.webinterface.utils.comparator.GroupByValueAscComparator;
 import com.xingcloud.webinterface.utils.comparator.GroupByValueDescComparator;
 import com.xingcloud.webinterface.utils.range.XRange;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.log4j.Logger;
@@ -371,6 +370,9 @@ public class GroupByQueryResult extends QueryResult {
     if (CollectionUtils.isNotEmpty(groupByKeyUnion)) {
       List<String> keys = new ArrayList<String>(groupByKeyUnion.size());
       for (Object obj : groupByKeyUnion) {
+        if (Pending.isPendingPlaceholder(obj) || NotAvailable.isNotAvailablePlaceholder(obj)) {
+          continue;
+        }
         keys.add(obj.toString());
         LOGGER.info("[FORMATTER] - Known key: " + obj);
       }
