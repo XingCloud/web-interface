@@ -1,4 +1,4 @@
-package com.xingcloud.webinterface.segment2;
+package com.xingcloud.webinterface.segment;
 
 import static com.xingcloud.webinterface.enums.Operator.EQ;
 import static com.xingcloud.webinterface.enums.Operator.IN;

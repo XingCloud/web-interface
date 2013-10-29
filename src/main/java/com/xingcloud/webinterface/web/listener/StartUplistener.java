@@ -37,11 +37,12 @@ public class StartUplistener implements ServletContextListener {
 
     UITableChecker.loadInitedUITables();
 
-    try {
-      XScheduler.getInstance().start();
-    } catch (SchedulerException e) {
-      e.printStackTrace();
-    }
+
+//    try {
+//      XScheduler.getInstance().start();
+//    } catch (SchedulerException e) {
+//      e.printStackTrace();
+//    }
 
   }
 

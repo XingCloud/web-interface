@@ -31,55 +31,6 @@
     </repository>
   </repositories>
 
-  <!--
-  <profiles>
-    <profile>
-      <id>local_debug</id>
-      <activation>
-        <property>
-          <name>xa_env</name>
-          <value>local_debug</value>
-        </property>
-      </activation>
-      <repositories>
-        <repository>
-          <id>local_debug_repo</id>
-          <url>file://d:/local_repo/repository</url>
-        </repository>
-      </repositories>
-    </profile>
-    <profile>
-      <id>pre_production</id>
-      <activation>
-        <property>
-          <name>xa_env</name>
-          <value>pre_production</value>
-        </property>
-      </activation>
-      <repositories>
-        <repository>
-          <id>pre_production_repo</id>
-          <url>file:///home/hadoop/local_repo/pre_production</url>
-        </repository>
-      </repositories>
-    </profile>
-    <profile>
-      <id>production</id>
-      <activation>
-        <property>
-          <name>xa_env</name>
-          <value>production</value>
-        </property>
-      </activation>
-      <repositories>
-        <repository>
-          <id>production_repo</id>
-          <url>file:///home/hadoop/local_repo/production</url>
-        </repository>
-      </repositories>
-    </profile>
-  </profiles>
-  -->
   <!-- Building config -->
   <build>
     <defaultGoal>package</defaultGoal>
@@ -438,6 +389,12 @@
       <groupId>aviator</groupId>
       <artifactId>aviator</artifactId>
       <version>2.3.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>jsqlpaser</groupId>
+      <artifactId>jsqlpaser</artifactId>
+      <version>0.7.0</version>
     </dependency>
 
     <!-- XingCloud -->

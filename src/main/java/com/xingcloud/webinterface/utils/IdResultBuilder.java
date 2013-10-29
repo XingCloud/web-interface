@@ -5,7 +5,6 @@ import static com.xingcloud.basic.utils.DateUtils.before;
 import static com.xingcloud.basic.utils.DateUtils.today;
 import static com.xingcloud.basic.utils.DateUtils.yesterday;
 import static com.xingcloud.webinterface.conf.WebInterfaceConfig.BATCH_GROUPBY;
-import static com.xingcloud.webinterface.conf.WebInterfaceConfig.NEW_SEGMENT;
 import static com.xingcloud.webinterface.enums.AggregationPolicy.ACCUMULATION;
 import static com.xingcloud.webinterface.enums.AggregationPolicy.ACCUMULATION_EXTEND;
 import static com.xingcloud.webinterface.enums.AggregationPolicy.AVERAGE;
@@ -28,9 +27,7 @@ import static com.xingcloud.webinterface.exec.QueryDescriptorTruncater.truncateD
 import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_DESCRIPTOR_BUILD;
 import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_STR_TIME_USE_BUILD_DESCRIPTOR;
 import static com.xingcloud.webinterface.monitor.SystemMonitor.putMonitorInfo;
-import static com.xingcloud.webinterface.segment.SegmentHandlerChain.createHandlers;
-import static com.xingcloud.webinterface.segment.SegmentHandlerChain.handleSegment;
-import static com.xingcloud.webinterface.segment2.SegmentEvaluator.evaluate;
+import static com.xingcloud.webinterface.segment.SegmentEvaluator.evaluate;
 import static com.xingcloud.webinterface.utils.DateSplitter.split2Pairs;
 import static com.xingcloud.webinterface.utils.ModelUtils.getDateTruncateLeve;
 import static com.xingcloud.webinterface.utils.ModelUtils.getRealBeginEndDatePair;
@@ -72,9 +69,7 @@ import com.xingcloud.webinterface.model.intermediate.GroupByIdResult;
 import com.xingcloud.webinterface.model.intermediate.GroupByItemResult;
 import com.xingcloud.webinterface.model.intermediate.GroupByItemResultGroup;
 import com.xingcloud.webinterface.monitor.MonitorInfo;
-import com.xingcloud.webinterface.segment.SegmentHandler;
-import com.xingcloud.webinterface.segment.SegmentSplitter;
-import com.xingcloud.webinterface.segment2.SegmentSeparator;
+import com.xingcloud.webinterface.segment.SegmentSeparator;
 import org.apache.commons.collections.CollectionUtils;
 
 import java.text.ParseException;
@@ -197,7 +192,6 @@ public class IdResultBuilder {
     CommonItemResult proxyCommonItemResult;
     List<CommonItemResult> commonItemResults;
 
-    List<SegmentHandler> handlers;
     for (FormulaParameterItem item : items) {
       name = item.getName();
       event = item.getEvent();
@@ -217,14 +211,8 @@ public class IdResultBuilder {
 
       hasUsefulNDorNDO = hasUsefulNDorNDO(nd, ndo);
 
-      handlers = createHandlers(segment);
-
       // 拆分带数组的Segment
-      if (NEW_SEGMENT) {
-        splitSegments = SegmentSeparator.generateNewSegments(segment);
-      } else {
-        splitSegments = SegmentSplitter.generateNewSegments(segment);
-      }
+      splitSegments = SegmentSeparator.generateNewSegments(segment);
       commonItemResults = new ArrayList<CommonItemResult>(splitSegments.length);
       // 生成Total所必须的Descriptor
       tap = parseTotalSummaryPolicy(booleanInteger, interval);
@@ -261,11 +249,7 @@ public class IdResultBuilder {
         }
         truncateDate(normalConnectors, truncateTargetDate, dateTruncateLevel);
         // 处理Segment
-        if (NEW_SEGMENT) {
-          evaluate(normalConnectors);
-        } else {
-          handleSegment(handlers, normalConnectors, ignoreHandlers);
-        }
+        evaluate(normalConnectors);
 
         if (QUERY.equals(tap)) {
           totalConnectors = new ArrayList<FormulaQueryDescriptor>(1);
@@ -348,11 +332,7 @@ public class IdResultBuilder {
         }
         truncateDate(naturalConnectors, truncateTargetDate, dateTruncateLevel);
         // 处理Segment
-        if (NEW_SEGMENT) {
-          evaluate(naturalConnectors);
-        } else {
-          handleSegment(handlers, naturalConnectors, false);
-        }
+        evaluate(naturalConnectors);
 
         cir = new CommonItemResult(name, normalConnectors, totalConnectors, naturalConnectors, tap, nap,
                                    totalKeyIntersection, naturalKeyIntersection);
@@ -481,8 +461,6 @@ public class IdResultBuilder {
     List<GroupByItemResult> groupByItemResults;
     GroupByItemResult groupByItemResultProxy;
 
-    List<SegmentHandler> handlers = null;
-
     // ======================================
     // TODO 参看方法注解
 
@@ -513,13 +491,7 @@ public class IdResultBuilder {
       groupBy = gbfpi.getGroupBy();
       groupByType = gbfpi.getGroupByType();
 
-      if (NEW_SEGMENT) {
-        splitSegments = SegmentSeparator.generateNewSegments(segment);
-      } else {
-        handlers = createHandlers(segment);
-        splitSegments = SegmentSplitter.generateNewSegments(segment);
-      }
-
+      splitSegments = SegmentSeparator.generateNewSegments(segment);
       groupByItemResults = new ArrayList<GroupByItemResult>(splitSegments.length);
 
       averageMetric = isAverage(nd, ndo);
@@ -586,11 +558,7 @@ public class IdResultBuilder {
               descriptor.addFunction(function);
               descriptors.add(descriptor);
               // 处理Segment
-              if (NEW_SEGMENT) {
-                evaluate(descriptor);
-              } else {
-                handleSegment(handlers, descriptor, false);
-              }
+              evaluate(descriptor);
               putMonitorInfo(MI_DESCRIPTOR_BUILD);
             }
           }
@@ -617,11 +585,7 @@ public class IdResultBuilder {
             descriptor.addFunction(function);
             descriptors.add(descriptor);
             // 处理Segment
-            if (NEW_SEGMENT) {
-              evaluate(descriptor);
-            } else {
-              handleSegment(handlers, descriptor, false);
-            }
+            evaluate(descriptor);
             putMonitorInfo(MI_DESCRIPTOR_BUILD);
           }
         } else {
@@ -631,11 +595,7 @@ public class IdResultBuilder {
           truncateDate(descriptor, targetTrimDate, dateTruncateLevel);
           descriptor.addFunction(function);
           // 处理Segment
-          if (NEW_SEGMENT) {
-            evaluate(descriptor);
-          } else {
-            handleSegment(handlers, descriptor, false);
-          }
+          evaluate(descriptor);
 
           descriptors.add(descriptor);
           putMonitorInfo(MI_DESCRIPTOR_BUILD);

@@ -1,4 +1,4 @@
-package com.xingcloud.webinterface.segment2;
+package com.xingcloud.webinterface.segment;
 
 import com.xingcloud.webinterface.enums.Operator;
 import com.xingcloud.webinterface.enums.SegmentExprType;
@@ -6,7 +6,7 @@ import com.xingcloud.webinterface.enums.SegmentExprType;
 import java.io.Serializable;
 
 /**
- * User: Z J Wu Date: 13-5-22 Time: 下午2:32 Package: com.xingcloud.webinterface.segment2
+ * User: Z J Wu Date: 13-5-22 Time: 下午2:32 Package: com.xingcloud.webinterface.segment
  */
 public class Condition implements Serializable {
 

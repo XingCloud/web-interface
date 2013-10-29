@@ -1,4 +1,4 @@
-package com.xingcloud.webinterface.segment2;
+package com.xingcloud.webinterface.segment;
 
 import static com.xingcloud.webinterface.calculate.func.DateAddFunction.DATE_ADD_FUNCTION_NAME;
 import static com.xingcloud.webinterface.enums.Interval.HOUR;
@@ -50,7 +50,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * User: Z J Wu Date: 13-5-8 Time: 下午6:06 Package: com.xingcloud.webinterface.segment2
+ * User: Z J Wu Date: 13-5-8 Time: 下午6:06 Package: com.xingcloud.webinterface.segment
  */
 public class SegmentEvaluator {
 

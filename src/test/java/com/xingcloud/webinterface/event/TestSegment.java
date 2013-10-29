@@ -7,7 +7,7 @@ import com.xingcloud.webinterface.exception.SegmentException;
 import com.xingcloud.webinterface.model.Filter;
 import com.xingcloud.webinterface.model.formula.CommonFormulaQueryDescriptor;
 import com.xingcloud.webinterface.model.formula.FormulaQueryDescriptor;
-import com.xingcloud.webinterface.segment2.SegmentEvaluator;
+import com.xingcloud.webinterface.segment.SegmentEvaluator;
 import org.junit.Test;
 
 import java.util.Map;

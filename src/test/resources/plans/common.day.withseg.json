@@ -11,12 +11,12 @@
   query : [ {
     op : "scan",
     @id : 1,
-    memo : "Scan(Table=ram.identifier, Prop=identifier, Val={EQ=\"null\"})",
+    memo : "Scan(Table=ram.register_time, Prop=register_time, Val={GTE=2013-09-12, LTE=2013-09-12})",
     storageengine : "mysql",
     selection : [ {
-      table : "ram.identifier",
+      table : "ram.register_time",
       filter : {
-        expression : " (val)  == ('\"null\"') "
+        expression : " ( (val)  >= (20130912000000) )  && ( (val)  <= (20130912235959) ) "
       },
       projections : [ {
         ref : "uid",
@@ -89,7 +89,7 @@
     input : 4,
     projections : [ {
       ref : "query_id",
-      expr : "'COMMON,ram,2013-10-01,2013-10-02,visit.*,{\"identifier\":\"\\\"null\\\"\"},VF-ALL-0-0,PERIOD'"
+      expr : "'COMMON,ram,2013-10-01,2013-10-02,visit.*,{\"register_time\":\"2013-09-12\"},VF-ALL-0-0,PERIOD'"
     }, {
       ref : "count",
       expr : "count"

@@ -1,10 +1,10 @@
-package com.xingcloud.webinterface.segment2;
+package com.xingcloud.webinterface.segment;
 
 import java.io.Serializable;
 import java.util.List;
 
 /**
- * User: Z J Wu Date: 13-5-22 Time: 下午2:31 Package: com.xingcloud.webinterface.segment2
+ * User: Z J Wu Date: 13-5-22 Time: 下午2:31 Package: com.xingcloud.webinterface.segment
  */
 public class SegmentPart implements Serializable, Comparable<SegmentPart> {
   private final String property;

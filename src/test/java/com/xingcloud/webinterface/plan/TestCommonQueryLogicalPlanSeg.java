@@ -1,12 +1,11 @@
 package com.xingcloud.webinterface.plan;
 
-import com.xingcloud.qm.service.Submit;
 import com.xingcloud.webinterface.enums.CommonQueryType;
 import com.xingcloud.webinterface.enums.Interval;
 import com.xingcloud.webinterface.model.Filter;
 import com.xingcloud.webinterface.model.formula.CommonFormulaQueryDescriptor;
 import com.xingcloud.webinterface.model.formula.FormulaQueryDescriptor;
-import com.xingcloud.webinterface.segment2.SegmentEvaluator;
+import com.xingcloud.webinterface.segment.SegmentEvaluator;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.junit.Test;
 
@@ -25,7 +24,7 @@ public class TestCommonQueryLogicalPlanSeg extends TestLogicalPlanBase {
       "}";
 
     segment = "{\"register_time\":[{\"op\":\"eq\",\"expr\":\"2013-09-12\",\"type\":\"CONST\"}]}";
-    segment = "{\"identifier\":[{\"op\":\"eq\",\"expr\":\"\\\\\"null\\\\\"\",\"type\":\"CONST\"}]}";
+//    segment = "{\"identifier\":[{\"op\":\"eq\",\"expr\":\"\\\\\"null\\\\\"\",\"type\":\"CONST\"}]}";
 
     System.out.println(segment);
 
