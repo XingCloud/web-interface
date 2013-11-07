@@ -1,6 +1,7 @@
 package com.xingcloud.webinterface.model.formula;
 
 import static com.xingcloud.basic.Constants.SEPARATOR_CHAR_CACHE;
+import static com.xingcloud.basic.utils.DateUtils.getFullDisplayDateString;
 import static com.xingcloud.webinterface.enums.Interval.HOUR;
 import static com.xingcloud.webinterface.enums.Interval.MIN5;
 import static com.xingcloud.webinterface.plan.Plans.DFR;
@@ -241,8 +242,9 @@ public class CommonFormulaQueryDescriptor extends FormulaQueryDescriptor {
     logicalOperators.add(collapsingAggregate);
 
     String queryId = getKey();
-    NamedExpression[] selections = min5HourQuery ? new NamedExpression[5] : new NamedExpression[4];
+    NamedExpression[] selections = new NamedExpression[5];
     LogicalExpression constQueryId = new ValueExpressions.QuotedString(queryId, ExpressionPosition.UNKNOWN);
+    LogicalExpression valueKey;
     selections[0] = new NamedExpression(constQueryId, buildColumn("query_id"));
     if (min5HourQuery) {
       switch (this.interval) {
@@ -256,17 +258,15 @@ public class CommonFormulaQueryDescriptor extends FormulaQueryDescriptor {
           throw new PlanException(
             "Cannot discriminate function because interval is not ateappropriate - " + this.interval);
       }
-      LogicalExpression finalFunc = DFR
-        .createExpression(segmentFunc, ExpressionPosition.UNKNOWN, buildColumn("dimension"));
-      selections[1] = new NamedExpression(finalFunc, buildColumn("dimension"));
-      selections[2] = new NamedExpression(buildColumn("count"), buildColumn("count"));
-      selections[3] = new NamedExpression(buildColumn("user_num"), buildColumn("user_num"));
-      selections[4] = new NamedExpression(buildColumn("sum"), buildColumn("sum"));
+      valueKey = DFR.createExpression(segmentFunc, ExpressionPosition.UNKNOWN, buildColumn("dimension"));
     } else {
-      selections[1] = new NamedExpression(buildColumn("count"), buildColumn("count"));
-      selections[2] = new NamedExpression(buildColumn("user_num"), buildColumn("user_num"));
-      selections[3] = new NamedExpression(buildColumn("sum"), buildColumn("sum"));
+      valueKey = new ValueExpressions.QuotedString(getFullDisplayDateString(getRealBeginDate()),
+                                                   ExpressionPosition.UNKNOWN);
     }
+    selections[1] = new NamedExpression(valueKey, buildColumn("dimension"));
+    selections[2] = new NamedExpression(buildColumn("count"), buildColumn("count"));
+    selections[3] = new NamedExpression(buildColumn("user_num"), buildColumn("user_num"));
+    selections[4] = new NamedExpression(buildColumn("sum"), buildColumn("sum"));
     Project project = new Project(selections);
     project.setInput(collapsingAggregate);
     logicalOperators.add(project);
