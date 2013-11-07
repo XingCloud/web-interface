@@ -57,17 +57,17 @@ public class GroupByFormulaQueryDescriptor extends FormulaQueryDescriptor {
   }
 
   public GroupByFormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
-                                       String segment, Filter filter, double samplingRate, String groupBy,
+                                       String segment, String sqlSegments, Filter filter, String groupBy,
                                        GroupByType groupByType) {
-    super(projectId, realBeginDate, realEndDate, event, segment, filter, samplingRate);
+    super(projectId, realBeginDate, realEndDate, event, segment, sqlSegments, filter);
     this.groupBy = groupBy;
     this.groupByType = groupByType;
   }
 
   public GroupByFormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
-                                       String segment, Filter filter, double samplingRate, String inputBeginDate,
+                                       String segment, String sqlSegments, Filter filter, String inputBeginDate,
                                        String inputEndDate, String groupBy, GroupByType groupByType) {
-    super(projectId, realBeginDate, realEndDate, event, segment, filter, samplingRate, inputBeginDate, inputEndDate);
+    super(projectId, realBeginDate, realEndDate, event, segment, sqlSegments, filter, inputBeginDate, inputEndDate);
     this.groupBy = groupBy;
     this.groupByType = groupByType;
   }

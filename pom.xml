@@ -392,9 +392,9 @@
     </dependency>
 
     <dependency>
-      <groupId>jsqlpaser</groupId>
-      <artifactId>jsqlpaser</artifactId>
-      <version>0.7.0</version>
+      <groupId>jsqlparser</groupId>
+      <artifactId>jsqlparser</artifactId>
+      <version>0.7.1</version>
     </dependency>
 
     <!-- XingCloud -->

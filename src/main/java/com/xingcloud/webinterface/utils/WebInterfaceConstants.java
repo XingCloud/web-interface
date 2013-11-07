@@ -158,6 +158,7 @@ public class WebInterfaceConstants {
 
   public static final Gson DEFAULT_GSON_PLAIN = new GsonBuilder().serializeNulls()
                                                                  .excludeFieldsWithoutExposeAnnotation().create();
+  public static final Gson DEFAULT_SQL_GSON_PLAIN = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
   public static final Gson DEFAULT_GSON_PRETTY = new GsonBuilder().setPrettyPrinting().serializeNulls()
                                                                   .excludeFieldsWithoutExposeAnnotation().create();
 
@@ -174,7 +175,5 @@ public class WebInterfaceConstants {
   public static final String SQL_TABLE_NAME_PREFIX_USER = "fix_";
 
   public static final char GENERIC_SEPARATOR = '\001';
-
-
 
 }

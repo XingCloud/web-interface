@@ -29,7 +29,7 @@ public class TestCommonQueryLogicalPlanSeg extends TestLogicalPlanBase {
     System.out.println(segment);
 
     FormulaQueryDescriptor fqd = new CommonFormulaQueryDescriptor("ram", TEST_REAL_BEGIN_DATE, TEST_REAL_END_DATE,
-                                                                  TEST_EVENT_VISIT, segment, Filter.ALL, 1d,
+                                                                  TEST_EVENT_VISIT, segment, segment, Filter.ALL,
                                                                   "2013-03-10", "2013-03-12", Interval.PERIOD,
                                                                   CommonQueryType.NORMAL);
     SegmentEvaluator.evaluate(fqd);

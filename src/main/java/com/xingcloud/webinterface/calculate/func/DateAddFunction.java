@@ -1,7 +1,6 @@
 package com.xingcloud.webinterface.calculate.func;
 
 import static com.xingcloud.basic.utils.DateUtils.dateAdd;
-import static com.xingcloud.webinterface.utils.WebInterfaceConstants.SEGMENT_FUNCTION_BEGIN_CHAR;
 
 import com.googlecode.aviator.AviatorEvaluator;
 import com.googlecode.aviator.runtime.function.AbstractFunction;
@@ -18,7 +17,8 @@ import java.util.Map;
  */
 public class DateAddFunction extends AbstractFunction {
 
-  public static final String DATE_ADD_FUNCTION_NAME = SEGMENT_FUNCTION_BEGIN_CHAR + "date_add";
+  public static final String DATE_ADD_FUNCTION_NAME = "date_add";
+  public static final String DATE_ADD_FUNCTION_START_KEYWORD = "s";
 
   @Override
   public String getName() {

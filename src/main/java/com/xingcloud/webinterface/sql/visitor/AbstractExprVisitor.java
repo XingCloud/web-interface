@@ -1,10 +1,18 @@
 package com.xingcloud.webinterface.sql.visitor;
 
+import static com.xingcloud.webinterface.calculate.func.DateAddFunction.DATE_ADD_FUNCTION_NAME;
+import static com.xingcloud.webinterface.calculate.func.DateAddFunction.DATE_ADD_FUNCTION_START_KEYWORD;
+
+import com.xingcloud.webinterface.calculate.Arity;
+import com.xingcloud.webinterface.calculate.Evaluator;
+import com.xingcloud.webinterface.exception.ExpressionEvaluationException;
+import com.xingcloud.webinterface.model.formula.FormulaQueryDescriptor;
 import net.sf.jsqlparser.expression.AllComparisonExpression;
 import net.sf.jsqlparser.expression.AnyComparisonExpression;
 import net.sf.jsqlparser.expression.CaseExpression;
 import net.sf.jsqlparser.expression.DateValue;
 import net.sf.jsqlparser.expression.DoubleValue;
+import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.ExpressionVisitor;
 import net.sf.jsqlparser.expression.Function;
 import net.sf.jsqlparser.expression.InverseExpression;
@@ -29,6 +37,7 @@ import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.expression.operators.relational.Between;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
 import net.sf.jsqlparser.expression.operators.relational.ExistsExpression;
+import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.expression.operators.relational.GreaterThan;
 import net.sf.jsqlparser.expression.operators.relational.GreaterThanEquals;
 import net.sf.jsqlparser.expression.operators.relational.InExpression;
@@ -40,11 +49,28 @@ import net.sf.jsqlparser.expression.operators.relational.MinorThanEquals;
 import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
+import org.apache.drill.common.expression.ExpressionPosition;
+import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.ValueExpressions;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * User: Z J Wu Date: 13-10-28 Time: 下午5:40 Package: com.xingcloud.webinterface.sql.visitor
  */
-public class AbstractExprVisitor implements ExpressionVisitor {
+public class AbstractExprVisitor extends FQDVisitor implements ExpressionVisitor {
+
+  protected LogicalExpression logicalExpression;
+
+  public LogicalExpression getLogicalExpression() {
+    return logicalExpression;
+  }
+
+  public AbstractExprVisitor(FormulaQueryDescriptor descriptor) {
+    super(descriptor);
+  }
+
   @Override public void visit(NullValue nullValue) {
   }
 
@@ -58,9 +84,11 @@ public class AbstractExprVisitor implements ExpressionVisitor {
   }
 
   @Override public void visit(DoubleValue doubleValue) {
+    this.logicalExpression = new ValueExpressions.DoubleExpression(doubleValue.getValue(), ExpressionPosition.UNKNOWN);
   }
 
   @Override public void visit(LongValue longValue) {
+    this.logicalExpression = new ValueExpressions.LongExpression(longValue.getValue(), ExpressionPosition.UNKNOWN);
   }
 
   @Override public void visit(DateValue dateValue) {
@@ -76,6 +104,7 @@ public class AbstractExprVisitor implements ExpressionVisitor {
   }
 
   @Override public void visit(StringValue stringValue) {
+    this.logicalExpression = new ValueExpressions.QuotedString(stringValue.getValue(), ExpressionPosition.UNKNOWN);
   }
 
   @Override public void visit(Addition addition) {
@@ -160,5 +189,29 @@ public class AbstractExprVisitor implements ExpressionVisitor {
   }
 
   @Override public void visit(BitwiseXor bitwiseXor) {
+  }
+
+  protected boolean columnIsLeft(Expression left, Expression right) {
+    return isColumn(left) && !isColumn(right);
+  }
+
+  protected boolean isColumn(Expression expression) {
+    return expression instanceof Column;
+  }
+
+  protected String visitDateAddFunction(Function function) throws ExpressionEvaluationException {
+    ExpressionList parameters = function.getParameters();
+    List parameterList = parameters.getExpressions();
+    String formula;
+    List<Arity> arity;
+    String type = ((StringValue) parameterList.get(0)).getValue();
+    formula = DATE_ADD_FUNCTION_NAME + "(date, " + parameterList.get(1) + ")";
+    arity = new ArrayList<Arity>(1);
+    if (DATE_ADD_FUNCTION_START_KEYWORD.equals(type)) {
+      arity.add(new Arity("date", descriptor.getInputBeginDate()));
+    } else {
+      arity.add(new Arity("date", descriptor.getInputEndDate()));
+    }
+    return Evaluator.evaluate(formula, arity).toString();
   }
 }

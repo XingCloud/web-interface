@@ -40,7 +40,7 @@ public class TestCommonQueryLogicalPlanNoSegRandomDate extends TestLogicalPlanBa
       s1 = DateUtils.date2Short(d1);
       s2 = DateUtils.date2Short(d2);
       event = r.nextBoolean() ? TEST_EVENT : TEST_EVENT2;
-      fqd = new CommonFormulaQueryDescriptor(TEST_TABLE, s1, s2, event, null, Filter.ALL, 1d, "2013-03-10",
+      fqd = new CommonFormulaQueryDescriptor(TEST_TABLE, s1, s2, event, null,null, Filter.ALL,  "2013-03-10",
                                              "2013-03-12", Interval.PERIOD, CommonQueryType.NORMAL);
 
       SegmentEvaluator.evaluate(fqd);

@@ -19,7 +19,7 @@ public class TestUserGroupByQueryLogicalPlanSeg extends TestLogicalPlanBase {
     String name = "groupby.prop.withseg.json";
     String segment = "{\"identifier\":[{\"op\":\"eq\",\"expr\":\"android.global.s77\",\"type\":\"CONST\"}]}";
     FormulaQueryDescriptor fqd = new GroupByFormulaQueryDescriptor(TEST_TABLE, TEST_REAL_BEGIN_DATE, TEST_REAL_END_DATE,
-                                                                   TEST_EVENT, segment, Filter.ALL, 1d, "geoip",
+                                                                   TEST_EVENT, segment, segment, Filter.ALL, "geoip",
                                                                    GroupByType.USER_PROPERTIES);
     SegmentEvaluator.evaluate(fqd);
     LogicalPlan logicalPlan = fqd.toLogicalPlain();

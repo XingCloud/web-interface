@@ -11,12 +11,12 @@
   query : [ {
     op : "scan",
     @id : 1,
-    memo : "Scan(Table=ram.register_time, Prop=register_time, Val={GTE=2013-09-12, LTE=2013-09-12})",
+    memo : "Scan(Table=ram.register_time, Prop=register_time, Val={LTE=2013-09-12, GTE=2013-09-12})",
     storageengine : "mysql",
     selection : [ {
       table : "ram.register_time",
       filter : {
-        expression : " ( (val)  >= (20130912000000) )  && ( (val)  <= (20130912235959) ) "
+        expression : " ( (val)  <= (20130912235959) )  && ( (val)  >= (20130912000000) ) "
       },
       projections : [ {
         ref : "uid",

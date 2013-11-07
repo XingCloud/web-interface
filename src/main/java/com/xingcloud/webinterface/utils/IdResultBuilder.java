@@ -200,7 +200,6 @@ public class IdResultBuilder {
       nd = item.getCoverRange();
       ndo = item.getCoverRangeOrigin();
       function = item.getFunction();
-      samplingRate = resolveSamplingRateByEvent(event, function);
 
       hasSegment = !(Strings.isNullOrEmpty(segment) || TOTAL_USER.equals(segment)
       );
@@ -231,17 +230,17 @@ public class IdResultBuilder {
           beginDate = pair.getBeginDate();
           endDate = pair.getEndDate();
           if (intervalFloat < 1) {
-            fqd = new CommonFormulaQueryDescriptor(projectId, beginDate, endDate, event, singleSplitSegment, filter,
-                                                   samplingRate, interval, NORMAL);
+            fqd = new CommonFormulaQueryDescriptor(projectId, beginDate, endDate, event, singleSplitSegment,
+                                                   singleSplitSegment, filter, interval, NORMAL);
           } else if (hasUsefulNDorNDO) {
             tmpPair = getRealBeginEndDatePair(beginDate, endDate, nd, ndo);
             realBeginDate = tmpPair.getBeginDate();
             realEndDate = tmpPair.getEndDate();
             fqd = new CommonFormulaQueryDescriptor(projectId, realBeginDate, realEndDate, event, singleSplitSegment,
-                                                   filter, samplingRate, beginDate, endDate, PERIOD, NORMAL);
+                                                   singleSplitSegment, filter, beginDate, endDate, PERIOD, NORMAL);
           } else {
-            fqd = new CommonFormulaQueryDescriptor(projectId, beginDate, endDate, event, singleSplitSegment, filter,
-                                                   samplingRate, PERIOD, NORMAL);
+            fqd = new CommonFormulaQueryDescriptor(projectId, beginDate, endDate, event, singleSplitSegment,
+                                                   singleSplitSegment, filter, PERIOD, NORMAL);
           }
           fqd.addFunction(function);
           normalConnectors.add(fqd);
@@ -254,7 +253,7 @@ public class IdResultBuilder {
         if (QUERY.equals(tap)) {
           totalConnectors = new ArrayList<FormulaQueryDescriptor>(1);
           fqd = new CommonFormulaQueryDescriptor(projectId, container.getBeginDate(), container.getEndDate(), event,
-                                                 TOTAL_USER, filter, samplingRate, PERIOD, TOTAL);
+                                                 TOTAL_USER, TOTAL_USER, filter, PERIOD, TOTAL);
           fqd.addFunction(function);
           totalConnectors.add(fqd);
           putMonitorInfo(MI_DESCRIPTOR_BUILD);
@@ -268,11 +267,11 @@ public class IdResultBuilder {
               tmpPair = getRealBeginEndDatePair(beginDate, endDate, nd, ndo);
               realBeginDate = tmpPair.getBeginDate();
               realEndDate = tmpPair.getEndDate();
-              fqd = new CommonFormulaQueryDescriptor(projectId, realBeginDate, realEndDate, event, TOTAL_USER, filter,
-                                                     samplingRate, beginDate, endDate, PERIOD, NORMAL);
+              fqd = new CommonFormulaQueryDescriptor(projectId, realBeginDate, realEndDate, event, TOTAL_USER,
+                                                     TOTAL_USER, filter, beginDate, endDate, PERIOD, NORMAL);
             } else {
-              fqd = new CommonFormulaQueryDescriptor(projectId, beginDate, endDate, event, TOTAL_USER, filter,
-                                                     samplingRate, PERIOD, NORMAL);
+              fqd = new CommonFormulaQueryDescriptor(projectId, beginDate, endDate, event, TOTAL_USER, TOTAL_USER,
+                                                     filter, PERIOD, NORMAL);
             }
             fqd.addFunction(function);
             totalConnectors.add(fqd);
@@ -287,11 +286,11 @@ public class IdResultBuilder {
               tmpPair = getRealBeginEndDatePair(beginDate, endDate, nd, ndo);
               realBeginDate = tmpPair.getBeginDate();
               realEndDate = tmpPair.getEndDate();
-              fqd = new CommonFormulaQueryDescriptor(projectId, realBeginDate, realEndDate, event, TOTAL_USER, filter,
-                                                     samplingRate, beginDate, endDate, PERIOD, NORMAL);
+              fqd = new CommonFormulaQueryDescriptor(projectId, realBeginDate, realEndDate, event, TOTAL_USER,
+                                                     TOTAL_USER, filter, beginDate, endDate, PERIOD, NORMAL);
             } else {
-              fqd = new CommonFormulaQueryDescriptor(projectId, beginDate, endDate, event, TOTAL_USER, filter,
-                                                     samplingRate, PERIOD, NORMAL);
+              fqd = new CommonFormulaQueryDescriptor(projectId, beginDate, endDate, event, TOTAL_USER, TOTAL_USER,
+                                                     filter, PERIOD, NORMAL);
             }
             fqd.addFunction(function);
             totalConnectors.add(fqd);
@@ -304,7 +303,7 @@ public class IdResultBuilder {
         if (QUERY.equals(nap)) {
           naturalConnectors = new ArrayList<FormulaQueryDescriptor>(1);
           fqd = new CommonFormulaQueryDescriptor(projectId, container.getBeginDate(), container.getEndDate(), event,
-                                                 singleSplitSegment, filter, samplingRate, PERIOD, NATURAL);
+                                                 singleSplitSegment, singleSplitSegment, filter, PERIOD, NATURAL);
           fqd.addFunction(function);
           naturalConnectors.add(fqd);
           putMonitorInfo(MI_DESCRIPTOR_BUILD);
@@ -317,11 +316,11 @@ public class IdResultBuilder {
               tmpPair = getRealBeginEndDatePair(beginDate, endDate, nd, ndo);
               realBeginDate = tmpPair.getBeginDate();
               realEndDate = tmpPair.getEndDate();
-              fqd = new CommonFormulaQueryDescriptor(projectId, realBeginDate, realEndDate, event, TOTAL_USER, filter,
-                                                     samplingRate, beginDate, endDate, PERIOD, NORMAL);
+              fqd = new CommonFormulaQueryDescriptor(projectId, realBeginDate, realEndDate, event, TOTAL_USER,
+                                                     TOTAL_USER, filter, beginDate, endDate, PERIOD, NORMAL);
             } else {
-              fqd = new CommonFormulaQueryDescriptor(projectId, beginDate, endDate, event, singleSplitSegment, filter,
-                                                     samplingRate, PERIOD, NORMAL);
+              fqd = new CommonFormulaQueryDescriptor(projectId, beginDate, endDate, event, singleSplitSegment,
+                                                     singleSplitSegment, filter, PERIOD, NORMAL);
             }
             fqd.addFunction(function);
             naturalConnectors.add(fqd);
@@ -529,7 +528,7 @@ public class IdResultBuilder {
           if (INTERNAL_NA.equals(latestAvailableGroupByDate)) {
             descriptors = new ArrayList<FormulaQueryDescriptor>(1);
             descriptor = new GroupByFormulaQueryDescriptor(projectId, beginDate, endDate, event, splitSegmentPart,
-                                                           filter, samplingRate, groupBy, groupByType);
+                                                           splitSegmentPart, filter, groupBy, groupByType);
             descriptor.setDateTruncateType(KILL);
             descriptors.add(descriptor);
             putMonitorInfo(MI_DESCRIPTOR_BUILD);
@@ -546,7 +545,7 @@ public class IdResultBuilder {
               p = pairs.get(i);
               tmpPair = getRealBeginEndDatePair(p.getBeginDate(), p.getEndDate(), nd, ndo);
               descriptor = new GroupByFormulaQueryDescriptor(projectId, tmpPair.getBeginDate(), tmpPair.getEndDate(),
-                                                             event, splitSegmentPart, filter, samplingRate,
+                                                             event, splitSegmentPart, splitSegmentPart, filter,
                                                              p.getBeginDate(), p.getEndDate(), groupBy, groupByType);
               descriptor.setDateTruncateType(PASS);
 
@@ -579,7 +578,7 @@ public class IdResultBuilder {
             p = pairs.get(i);
             tmpPair = getRealBeginEndDatePair(p.getBeginDate(), p.getEndDate(), nd, ndo);
             descriptor = new GroupByFormulaQueryDescriptor(projectId, tmpPair.getBeginDate(), tmpPair.getEndDate(),
-                                                           event, splitSegmentPart, filter, samplingRate,
+                                                           event, splitSegmentPart, splitSegmentPart, filter,
                                                            p.getBeginDate(), p.getEndDate(), groupBy, groupByType);
             truncateDate(descriptor, targetTrimDate, dateTruncateLevel);
             descriptor.addFunction(function);
@@ -590,8 +589,8 @@ public class IdResultBuilder {
           }
         } else {
           descriptors = new ArrayList<FormulaQueryDescriptor>(1);
-          descriptor = new GroupByFormulaQueryDescriptor(projectId, beginDate, endDate, event, splitSegmentPart, filter,
-                                                         samplingRate, groupBy, groupByType);
+          descriptor = new GroupByFormulaQueryDescriptor(projectId, beginDate, endDate, event, splitSegmentPart,
+                                                         splitSegmentPart, filter, groupBy, groupByType);
           truncateDate(descriptor, targetTrimDate, dateTruncateLevel);
           descriptor.addFunction(function);
           // 处理Segment

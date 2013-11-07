@@ -1,6 +1,7 @@
 package com.xingcloud.webinterface.model.formula;
 
 import static com.xingcloud.basic.Constants.SEPARATOR_CHAR_CACHE;
+import static com.xingcloud.basic.utils.DateUtils.getFullDisplayDateString;
 import static com.xingcloud.webinterface.enums.Interval.HOUR;
 import static com.xingcloud.webinterface.enums.Interval.MIN5;
 import static com.xingcloud.webinterface.plan.Plans.DFR;
@@ -61,17 +62,17 @@ public class CommonFormulaQueryDescriptor extends FormulaQueryDescriptor {
   }
 
   public CommonFormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
-                                      String segment, Filter filter, double samplingRate, Interval interval,
+                                      String segment, String sqlSegments, Filter filter, Interval interval,
                                       CommonQueryType commonQueryType) {
-    super(projectId, realBeginDate, realEndDate, event, segment, filter, samplingRate);
+    super(projectId, realBeginDate, realEndDate, event, segment, sqlSegments, filter);
     this.interval = interval;
     this.commonQueryType = commonQueryType;
   }
 
   public CommonFormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
-                                      String segment, Filter filter, double samplingRate, String inputBeginDate,
+                                      String segment, String sqlSegments, Filter filter, String inputBeginDate,
                                       String inputEndDate, Interval interval, CommonQueryType commonQueryType) {
-    super(projectId, realBeginDate, realEndDate, event, segment, filter, samplingRate, inputBeginDate, inputEndDate);
+    super(projectId, realBeginDate, realEndDate, event, segment, sqlSegments, filter, inputBeginDate, inputEndDate);
     this.interval = interval;
     this.commonQueryType = commonQueryType;
   }
@@ -241,7 +242,7 @@ public class CommonFormulaQueryDescriptor extends FormulaQueryDescriptor {
     logicalOperators.add(collapsingAggregate);
 
     String queryId = getKey();
-    NamedExpression[] selections = min5HourQuery ? new NamedExpression[5] : new NamedExpression[4];
+    NamedExpression[] selections = new NamedExpression[5];
     LogicalExpression constQueryId = new ValueExpressions.QuotedString(queryId, ExpressionPosition.UNKNOWN);
     selections[0] = new NamedExpression(constQueryId, buildColumn("query_id"));
     if (min5HourQuery) {
@@ -263,9 +264,12 @@ public class CommonFormulaQueryDescriptor extends FormulaQueryDescriptor {
       selections[3] = new NamedExpression(buildColumn("user_num"), buildColumn("user_num"));
       selections[4] = new NamedExpression(buildColumn("sum"), buildColumn("sum"));
     } else {
-      selections[1] = new NamedExpression(buildColumn("count"), buildColumn("count"));
-      selections[2] = new NamedExpression(buildColumn("user_num"), buildColumn("user_num"));
-      selections[3] = new NamedExpression(buildColumn("sum"), buildColumn("sum"));
+      LogicalExpression currentDay = new ValueExpressions.QuotedString(getFullDisplayDateString(getRealBeginDate()),
+                                                                       ExpressionPosition.UNKNOWN);
+      selections[1] = new NamedExpression(currentDay, buildColumn("dimension"));
+      selections[2] = new NamedExpression(buildColumn("count"), buildColumn("count"));
+      selections[3] = new NamedExpression(buildColumn("user_num"), buildColumn("user_num"));
+      selections[4] = new NamedExpression(buildColumn("sum"), buildColumn("sum"));
     }
     Project project = new Project(selections);
     project.setInput(collapsingAggregate);

@@ -59,11 +59,11 @@ public abstract class FormulaQueryDescriptor {
   protected String realEndDate;
   protected String event;
   protected String segment;
+  protected String sqlSegments;
   protected Map<String, Map<Operator, Object>> segmentMap;
   protected Filter filter;
 
   // 其他信息
-  protected double samplingRate;
   protected Set<Function> functions = EnumSet.noneOf(Function.class);
   protected long dayDistance;
   protected DateTruncateType dateTruncateType;
@@ -93,15 +93,15 @@ public abstract class FormulaQueryDescriptor {
   }
 
   public FormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
-                                String segment, Filter filter, double samplingRate) {
+                                String segment, String sqlSegments, Filter filter) {
     super();
     this.projectId = projectId;
     this.realBeginDate = realBeginDate;
     this.realEndDate = realEndDate;
     this.event = event;
     this.segment = segment;
+    this.sqlSegments = sqlSegments;
     this.filter = filter;
-    this.samplingRate = samplingRate;
     try {
       setDayDistance(span(realBeginDate, realEndDate));
     } catch (ParseException e) {
@@ -115,7 +115,7 @@ public abstract class FormulaQueryDescriptor {
   }
 
   public FormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
-                                String segment, Filter filter, double samplingRate, String inputBeginDate,
+                                String segment, String sqlSegments, Filter filter, String inputBeginDate,
                                 String inputEndDate) {
     super();
     this.projectId = projectId;
@@ -123,8 +123,8 @@ public abstract class FormulaQueryDescriptor {
     this.realEndDate = realEndDate;
     this.event = event;
     this.segment = segment;
+    this.sqlSegments = sqlSegments;
     this.filter = filter;
-    this.samplingRate = samplingRate;
     try {
       setDayDistance(span(realBeginDate, realEndDate));
     } catch (ParseException e) {
@@ -175,8 +175,6 @@ public abstract class FormulaQueryDescriptor {
     sb.append(getInputEndDate());
     sb.append(SEPARATOR_CHAR_CACHE);
     sb.append(getFunctions());
-    sb.append(SEPARATOR_CHAR_CACHE);
-    sb.append(getSamplingRate());
     sb.append(SEPARATOR_CHAR_CACHE);
     sb.append(getDateTruncateType());
   }
@@ -300,14 +298,6 @@ public abstract class FormulaQueryDescriptor {
     this.filter = filter;
   }
 
-  public double getSamplingRate() {
-    return samplingRate;
-  }
-
-  public void setSamplingRate(double samplingRate) {
-    this.samplingRate = samplingRate;
-  }
-
   public Set<Function> getFunctions() {
     return functions;
   }
@@ -373,6 +363,14 @@ public abstract class FormulaQueryDescriptor {
 
   public String getSqlUserTableName() {
     return sqlUserTableName;
+  }
+
+  public String getSqlSegments() {
+    return sqlSegments;
+  }
+
+  public void setSqlSegments(String sqlSegments) {
+    this.sqlSegments = sqlSegments;
   }
 
   public Map<String, Map<Operator, Object>> getSegmentMap() {

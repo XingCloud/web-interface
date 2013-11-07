@@ -3,6 +3,7 @@ package com.xingcloud.webinterface.plan;
 import static com.xingcloud.webinterface.enums.Operator.EQ;
 import static com.xingcloud.webinterface.enums.Operator.GTE;
 import static com.xingcloud.webinterface.enums.Operator.LTE;
+import static com.xingcloud.webinterface.enums.Operator.SGMT;
 import static com.xingcloud.webinterface.enums.Operator.SGMT300;
 import static com.xingcloud.webinterface.enums.Operator.SGMT3600;
 import static org.apache.drill.common.expression.ExpressionPosition.UNKNOWN;
@@ -68,7 +69,7 @@ public class Plans {
   public static final String KEY_WORD_SGMT = "sgmt";
   public static final String KEY_WORD_TIMESTAMP = "timestamp";
 
-  public static FunctionRegistry DFR = new FunctionRegistry(DrillConfig.create());
+  public static final FunctionRegistry DFR = new FunctionRegistry(DrillConfig.create());
 
   public static DrillConfig DEFAULT_DRILL_CONFIG = DrillConfig.create();
 
@@ -106,7 +107,20 @@ public class Plans {
   }
 
   private static Object object2String(boolean transformDate, boolean beginSuffix, Object o) {
-    if (o instanceof Number || o instanceof Boolean) {
+    if (o instanceof Object[]) {
+      Object[] obj = (Object[]) o;
+      if (ArrayUtils.isEmpty(obj)) {
+        return null;
+      }
+      System.out.println((obj[0].getClass()));
+      String separator = ((obj[0] instanceof String) ? "','" : ",");
+      StringBuilder sb = new StringBuilder(obj[0].toString());
+      for (int i = 1; i < obj.length; i++) {
+        sb.append(separator);
+        sb.append(obj[i]);
+      }
+      return sb.toString();
+    } else if (o instanceof Number || o instanceof Boolean) {
       return o;
     } else {
       if (transformDate) {
@@ -120,7 +134,9 @@ public class Plans {
   }
 
   private static LogicalExpression toLE(Object o) {
-    if (o instanceof String) {
+    if (o instanceof Object[]) {
+      return null;
+    } else if (o instanceof String) {
       return new ValueExpressions.QuotedString(o.toString(), ExpressionPosition.UNKNOWN);
     } else if (o instanceof Number) {
       return ValueExpressions.getNumericExpression(o.toString(), ExpressionPosition.UNKNOWN);
@@ -129,6 +145,25 @@ public class Plans {
     } else {
       return new FieldReference(o.toString(), ExpressionPosition.UNKNOWN);
     }
+  }
+
+  private static LogicalExpression toArrayLE(Collection collection) {
+    Iterator it = collection.iterator();
+    Object next = it.next();
+    boolean pureString = (next instanceof String);
+    String separator = (pureString ? "','" : ",");
+    StringBuilder sb = new StringBuilder(next.toString());
+    for (; ; ) {
+      if (!it.hasNext()) {
+        break;
+      }
+      next = it.next();
+      sb.append(separator);
+      sb.append(next.toString());
+    }
+    String str = sb.toString();
+    LogicalExpression le = pureString ? new ValueExpressions.QuotedString(str, UNKNOWN) : buildColumn(str);
+    return le;
   }
 
   private static LogicalOperator getSingleMysqlSegmentExprScan(String projectId, String propertyName,
@@ -201,6 +236,75 @@ public class Plans {
     }
   }
 
+  private static LogicalOperator getSingleMysqlSegmentExprScan2(String projectId, String propertyName,
+                                                                Map<Operator, Object> valueMap) throws PlanException {
+    if (MapUtils.isEmpty(valueMap)) {
+      throw new PlanException("Empty segment value");
+    }
+    String table = toUserMysqlTableName(projectId, propertyName);
+    boolean transformDate = usingDateFunc(projectId, propertyName), hasFunctionalSegment = valueMap
+      .containsKey(SGMT), hasEQ = valueMap.containsKey(EQ);
+    Object valueObject = null;
+    if (transformDate && (hasEQ || hasFunctionalSegment)) {
+      if (hasEQ) {
+        valueObject = valueMap.get(EQ);
+        valueMap.remove(EQ);
+      } else if (hasFunctionalSegment) {
+        valueObject = valueMap.get(SGMT);
+        valueMap.remove(SGMT);
+      }
+      valueMap.put(GTE, valueObject);
+      valueMap.put(LTE, valueObject);
+    }
+    String sqlOperator;
+    List<LogicalExpression> logicalExpressions = new ArrayList<LogicalExpression>(valueMap.size());
+    String field = "val";
+    Object fieldValue;
+    FieldReference fieldReference = buildColumn(field);
+    LogicalExpression fieldValueReference;
+    Operator operator;
+    boolean usingBeginSuffix;
+    LogicalExpression le;
+
+    for (Map.Entry<Operator, Object> entry : valueMap.entrySet()) {
+      operator = entry.getKey();
+      sqlOperator = operator.getMathOperator();
+      usingBeginSuffix = usingBeginSuffix(operator);
+      valueObject = entry.getValue();
+      if (valueObject instanceof Collection) {
+        fieldValueReference = toArrayLE((Collection) valueObject);
+      } else {
+        fieldValue = object2String(transformDate, usingBeginSuffix, valueObject);
+        fieldValueReference = toLE(fieldValue);
+      }
+      le = DFR.createExpression(sqlOperator, ExpressionPosition.UNKNOWN, fieldReference, fieldValueReference);
+      logicalExpressions.add(le);
+    }
+    FieldReference fr = buildColumn(KEY_WORD_UID);
+    NamedExpression[] projections;
+    if (hasFunctionalSegment) {
+      projections = new NamedExpression[2];
+      projections[0] = new NamedExpression(fr, fr);
+      projections[1] = new NamedExpression(buildColumn(field), buildColumn(propertyName));
+    } else {
+      projections = new NamedExpression[]{new NamedExpression(fr, fr)};
+    }
+
+    ScanFilter sf = new ScanFilter(toBinaryExpression(logicalExpressions, "and"));
+    ScanSelection ss = new ScanSelection(table, sf, projections);
+    ScanSelection[] sss = new ScanSelection[]{ss};
+    ObjectMapper mapper = DEFAULT_DRILL_CONFIG.getMapper();
+    String str;
+    try {
+      str = mapper.writeValueAsString(sss);
+      Scan scan = new Scan(SE_MYSQL, mapper.readValue(str, JSONOptions.class), buildTable(KEY_WORD_USER));
+      scan.setMemo("Scan(Table=" + table + ", Prop=" + propertyName + ", Val=" + valueMap + ")");
+      return scan;
+    } catch (Exception e) {
+      throw new PlanException(e);
+    }
+  }
+
   public static LogicalOperator getChainedMysqlSegmentScan(String projectId, List<LogicalOperator> operators,
                                                            Map<String, Map<Operator, Object>> segmentMap) throws
     PlanException {
@@ -225,6 +329,41 @@ public class Plans {
       propertyName = entry.getKey();
       singleSegmentMap = entry.getValue();
       lo2 = getSingleMysqlSegmentExprScan(projectId, propertyName, new HashMap<Operator, Object>(singleSegmentMap));
+      operators.add(lo2);
+
+      joinConditions = new JoinCondition[1];
+      joinConditions[0] = new JoinCondition("==", buildColumn(KEY_WORD_UID), buildColumn(KEY_WORD_UID));
+      join = new Join(lo1, lo2, joinConditions, Join.JoinType.INNER);
+      operators.add(join);
+      lo1 = join;
+    }
+    return lo1;
+  }
+
+  public static LogicalOperator getChainedMysqlSegmentScan2(String projectId, List<LogicalOperator> operators,
+                                                            Map<String, Map<Operator, Object>> segmentMap) throws
+    PlanException {
+    if (MapUtils.isEmpty(segmentMap)) {
+      throw new PlanException("Empty segment");
+    }
+    Iterator<Map.Entry<String, Map<Operator, Object>>> it = segmentMap.entrySet().iterator();
+    Map.Entry<String, Map<Operator, Object>> entry = it.next();
+    String propertyName = entry.getKey();
+    Map<Operator, Object> singleSegmentMap = entry.getValue();
+    LogicalOperator lo1 = getSingleMysqlSegmentExprScan2(projectId, propertyName,
+                                                         new HashMap<Operator, Object>(singleSegmentMap)), lo2;
+    operators.add(lo1);
+
+    Join join;
+    JoinCondition[] joinConditions;
+    for (; ; ) {
+      if (!it.hasNext()) {
+        break;
+      }
+      entry = it.next();
+      propertyName = entry.getKey();
+      singleSegmentMap = entry.getValue();
+      lo2 = getSingleMysqlSegmentExprScan2(projectId, propertyName, new HashMap<Operator, Object>(singleSegmentMap));
       operators.add(lo2);
 
       joinConditions = new JoinCondition[1];
@@ -333,7 +472,7 @@ public class Plans {
     return le1;
   }
 
-  private static LogicalExpression toBinaryExpression(Map<String, LogicalExpression> map, String binaryFunction) throws
+  public static LogicalExpression toBinaryExpression(Map<String, LogicalExpression> map, String binaryFunction) throws
     PlanException {
     if (MapUtils.isEmpty(map)) {
       return null;
@@ -422,6 +561,10 @@ public class Plans {
 
   public static Store getStore() {
     return new Store("DEFAULT-STORE", null, null);
+  }
+
+  public static JoinCondition buildUidEQJoinCondition() {
+    return new JoinCondition("==", buildColumn(KEY_WORD_UID), buildColumn(KEY_WORD_UID));
   }
 
 }

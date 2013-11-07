@@ -274,9 +274,9 @@ public class SegmentEvaluator {
   public static void main(String[] args) throws SegmentException, IllegalAccessException, NoSuchMethodException,
     InvocationTargetException {
     String segment = "{\"register_time\":[{\"op\":\"ge\",\"expr\":\"$date_add(3)\",\"type\":\"VAR\"},{\"op\":\"le\",\"expr\":\"$date_add(`end_date`, 5)\",\"type\":\"VAR\"}],\"grade\":[{\"op\":\"eq\",\"expr\":10,\"type\":\"CONST\"}]}";
-    segment = "{\"nation\":[{\"op\":\"eq\",\"expr\":\"zh\",\"type\":\"CONST\"}],\"register_time\":[{\"op\":\"gte\",\"expr\":\"$date_add(1)\",\"type\":\"VAR\"},{\"op\":\"lte\",\"expr\":\"$date_add(1)\",\"type\":\"VAR\"}]}";
+    segment = "{\"nation\":[{\"op\":\"eq\",\"expr\":\"zh\",\"type\":\"CONST\"}],\"register_time\":[{\"op\":\"gte\",\"expr\":\"$date_add(3)\",\"type\":\"VAR\"},{\"op\":\"lte\",\"expr\":\"$date_add(3)\",\"type\":\"VAR\"}]}";
     FormulaQueryDescriptor fqd = new CommonFormulaQueryDescriptor("age", "2013-03-15", "2013-03-15", "visit.*", segment,
-                                                                  Filter.ALL, 1d, "2013-03-10", "2013-03-12",
+                                                                  segment, Filter.ALL, "2013-03-10", "2013-03-12",
                                                                   Interval.MIN5, CommonQueryType.NORMAL);
     evaluate(fqd);
     System.out.println(fqd.getSegment());

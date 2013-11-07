@@ -9,6 +9,8 @@ import java.util.Set;
 
 public enum Operator {
   // Hour function
+  SGMT("sgmt", "sgmt", "sgmt", true),
+  // Hour function
   SGMT300("sgmt300", "sgmt300", "sgmt300", true),
   // Min5 function
   SGMT3600("sgmt3600", "sgmt3600", "sgmt3600", true),
