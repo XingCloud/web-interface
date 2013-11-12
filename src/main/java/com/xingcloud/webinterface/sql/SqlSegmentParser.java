@@ -3,7 +3,6 @@ package com.xingcloud.webinterface.sql;
 import static com.xingcloud.webinterface.plan.Plans.buildUidEQJoinCondition;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.xingcloud.events.XEvent;
 import com.xingcloud.events.XEventException;
 import com.xingcloud.webinterface.enums.CommonQueryType;
 import com.xingcloud.webinterface.enums.Interval;
@@ -11,7 +10,6 @@ import com.xingcloud.webinterface.exception.SegmentException;
 import com.xingcloud.webinterface.model.Filter;
 import com.xingcloud.webinterface.model.formula.CommonFormulaQueryDescriptor;
 import com.xingcloud.webinterface.model.formula.FormulaQueryDescriptor;
-import com.xingcloud.webinterface.plan.Plans;
 import com.xingcloud.webinterface.segment.XSegment;
 import com.xingcloud.webinterface.sql.desc.JoinDescriptor;
 import com.xingcloud.webinterface.sql.desc.SegmentDescriptor;
@@ -22,18 +20,15 @@ import net.sf.jsqlparser.parser.CCJSqlParserManager;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SelectBody;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.drill.common.logical.LogicalPlan;
-import org.apache.drill.common.logical.StorageEngineConfig;
 import org.apache.drill.common.logical.data.Join;
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.common.logical.data.LogicalOperator;
-import org.apache.drill.common.logical.data.Store;
+import org.apache.log4j.Logger;
 
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -42,6 +37,7 @@ import java.util.Set;
  * User: Z J Wu Date: 13-10-28 Time: 下午5:02 Package: com.xingcloud.webinterface.sql
  */
 public class SqlSegmentParser {
+  private static final Logger LOGGER = Logger.getLogger(SqlSegmentParser.class);
   private static SqlSegmentParser instance;
 
   public synchronized static SqlSegmentParser getInstance() {
@@ -61,6 +57,9 @@ public class SqlSegmentParser {
   }
 
   public void evaluate(List<FormulaQueryDescriptor> descriptors) throws SegmentException {
+    if (CollectionUtils.isEmpty(descriptors)) {
+      return;
+    }
     for (FormulaQueryDescriptor descriptor : descriptors) {
       evaluate(descriptor);
     }
@@ -88,6 +87,9 @@ public class SqlSegmentParser {
     String[] segments = descriptor.getSqlSegments().split(";");
     if (ArrayUtils.isEmpty(segments)) {
       return null;
+    }
+    for (String sgmt : segments) {
+      LOGGER.info("[SEGMENT] - Segment part - " + sgmt);
     }
     Set<String> segmentSet = new HashSet<String>(segments.length);
     for (String sql : segments) {
@@ -133,63 +135,7 @@ public class SqlSegmentParser {
         logicalOperators.add(lo1);
       }
     }
-    return new XSegment(sd.toSegmentKey(), lo1, logicalOperators, sd.getFunctionalPropertiesMap());
-  }
-
-  private boolean parseIncremental(FormulaQueryDescriptor descriptor){
-
-  }
-
-  @Deprecated
-  private String transformEvent(String projectId, String sql) throws XEventException {
-    String eventKeywords = "event='";
-    int l = eventKeywords.length();
-    String eventEndKeywords = "'";
-    int i, j, pos = 0;
-    String eventString;
-    XEvent xEvent;
-    String[] eventArray;
-    StringBuilder newSqlPartSB;
-    StringBuilder newSqlSB = new StringBuilder();
-    boolean atLeastOne = false;
-    for (; ; ) {
-      i = sql.indexOf(eventKeywords, pos);
-      if (i < 0) {
-        if (atLeastOne) {
-          newSqlSB.append(sql.substring(pos + 1));
-        } else {
-          newSqlSB.append(sql.substring(pos));
-        }
-        break;
-      }
-      atLeastOne = true;
-      newSqlSB.append(sql.substring(pos, i));
-      j = sql.indexOf(eventEndKeywords, i + l);
-      pos = j;
-      eventString = StringUtils.trim(sql.substring(i + l, j));
-      xEvent = XEvent.buildXEvent(projectId, eventString);
-      if (xEvent == null) {
-        throw new XEventException("No such event - " + xEvent);
-      }
-      eventArray = xEvent.getEventArray();
-      newSqlPartSB = new StringBuilder();
-      newSqlPartSB.append("event0");
-      newSqlPartSB.append("='");
-      newSqlPartSB.append(eventArray[0]);
-      newSqlPartSB.append("'");
-
-      for (int k = 1; k < eventArray.length; k++) {
-        if (eventArray[k] != null) {
-          newSqlPartSB.append(" and event");
-          newSqlPartSB.append(k);
-          newSqlPartSB.append("='");
-          newSqlPartSB.append(eventArray[k]);
-          newSqlPartSB.append("'");
-        }
-      }
-      newSqlSB.append(newSqlPartSB.toString());
-    }
-    return newSqlSB.toString();
+    return new XSegment(sd.toSegmentKey(), lo1, logicalOperators, sd.getFunctionalPropertiesMap(), sd);
   }
 
   public static void main(String[] args) throws JSQLParserException, JsonProcessingException, XEventException,

@@ -10,7 +10,7 @@
 
   <!-- Start monitor threads -->
   <listener>
-    <listener-class>com.xingcloud.webinterface.web.listener.StartUplistener
+    <listener-class>com.xingcloud.webinterface.web.listener.StartUpListener
     </listener-class>
   </listener>
 

@@ -32,25 +32,25 @@ public class QueueSingleQueryTask extends AbstractQueueQueryTask {
   }
 
   private void doQuery() throws PlanException, JsonProcessingException, XRemoteQueryException {
+    LogicalPlan logicalPlan;
+    Submit submit = (Submit) WebServiceProvider.provideService(WEB_SERVICE_ID);
+    if (submit == null) {
+      throw new XRemoteQueryException("There is no corresponding web-service");
+    }
+    ObjectMapper mapper = DEFAULT_DRILL_CONFIG.getMapper();
+    logicalPlan = descriptor.toLogicalPlain();
+    if (logicalPlan == null) {
+      LOGGER.error("[QUERY] - Descriptor has generated null lp string - " + descriptor.getKey());
+      throw new PlanException("Null logical plan(" + descriptor + ")");
+    }
+    String planString = mapper.writeValueAsString(logicalPlan);
+    LOGGER.info("[LP-STRING]\n" + planString);
+
     if (DS_LP) {
-      LogicalPlan logicalPlan;
-      Submit submit = (Submit) WebServiceProvider.provideService(WEB_SERVICE_ID);
-      if (submit == null) {
-        throw new XRemoteQueryException("There is no corresponding web-service");
-      }
-      ObjectMapper mapper = DEFAULT_DRILL_CONFIG.getMapper();
-      logicalPlan = descriptor.toLogicalPlain();
-      if (logicalPlan == null) {
-        LOGGER.error("[QUERY] - Descriptor has generated null lp string - " + descriptor.getKey());
+      if (submit.submit(descriptor.getKey(), planString, PLAN)) {
+        LOGGER.info("[QUERY] - LP added to remote queue - " + descriptor.getKey());
       } else {
-        String planString = mapper.writeValueAsString(logicalPlan);
-        writeLPString2LocalLog(planString);
-//        LOGGER.info("[LP-STRING]\n" + planString);
-        if (submit.submit(descriptor.getKey(), planString, PLAN)) {
-          LOGGER.info("[QUERY] - LP added to remote queue - " + descriptor.getKey());
-        } else {
-          LOGGER.info("[QUERY] - LP rejected by remote queue - " + descriptor.getKey());
-        }
+        LOGGER.info("[QUERY] - LP rejected by remote queue - " + descriptor.getKey());
       }
     } else {
       LOGGER.info("[QUERY] - LP mock added to remote queue - " + descriptor.getKey());

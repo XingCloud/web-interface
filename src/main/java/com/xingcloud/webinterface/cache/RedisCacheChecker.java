@@ -31,6 +31,8 @@ import com.xingcloud.webinterface.model.ResultTuple;
 import com.xingcloud.webinterface.model.StatefulCache;
 import com.xingcloud.webinterface.model.formula.CommonFormulaQueryDescriptor;
 import com.xingcloud.webinterface.model.formula.FormulaQueryDescriptor;
+import com.xingcloud.webinterface.segment.XSegment;
+import com.xingcloud.webinterface.sql.desc.SegmentDescriptor;
 import org.apache.log4j.Logger;
 
 import java.text.ParseException;
@@ -92,7 +94,7 @@ public class RedisCacheChecker implements CacheChecker {
     String projectId = descriptor.getProjectId();
     String realBeginDate = descriptor.getRealBeginDate();
     String realEndDate = descriptor.getRealEndDate();
-    String segment =null;
+    XSegment segment=descriptor.getSegment();
 
     long cacheTimestamp = cache.getTimestamp();
     if (cacheTimestamp == 0) {

@@ -115,8 +115,7 @@ public class CheckCacheOptimizer {
 
     putMonitorInfo(new MonitorInfo(MI_STR_TIME_USE_CHECK_CACHE, accumulator.getRedisTotalTime()));
 
-    LOGGER.info("[CHECK-POINT] Check cache - Redis used " + accumulator
-      .getRedisTotalTime() + " milliseconds, Mysql used " + accumulator.getMysqltotalTime() + " milliseconds.");
+    LOGGER.info("[CHECK-POINT] Check cache - Redis used " + accumulator.getRedisTotalTime() + " milliseconds.");
     return descriptorTupleMap;
   }
 }

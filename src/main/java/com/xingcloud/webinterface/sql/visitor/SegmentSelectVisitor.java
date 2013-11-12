@@ -71,9 +71,6 @@ import java.util.TreeMap;
 public class SegmentSelectVisitor extends LogicalOperatorVisitor implements SelectVisitor {
 
   private LogicalOperator logicalOperator;
-
-  private Map<String, Map<Operator, Object>> segmentToStringMap;
-
   private JoinDescriptor joinDescriptor;
   private TableDescriptor tableDescriptor;
 
@@ -107,7 +104,6 @@ public class SegmentSelectVisitor extends LogicalOperatorVisitor implements Sele
       Expression whereClause = plainSelect.getWhere();
 
       Map<String, Map<Operator, Object>> whereClausesMap = new TreeMap<String, Map<Operator, Object>>();
-      this.segmentToStringMap = whereClausesMap;
       SegmentTableType segmentTableType = isEventTable ? E : U;
       SegmentExpressionVisitor exprVisitor = new SegmentExpressionVisitor(descriptor, segmentTableType,
                                                                           whereClausesMap);

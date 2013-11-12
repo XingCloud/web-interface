@@ -36,7 +36,7 @@ public class QueueBatchQueryTask extends AbstractQueueQueryTask {
     }
   }
 
-  private void doQuery() throws JsonProcessingException, XRemoteQueryException {
+  private void doQuery() throws JsonProcessingException, XRemoteQueryException, PlanException {
     if (CollectionUtils.isEmpty(descriptors)) {
       return;
     }
@@ -49,15 +49,15 @@ public class QueueBatchQueryTask extends AbstractQueueQueryTask {
 
     Map<String, String> batch = new HashMap<String, String>(descriptors.size());
     for (FormulaQueryDescriptor descriptor : descriptors) {
+      logicalPlan = descriptor.toLogicalPlain();
+      if (logicalPlan == null) {
+        throw new PlanException("Null logical plan");
+      }
+      String planString = mapper.writeValueAsString(logicalPlan);
+      LOGGER.info("[LP-STRING]\n" + planString);
       if (DS_LP) {
-        try {
-          logicalPlan = descriptor.toLogicalPlain();
-          String planString = mapper.writeValueAsString(logicalPlan);
-          batch.put(descriptor.getKey(), planString);
-          writeLPString2LocalLog(planString);
-        } catch (PlanException e) {
-          LOGGER.error("[QUERY] - LP mock added to remote queue - " + descriptor.getKey());
-        }
+        batch.put(descriptor.getKey(), planString);
+//        writeLPString2LocalLog(planString);
       } else {
         LOGGER.info("[QUERY] - LP mock added to remote queue - " + descriptor.getKey());
       }

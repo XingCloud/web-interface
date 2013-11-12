@@ -32,6 +32,7 @@ import com.xingcloud.webinterface.exception.UserPropertyException;
 import com.xingcloud.webinterface.exception.XParameterException;
 import com.xingcloud.webinterface.model.BeginEndDatePair;
 import com.xingcloud.webinterface.model.formula.FormulaParameterItem;
+import com.xingcloud.webinterface.segment.XSegment;
 import com.xingcloud.webinterface.sql.desc.ConditionUnit;
 import com.xingcloud.webinterface.sql.desc.JoinDescriptor;
 import com.xingcloud.webinterface.sql.desc.SegmentDescriptor;
@@ -205,10 +206,10 @@ public class ModelUtils {
     return false;
   }
 
-  public static boolean hasVolatileProperty(String projectId, SegmentDescriptor sd, Date targetDate) throws
+  public static boolean hasVolatileProperty(String projectId, XSegment segment, Date targetDate) throws
     SegmentException {
     try {
-      return _hasVolatileProperty(projectId, sd, targetDate);
+      return _hasVolatileProperty(projectId, segment, targetDate);
     } catch (ParseException e) {
       throw new SegmentException(e);
     } catch (UserPropertyException e) {
@@ -216,36 +217,54 @@ public class ModelUtils {
     }
   }
 
-  private static boolean _hasVolatileProperty(String projectId, SegmentDescriptor sd, Date targetDate) throws
+  private static boolean _hasVolatileProperty(String projectId, XSegment segment, Date targetDate) throws
     SegmentException, ParseException, UserPropertyException {
     // 无用户群
-    if (sd == null) {
+    if (segment == null) {
       return false;
     }
+    SegmentDescriptor sd = segment.getSegmentDescriptor();
     Set<JoinDescriptor> jds = sd.getJoins();
     TableDescriptor td1, td2;
-    for (JoinDescriptor jd : jds) {
-      td1 = jd.getLeft();
-      if (td1.isEventTable()) {
-        if (hasVolatileEventProperty(td1, targetDate)) {
-          return true;
+    if (CollectionUtils.isNotEmpty(jds)) {
+      for (JoinDescriptor jd : jds) {
+        td1 = jd.getLeft();
+        if (td1.isEventTable()) {
+          if (hasVolatileEventProperty(td1, targetDate)) {
+            return true;
+          }
+        } else {
+          if (hasVolatileUserProperty(projectId, td1, targetDate)) {
+            return true;
+          }
         }
-      } else {
-        if (hasVolatileUserProperty(projectId, td1, targetDate)) {
-          return true;
+        td2 = jd.getRight();
+        if (td2.isEventTable()) {
+          if (hasVolatileEventProperty(td2, targetDate)) {
+            return true;
+          }
+        } else {
+          if (hasVolatileUserProperty(projectId, td2, targetDate)) {
+            return true;
+          }
         }
       }
-      td2 = jd.getRight();
-      if (td2.isEventTable()) {
-        if (hasVolatileEventProperty(td2, targetDate)) {
-          return true;
-        }
-      } else {
-        if (hasVolatileUserProperty(projectId, td2, targetDate)) {
+    }
+
+    List<TableDescriptor> events = sd.getEvent();
+    if (CollectionUtils.isNotEmpty(events)) {
+      for (TableDescriptor td : events) {
+        if (hasVolatileEventProperty(td, targetDate)) {
           return true;
         }
       }
     }
+
+    TableDescriptor userTD = sd.getUser();
+    if (userTD != null && hasVolatileUserProperty(projectId, userTD, targetDate)) {
+      return true;
+    }
+
     return false;
   }
 
@@ -315,7 +334,7 @@ public class ModelUtils {
   }
 
   public static boolean isIncremental(long targetTimeStamp, String realBeginDate, String realEndDate, String projectId,
-                                      String segment) throws ParseIncrementalException {
+                                      XSegment segment) throws ParseIncrementalException {
     if (DEBUG) {
       return true;
     }

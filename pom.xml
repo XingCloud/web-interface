@@ -7,7 +7,6 @@
   <packaging>war</packaging>
   <version>1.0</version>
   <name>DataDriller web interface</name>
-  <url>http://65.255.35.141:${tport}</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -35,7 +34,7 @@
   <build>
     <defaultGoal>package</defaultGoal>
 
-    <finalName>${aid}</finalName>
+    <finalName>dd</finalName>
 
     <!-- Resources of app -->
     <resources>

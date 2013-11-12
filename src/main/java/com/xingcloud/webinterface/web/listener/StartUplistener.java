@@ -14,8 +14,8 @@ import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import java.util.concurrent.ExecutorService;
 
-public class StartUplistener implements ServletContextListener {
-  private static final Logger LOGGER = Logger.getLogger(StartUplistener.class);
+public class StartUpListener implements ServletContextListener {
+  private static final Logger LOGGER = Logger.getLogger(StartUpListener.class);
 
   public void contextDestroyed(ServletContextEvent arg0) {
   }

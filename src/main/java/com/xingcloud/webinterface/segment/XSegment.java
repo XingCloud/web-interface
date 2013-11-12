@@ -1,6 +1,7 @@
 package com.xingcloud.webinterface.segment;
 
 import com.xingcloud.webinterface.enums.Operator;
+import com.xingcloud.webinterface.sql.desc.SegmentDescriptor;
 import org.apache.drill.common.logical.data.LogicalOperator;
 
 import java.util.List;
@@ -19,12 +20,15 @@ public class XSegment {
 
   private Map<String, Operator> functionalPropertiesMap;
 
+  private SegmentDescriptor segmentDescriptor;
+
   public XSegment(String identifier, LogicalOperator segmentLogicalOperator, List<LogicalOperator> logicalOperators,
-                  Map<String, Operator> functionalPropertiesMap) {
+                  Map<String, Operator> functionalPropertiesMap, SegmentDescriptor segmentDescriptor) {
     this.identifier = identifier;
     this.segmentLogicalOperator = segmentLogicalOperator;
     this.logicalOperators = logicalOperators;
     this.functionalPropertiesMap = functionalPropertiesMap;
+    this.segmentDescriptor = segmentDescriptor;
   }
 
   public Map<String, Operator> getFunctionalPropertiesMap() {
@@ -41,6 +45,10 @@ public class XSegment {
 
   public List<LogicalOperator> getLogicalOperators() {
     return logicalOperators;
+  }
+
+  public SegmentDescriptor getSegmentDescriptor() {
+    return segmentDescriptor;
   }
 
   @Override
