@@ -1,6 +1,6 @@
 package com.xingcloud.webinterface.web.listener;
 
-import static com.xingcloud.webinterface.conf.WebInterfaceConfig.ENABLE_REDIS_CACHE;
+import static com.xingcloud.webinterface.utils.HttpUtils.ENABLE_SYSTEM_MONITOR;
 
 import com.xingcloud.basic.mail.XMailService;
 import com.xingcloud.webinterface.cron.XScheduler;
@@ -26,7 +26,7 @@ public class ShutDownListener implements ServletContextListener {
     XQueryExecutorServiceProvider.destroy();
 
     // 监控的线程池
-    if (ENABLE_REDIS_CACHE) {
+    if (ENABLE_SYSTEM_MONITOR) {
       XMonitorExecutorServiceProvider.destory();
       LOGGER.info("[SHUTDOWN-LISTENER] - Monitor thread pool is shutdown.");
     }
