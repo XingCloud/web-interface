@@ -27,14 +27,12 @@ import static com.xingcloud.webinterface.exec.QueryDescriptorTruncater.truncateD
 import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_DESCRIPTOR_BUILD;
 import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_STR_TIME_USE_BUILD_DESCRIPTOR;
 import static com.xingcloud.webinterface.monitor.SystemMonitor.putMonitorInfo;
-import static com.xingcloud.webinterface.segment.SegmentEvaluator.evaluate;
 import static com.xingcloud.webinterface.utils.DateSplitter.split2Pairs;
 import static com.xingcloud.webinterface.utils.ModelUtils.getDateTruncateLeve;
 import static com.xingcloud.webinterface.utils.ModelUtils.getRealBeginEndDatePair;
 import static com.xingcloud.webinterface.utils.ModelUtils.hasUsefulNDorNDO;
 import static com.xingcloud.webinterface.utils.ModelUtils.isAccumulative;
 import static com.xingcloud.webinterface.utils.ModelUtils.isAverage;
-import static com.xingcloud.webinterface.utils.ModelUtils.resolveSamplingRateByEvent;
 import static com.xingcloud.webinterface.utils.WebInterfaceCommonUtils.booleans2Int;
 import static com.xingcloud.webinterface.utils.WebInterfaceConstants.MIN_HOUR_SUMMARY_POLICY_ARR_NATURAL;
 import static com.xingcloud.webinterface.utils.WebInterfaceConstants.MIN_HOUR_SUMMARY_POLICY_ARR_TOTAL;
@@ -70,6 +68,7 @@ import com.xingcloud.webinterface.model.intermediate.GroupByItemResult;
 import com.xingcloud.webinterface.model.intermediate.GroupByItemResultGroup;
 import com.xingcloud.webinterface.monitor.MonitorInfo;
 import com.xingcloud.webinterface.segment.SegmentSeparator;
+import com.xingcloud.webinterface.sql.SqlSegmentParser;
 import org.apache.commons.collections.CollectionUtils;
 
 import java.text.ParseException;
@@ -151,10 +150,7 @@ public class IdResultBuilder {
 
     DateTruncateLevel dateTruncateLevel;
     float intervalFloat = interval.getDays();
-    double samplingRate;
     Date truncateTargetDate = (intervalFloat < 1 ? today() : yesterday());
-
-    boolean ignoreHandlers = intervalFloat < 1;
 
     List<BeginEndDatePair> datePairs;
     BeginEndDatePair tmpPair;
@@ -195,7 +191,7 @@ public class IdResultBuilder {
     for (FormulaParameterItem item : items) {
       name = item.getName();
       event = item.getEvent();
-      segment = item.getSegment();
+      segment = item.getSqlSegment();
       filter = item.getFilter();
       nd = item.getCoverRange();
       ndo = item.getCoverRangeOrigin();
@@ -211,7 +207,7 @@ public class IdResultBuilder {
       hasUsefulNDorNDO = hasUsefulNDorNDO(nd, ndo);
 
       // 拆分带数组的Segment
-      splitSegments = SegmentSeparator.generateNewSegments(segment);
+      splitSegments = SegmentSeparator.generateNewSegments2(segment);
       commonItemResults = new ArrayList<CommonItemResult>(splitSegments.length);
       // 生成Total所必须的Descriptor
       tap = parseTotalSummaryPolicy(booleanInteger, interval);
@@ -230,17 +226,17 @@ public class IdResultBuilder {
           beginDate = pair.getBeginDate();
           endDate = pair.getEndDate();
           if (intervalFloat < 1) {
-            fqd = new CommonFormulaQueryDescriptor(projectId, beginDate, endDate, event, singleSplitSegment,
-                                                   singleSplitSegment, filter, interval, NORMAL);
+            fqd = new CommonFormulaQueryDescriptor(projectId, beginDate, endDate, event, singleSplitSegment, filter,
+                                                   interval, NORMAL);
           } else if (hasUsefulNDorNDO) {
             tmpPair = getRealBeginEndDatePair(beginDate, endDate, nd, ndo);
             realBeginDate = tmpPair.getBeginDate();
             realEndDate = tmpPair.getEndDate();
             fqd = new CommonFormulaQueryDescriptor(projectId, realBeginDate, realEndDate, event, singleSplitSegment,
-                                                   singleSplitSegment, filter, beginDate, endDate, PERIOD, NORMAL);
+                                                   filter, beginDate, endDate, PERIOD, NORMAL);
           } else {
-            fqd = new CommonFormulaQueryDescriptor(projectId, beginDate, endDate, event, singleSplitSegment,
-                                                   singleSplitSegment, filter, PERIOD, NORMAL);
+            fqd = new CommonFormulaQueryDescriptor(projectId, beginDate, endDate, event, singleSplitSegment, filter,
+                                                   PERIOD, NORMAL);
           }
           fqd.addFunction(function);
           normalConnectors.add(fqd);
@@ -248,12 +244,12 @@ public class IdResultBuilder {
         }
         truncateDate(normalConnectors, truncateTargetDate, dateTruncateLevel);
         // 处理Segment
-        evaluate(normalConnectors);
+        SqlSegmentParser.getInstance().evaluate(normalConnectors);
 
         if (QUERY.equals(tap)) {
           totalConnectors = new ArrayList<FormulaQueryDescriptor>(1);
           fqd = new CommonFormulaQueryDescriptor(projectId, container.getBeginDate(), container.getEndDate(), event,
-                                                 TOTAL_USER, TOTAL_USER, filter, PERIOD, TOTAL);
+                                                 TOTAL_USER, filter, PERIOD, TOTAL);
           fqd.addFunction(function);
           totalConnectors.add(fqd);
           putMonitorInfo(MI_DESCRIPTOR_BUILD);
@@ -267,11 +263,11 @@ public class IdResultBuilder {
               tmpPair = getRealBeginEndDatePair(beginDate, endDate, nd, ndo);
               realBeginDate = tmpPair.getBeginDate();
               realEndDate = tmpPair.getEndDate();
-              fqd = new CommonFormulaQueryDescriptor(projectId, realBeginDate, realEndDate, event, TOTAL_USER,
-                                                     TOTAL_USER, filter, beginDate, endDate, PERIOD, NORMAL);
+              fqd = new CommonFormulaQueryDescriptor(projectId, realBeginDate, realEndDate, event, TOTAL_USER, filter,
+                                                     beginDate, endDate, PERIOD, NORMAL);
             } else {
-              fqd = new CommonFormulaQueryDescriptor(projectId, beginDate, endDate, event, TOTAL_USER, TOTAL_USER,
-                                                     filter, PERIOD, NORMAL);
+              fqd = new CommonFormulaQueryDescriptor(projectId, beginDate, endDate, event, TOTAL_USER, filter, PERIOD,
+                                                     NORMAL);
             }
             fqd.addFunction(function);
             totalConnectors.add(fqd);
@@ -286,11 +282,11 @@ public class IdResultBuilder {
               tmpPair = getRealBeginEndDatePair(beginDate, endDate, nd, ndo);
               realBeginDate = tmpPair.getBeginDate();
               realEndDate = tmpPair.getEndDate();
-              fqd = new CommonFormulaQueryDescriptor(projectId, realBeginDate, realEndDate, event, TOTAL_USER,
-                                                     TOTAL_USER, filter, beginDate, endDate, PERIOD, NORMAL);
+              fqd = new CommonFormulaQueryDescriptor(projectId, realBeginDate, realEndDate, event, TOTAL_USER, filter,
+                                                     beginDate, endDate, PERIOD, NORMAL);
             } else {
-              fqd = new CommonFormulaQueryDescriptor(projectId, beginDate, endDate, event, TOTAL_USER, TOTAL_USER,
-                                                     filter, PERIOD, NORMAL);
+              fqd = new CommonFormulaQueryDescriptor(projectId, beginDate, endDate, event, TOTAL_USER, filter, PERIOD,
+                                                     NORMAL);
             }
             fqd.addFunction(function);
             totalConnectors.add(fqd);
@@ -303,7 +299,7 @@ public class IdResultBuilder {
         if (QUERY.equals(nap)) {
           naturalConnectors = new ArrayList<FormulaQueryDescriptor>(1);
           fqd = new CommonFormulaQueryDescriptor(projectId, container.getBeginDate(), container.getEndDate(), event,
-                                                 singleSplitSegment, singleSplitSegment, filter, PERIOD, NATURAL);
+                                                 singleSplitSegment, filter, PERIOD, NATURAL);
           fqd.addFunction(function);
           naturalConnectors.add(fqd);
           putMonitorInfo(MI_DESCRIPTOR_BUILD);
@@ -316,11 +312,11 @@ public class IdResultBuilder {
               tmpPair = getRealBeginEndDatePair(beginDate, endDate, nd, ndo);
               realBeginDate = tmpPair.getBeginDate();
               realEndDate = tmpPair.getEndDate();
-              fqd = new CommonFormulaQueryDescriptor(projectId, realBeginDate, realEndDate, event, TOTAL_USER,
-                                                     TOTAL_USER, filter, beginDate, endDate, PERIOD, NORMAL);
+              fqd = new CommonFormulaQueryDescriptor(projectId, realBeginDate, realEndDate, event, TOTAL_USER, filter,
+                                                     beginDate, endDate, PERIOD, NORMAL);
             } else {
-              fqd = new CommonFormulaQueryDescriptor(projectId, beginDate, endDate, event, singleSplitSegment,
-                                                     singleSplitSegment, filter, PERIOD, NORMAL);
+              fqd = new CommonFormulaQueryDescriptor(projectId, beginDate, endDate, event, singleSplitSegment, filter,
+                                                     PERIOD, NORMAL);
             }
             fqd.addFunction(function);
             naturalConnectors.add(fqd);
@@ -331,7 +327,7 @@ public class IdResultBuilder {
         }
         truncateDate(naturalConnectors, truncateTargetDate, dateTruncateLevel);
         // 处理Segment
-        evaluate(naturalConnectors);
+        SqlSegmentParser.getInstance().evaluate(naturalConnectors);
 
         cir = new CommonItemResult(name, normalConnectors, totalConnectors, naturalConnectors, tap, nap,
                                    totalKeyIntersection, naturalKeyIntersection);
@@ -377,16 +373,14 @@ public class IdResultBuilder {
     SliceType sliceType = container.getSliceType();
 
     Map<String, Function> functionMap = extractFunctionMap(container);
-    String event = null;
-    String name, segment, groupBy;
+    String event, name, segment, groupBy;
     Filter filter;
     Integer nd, ndo;
-    Function function = null;
+    Function function;
     GroupByType groupByType;
     DateTruncateType dtt;
     AggregationPolicy ap;
 
-    double samplingRate = resolveSamplingRateByEvent(event, function);
     List<BeginEndDatePair> pairs = null;
 
     Map<String, GroupByItemResult> itemResultMap = new HashMap<String, GroupByItemResult>(items.size());
@@ -490,7 +484,7 @@ public class IdResultBuilder {
       groupBy = gbfpi.getGroupBy();
       groupByType = gbfpi.getGroupByType();
 
-      splitSegments = SegmentSeparator.generateNewSegments(segment);
+      splitSegments = SegmentSeparator.generateNewSegments2(segment);
       groupByItemResults = new ArrayList<GroupByItemResult>(splitSegments.length);
 
       averageMetric = isAverage(nd, ndo);
@@ -528,7 +522,7 @@ public class IdResultBuilder {
           if (INTERNAL_NA.equals(latestAvailableGroupByDate)) {
             descriptors = new ArrayList<FormulaQueryDescriptor>(1);
             descriptor = new GroupByFormulaQueryDescriptor(projectId, beginDate, endDate, event, splitSegmentPart,
-                                                           splitSegmentPart, filter, groupBy, groupByType);
+                                                           filter, groupBy, groupByType);
             descriptor.setDateTruncateType(KILL);
             descriptors.add(descriptor);
             putMonitorInfo(MI_DESCRIPTOR_BUILD);
@@ -545,8 +539,8 @@ public class IdResultBuilder {
               p = pairs.get(i);
               tmpPair = getRealBeginEndDatePair(p.getBeginDate(), p.getEndDate(), nd, ndo);
               descriptor = new GroupByFormulaQueryDescriptor(projectId, tmpPair.getBeginDate(), tmpPair.getEndDate(),
-                                                             event, splitSegmentPart, splitSegmentPart, filter,
-                                                             p.getBeginDate(), p.getEndDate(), groupBy, groupByType);
+                                                             event, splitSegmentPart, filter, p.getBeginDate(),
+                                                             p.getEndDate(), groupBy, groupByType);
               descriptor.setDateTruncateType(PASS);
 
               // ======================================
@@ -557,7 +551,7 @@ public class IdResultBuilder {
               descriptor.addFunction(function);
               descriptors.add(descriptor);
               // 处理Segment
-              evaluate(descriptor);
+              SqlSegmentParser.getInstance().evaluate(descriptor);
               putMonitorInfo(MI_DESCRIPTOR_BUILD);
             }
           }
@@ -578,23 +572,23 @@ public class IdResultBuilder {
             p = pairs.get(i);
             tmpPair = getRealBeginEndDatePair(p.getBeginDate(), p.getEndDate(), nd, ndo);
             descriptor = new GroupByFormulaQueryDescriptor(projectId, tmpPair.getBeginDate(), tmpPair.getEndDate(),
-                                                           event, splitSegmentPart, splitSegmentPart, filter,
-                                                           p.getBeginDate(), p.getEndDate(), groupBy, groupByType);
+                                                           event, splitSegmentPart, filter, p.getBeginDate(),
+                                                           p.getEndDate(), groupBy, groupByType);
             truncateDate(descriptor, targetTrimDate, dateTruncateLevel);
             descriptor.addFunction(function);
             descriptors.add(descriptor);
             // 处理Segment
-            evaluate(descriptor);
+            SqlSegmentParser.getInstance().evaluate(descriptor);
             putMonitorInfo(MI_DESCRIPTOR_BUILD);
           }
         } else {
           descriptors = new ArrayList<FormulaQueryDescriptor>(1);
-          descriptor = new GroupByFormulaQueryDescriptor(projectId, beginDate, endDate, event, splitSegmentPart,
-                                                         splitSegmentPart, filter, groupBy, groupByType);
+          descriptor = new GroupByFormulaQueryDescriptor(projectId, beginDate, endDate, event, splitSegmentPart, filter,
+                                                         groupBy, groupByType);
           truncateDate(descriptor, targetTrimDate, dateTruncateLevel);
           descriptor.addFunction(function);
           // 处理Segment
-          evaluate(descriptor);
+          SqlSegmentParser.getInstance().evaluate(descriptor);
 
           descriptors.add(descriptor);
           putMonitorInfo(MI_DESCRIPTOR_BUILD);

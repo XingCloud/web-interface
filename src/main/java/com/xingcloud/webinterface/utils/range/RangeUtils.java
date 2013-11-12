@@ -38,11 +38,11 @@ public class RangeUtils {
     switch (operator) {
       case GT:
         return greaterThan(l);
-      case GTE:
+      case GE:
         return atLeast(l);
       case LT:
         return lessThan(l);
-      case LTE:
+      case LE:
         return atMost(l);
       case EQ:
         return singleton(l);
@@ -51,25 +51,25 @@ public class RangeUtils {
     }
   }
 
-  private static Range<Long> short2RangeLong(String operatorString, String date) {
-    String s = date.replace("-", "");
-    Long l = Long.valueOf(s);
-    Operator operator = Operator.OPERATOR_MONGO_KEYWORDS_BIMAP.inverse().get(operatorString);
-    switch (operator) {
-      case GT:
-        return greaterThan(l);
-      case GTE:
-        return atLeast(l);
-      case LT:
-        return lessThan(l);
-      case LTE:
-        return atMost(l);
-      case EQ:
-        return singleton(l);
-      default:
-        return all();
-    }
-  }
+//  private static Range<Long> short2RangeLong(String operatorString, String date) {
+//    String s = date.replace("-", "");
+//    Long l = Long.valueOf(s);
+//    Operator operator = Operator.OPERATOR_MONGO_KEYWORDS_BIMAP.inverse().get(operatorString);
+//    switch (operator) {
+//      case GT:
+//        return greaterThan(l);
+//      case GE:
+//        return atLeast(l);
+//      case LT:
+//        return lessThan(l);
+//      case LE:
+//        return atMost(l);
+//      case EQ:
+//        return singleton(l);
+//      default:
+//        return all();
+//    }
+//  }
 
   public static Range<Long> continuouslyIntersect(Collection<Range<Long>> ranges) throws WrongRangeException {
     Iterator<Range<Long>> it = ranges.iterator();

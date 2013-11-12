@@ -7,12 +7,13 @@ import static com.xingcloud.basic.utils.DateUtils.dateSubtraction;
 import static com.xingcloud.basic.utils.DateUtils.previousDay;
 import static com.xingcloud.basic.utils.DateUtils.short2Date;
 import static com.xingcloud.mysql.PropType.sql_datetime;
+import static com.xingcloud.webinterface.conf.WebInterfaceConfig.DEBUG;
 import static com.xingcloud.webinterface.enums.DateTruncateLevel.LOOSELY;
 import static com.xingcloud.webinterface.enums.Function.SUM;
 import static com.xingcloud.webinterface.enums.Function.USER_NUM;
 import static com.xingcloud.webinterface.enums.MongoOperator.LT;
 import static com.xingcloud.webinterface.enums.MongoOperator.LTE;
-import static com.xingcloud.webinterface.conf.WebInterfaceConfig.DEBUG;
+import static com.xingcloud.webinterface.sql.SqlUtilsConstants.DATE_FIELD;
 import static com.xingcloud.webinterface.utils.WebInterfaceConstants.DEFAULT_SAMPLING_RATE;
 import static com.xingcloud.webinterface.utils.WebInterfaceConstants.TOTAL_USER;
 
@@ -24,19 +25,27 @@ import com.xingcloud.mysql.UserProp;
 import com.xingcloud.webinterface.enums.DateTruncateLevel;
 import com.xingcloud.webinterface.enums.Function;
 import com.xingcloud.webinterface.enums.Interval;
+import com.xingcloud.webinterface.enums.Operator;
 import com.xingcloud.webinterface.exception.ParseIncrementalException;
 import com.xingcloud.webinterface.exception.SegmentException;
 import com.xingcloud.webinterface.exception.UserPropertyException;
 import com.xingcloud.webinterface.exception.XParameterException;
 import com.xingcloud.webinterface.model.BeginEndDatePair;
 import com.xingcloud.webinterface.model.formula.FormulaParameterItem;
+import com.xingcloud.webinterface.sql.desc.ConditionUnit;
+import com.xingcloud.webinterface.sql.desc.JoinDescriptor;
+import com.xingcloud.webinterface.sql.desc.SegmentDescriptor;
+import com.xingcloud.webinterface.sql.desc.TableDescriptor;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 public class ModelUtils {
 
@@ -140,6 +149,106 @@ public class ModelUtils {
     return pair;
   }
 
+  public static boolean hasVolatileEventProperty(TableDescriptor td, Date targetDate) throws SegmentException,
+    ParseException {
+    Map<String, List<ConditionUnit>> tdMap = td.getConditionUnits();
+    String compareDate, valueDateString, tDate = date2Short(targetDate);
+    List<ConditionUnit> cus = tdMap.get(DATE_FIELD);
+    if (CollectionUtils.isEmpty(cus)) {
+      throw new SegmentException("Cannot parse event table is volatile or not because condition map is empty - " + td);
+    }
+    Operator operator;
+    for (ConditionUnit cu : cus) {
+      operator = cu.getOperator();
+      valueDateString = cu.getValueObject().toString();
+      if (Operator.LT.equals(operator)) {
+        compareDate = previousDay(valueDateString);
+      } else {
+        compareDate = valueDateString;
+      }
+      if (!before(compareDate, tDate)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public static boolean hasVolatileUserProperty(String projectId, TableDescriptor td, Date targetDate) throws
+    UserPropertyException, ParseException {
+    Map<String, List<ConditionUnit>> tdMap = td.getConditionUnits();
+    UserProp up;
+    PropType pt;
+    String propertyName, compareDate, valueDateString, tDate = date2Short(targetDate);
+    List<ConditionUnit> cus;
+    Operator operator;
+    for (Entry<String, List<ConditionUnit>> entry : tdMap.entrySet()) {
+      propertyName = entry.getKey();
+      up = UserPropertiesInfoManager.getInstance().getUserProp(projectId, propertyName);
+      pt = up.getPropType();
+
+      if (sql_datetime.equals(pt)) {
+        cus = entry.getValue();
+        for (ConditionUnit cu : cus) {
+          operator = cu.getOperator();
+          valueDateString = cu.getValueObject().toString();
+          if (Operator.LT.equals(operator)) {
+            compareDate = previousDay(valueDateString);
+          } else {
+            compareDate = valueDateString;
+          }
+          if (!before(compareDate, tDate)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  public static boolean hasVolatileProperty(String projectId, SegmentDescriptor sd, Date targetDate) throws
+    SegmentException {
+    try {
+      return _hasVolatileProperty(projectId, sd, targetDate);
+    } catch (ParseException e) {
+      throw new SegmentException(e);
+    } catch (UserPropertyException e) {
+      throw new SegmentException(e);
+    }
+  }
+
+  private static boolean _hasVolatileProperty(String projectId, SegmentDescriptor sd, Date targetDate) throws
+    SegmentException, ParseException, UserPropertyException {
+    // 无用户群
+    if (sd == null) {
+      return false;
+    }
+    Set<JoinDescriptor> jds = sd.getJoins();
+    TableDescriptor td1, td2;
+    for (JoinDescriptor jd : jds) {
+      td1 = jd.getLeft();
+      if (td1.isEventTable()) {
+        if (hasVolatileEventProperty(td1, targetDate)) {
+          return true;
+        }
+      } else {
+        if (hasVolatileUserProperty(projectId, td1, targetDate)) {
+          return true;
+        }
+      }
+      td2 = jd.getRight();
+      if (td2.isEventTable()) {
+        if (hasVolatileEventProperty(td2, targetDate)) {
+          return true;
+        }
+      } else {
+        if (hasVolatileUserProperty(projectId, td2, targetDate)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   public static boolean hasVolatileUserProperty(String projectId, String segment, Date targetDate) throws
     SegmentException, UserPropertyException {
     if (Strings.isNullOrEmpty(segment) || TOTAL_USER.equals(segment)) {
@@ -236,7 +345,10 @@ public class ModelUtils {
     }
 
     try {
-      if (hasVolatileUserProperty(projectId, segment, targetDate)) {
+//      if (hasVolatileUserProperty(projectId, segment, targetDate)) {
+//        return false;
+//      }
+      if (hasVolatileProperty(projectId, segment, targetDate)) {
         return false;
       }
     } catch (Exception e) {

@@ -112,11 +112,11 @@ public class Filter implements Serializable {
     switch (operator) {
       case LT:
         return val < filterVal;
-      case LTE:
+      case LE:
         return val <= filterVal;
       case GT:
         return val > filterVal;
-      case GTE:
+      case GE:
         return val >= filterVal;
       case EQ:
         return val == filterVal;

@@ -9,8 +9,6 @@ import static com.xingcloud.webinterface.enums.Function.SUM;
 import static com.xingcloud.webinterface.enums.Function.USER_NUM;
 import static com.xingcloud.webinterface.enums.QueryType.COMMON;
 import static com.xingcloud.webinterface.enums.QueryType.GROUP;
-import static com.xingcloud.webinterface.utils.WebInterfaceConstants.SQL_TABLE_NAME_PREFIX_USER;
-import static com.xingcloud.webinterface.utils.WebInterfaceConstants.SQL_TABLE_NAME_SUFFIX_EVENT;
 import static com.xingcloud.webinterface.utils.WebInterfaceConstants.TOTAL_EVENT;
 import static com.xingcloud.webinterface.utils.WebInterfaceConstants.TOTAL_USER;
 
@@ -19,9 +17,9 @@ import com.xingcloud.mysql.UserProp;
 import com.xingcloud.webinterface.annotation.JsonName;
 import com.xingcloud.webinterface.enums.DateTruncateType;
 import com.xingcloud.webinterface.enums.Function;
-import com.xingcloud.webinterface.enums.Operator;
 import com.xingcloud.webinterface.exception.PlanException;
 import com.xingcloud.webinterface.model.Filter;
+import com.xingcloud.webinterface.segment.XSegment;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.drill.common.logical.LogicalPlan;
 
@@ -32,7 +30,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 /**
  * @author Z J Wu@2012-11-27
@@ -58,9 +55,10 @@ public abstract class FormulaQueryDescriptor {
   protected String realBeginDate;
   protected String realEndDate;
   protected String event;
-  protected String segment;
+  // Segment相关
   protected String sqlSegments;
-  protected Map<String, Map<Operator, Object>> segmentMap;
+  protected XSegment segment;
+
   protected Filter filter;
 
   // 其他信息
@@ -69,6 +67,7 @@ public abstract class FormulaQueryDescriptor {
   protected DateTruncateType dateTruncateType;
   protected String key;
   protected List<UserProp> userProperties;
+  protected boolean incremental;
 
   // 给segment使用的开始时间
   @JsonName("start_date")
@@ -77,29 +76,17 @@ public abstract class FormulaQueryDescriptor {
   @JsonName("end_date")
   protected String inputEndDate;
 
-  // 生成SQL时使用的表名称
-  // 事件
-  protected final String sqlEventTableName;
-  // UID
-  protected final String sqlUserTableName;
-
-  protected final String uuid;
-
   public FormulaQueryDescriptor() {
     super();
-    this.sqlEventTableName = projectId + SQL_TABLE_NAME_SUFFIX_EVENT;
-    this.sqlUserTableName = SQL_TABLE_NAME_PREFIX_USER + projectId;
-    this.uuid = UUID.randomUUID().toString();
   }
 
   public FormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
-                                String segment, String sqlSegments, Filter filter) {
+                                String sqlSegments, Filter filter) {
     super();
     this.projectId = projectId;
     this.realBeginDate = realBeginDate;
     this.realEndDate = realEndDate;
     this.event = event;
-    this.segment = segment;
     this.sqlSegments = sqlSegments;
     this.filter = filter;
     try {
@@ -109,20 +96,15 @@ public abstract class FormulaQueryDescriptor {
     }
     this.inputBeginDate = realBeginDate;
     this.inputEndDate = realEndDate;
-    this.sqlEventTableName = projectId + SQL_TABLE_NAME_SUFFIX_EVENT;
-    this.sqlUserTableName = SQL_TABLE_NAME_PREFIX_USER + projectId;
-    this.uuid = UUID.randomUUID().toString();
   }
 
   public FormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
-                                String segment, String sqlSegments, Filter filter, String inputBeginDate,
-                                String inputEndDate) {
+                                String sqlSegments, Filter filter, String inputBeginDate, String inputEndDate) {
     super();
     this.projectId = projectId;
     this.realBeginDate = realBeginDate;
     this.realEndDate = realEndDate;
     this.event = event;
-    this.segment = segment;
     this.sqlSegments = sqlSegments;
     this.filter = filter;
     try {
@@ -132,14 +114,10 @@ public abstract class FormulaQueryDescriptor {
     }
     this.inputBeginDate = inputBeginDate;
     this.inputEndDate = inputEndDate;
-
-    this.sqlEventTableName = projectId + SQL_TABLE_NAME_SUFFIX_EVENT;
-    this.sqlUserTableName = SQL_TABLE_NAME_PREFIX_USER + projectId;
-    this.uuid = UUID.randomUUID().toString();
   }
 
   public boolean hasSegment() {
-    String segment = getSegment();
+    String segment = getSqlSegments();
     return !(Strings.isNullOrEmpty(segment) || TOTAL_USER.equals(segment)
     );
   }
@@ -156,9 +134,12 @@ public abstract class FormulaQueryDescriptor {
     return KILL.equals(getDateTruncateType());
   }
 
-  protected LogicalPlan toLogicalPlanGeneric() {
-    LogicalPlan logicalPlan = null;
-    return logicalPlan;
+  public boolean isIncremental() {
+    return incremental;
+  }
+
+  public void setIncremental(boolean incremental) {
+    this.incremental = incremental;
   }
 
   public abstract LogicalPlan toLogicalPlain() throws PlanException;
@@ -206,13 +187,8 @@ public abstract class FormulaQueryDescriptor {
       sb.append(event);
     }
     sb.append(SEPARATOR_CHAR_CACHE);
-
-    String segment = getSegment();
-    if (Strings.isNullOrEmpty(segment)) {
-      sb.append(TOTAL_USER);
-    } else {
-      sb.append(segment);
-    }
+    XSegment xSegment = getSegment();
+    sb.append(xSegment == null ? TOTAL_USER : xSegment.getIdentifier().replace("'", ""));
     sb.append(SEPARATOR_CHAR_CACHE);
 
     Filter filter = getFilter();
@@ -282,11 +258,11 @@ public abstract class FormulaQueryDescriptor {
     this.event = event;
   }
 
-  public String getSegment() {
+  public XSegment getSegment() {
     return segment;
   }
 
-  public void setSegment(String segment) {
+  public void setSegment(XSegment segment) {
     this.segment = segment;
   }
 
@@ -357,28 +333,12 @@ public abstract class FormulaQueryDescriptor {
     this.userProperties = userProperties;
   }
 
-  public String getSqlEventTableName() {
-    return sqlEventTableName;
-  }
-
-  public String getSqlUserTableName() {
-    return sqlUserTableName;
-  }
-
   public String getSqlSegments() {
     return sqlSegments;
   }
 
   public void setSqlSegments(String sqlSegments) {
     this.sqlSegments = sqlSegments;
-  }
-
-  public Map<String, Map<Operator, Object>> getSegmentMap() {
-    return segmentMap;
-  }
-
-  public void setSegmentMap(Map<String, Map<Operator, Object>> segmentMap) {
-    this.segmentMap = segmentMap;
   }
 
   @Override

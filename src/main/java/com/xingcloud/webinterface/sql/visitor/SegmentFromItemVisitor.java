@@ -1,8 +1,6 @@
 package com.xingcloud.webinterface.sql.visitor;
 
 import static com.xingcloud.webinterface.enums.Operator.EQ;
-import static com.xingcloud.webinterface.enums.SegmentTableType.AJ;
-import static com.xingcloud.webinterface.enums.SegmentTableType.IJ;
 import static com.xingcloud.webinterface.plan.Plans.KEY_WORD_EVENT;
 import static com.xingcloud.webinterface.plan.Plans.KEY_WORD_UID;
 import static com.xingcloud.webinterface.plan.Plans.KEY_WORD_USER;
@@ -13,11 +11,11 @@ import static org.apache.drill.common.util.DrillConstants.SE_MYSQL;
 import static org.apache.drill.common.util.FieldReferenceBuilder.buildColumn;
 import static org.apache.drill.common.util.FieldReferenceBuilder.buildTable;
 
-import com.xingcloud.webinterface.enums.SegmentTableType;
 import com.xingcloud.webinterface.exception.SegmentException;
 import com.xingcloud.webinterface.model.formula.FormulaQueryDescriptor;
-import com.xingcloud.webinterface.sql.SegmentDescriptor;
 import com.xingcloud.webinterface.sql.SqlUtilsConstants;
+import com.xingcloud.webinterface.sql.desc.JoinDescriptor;
+import com.xingcloud.webinterface.sql.desc.TableDescriptor;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.FromItem;
 import net.sf.jsqlparser.statement.select.FromItemVisitor;
@@ -44,14 +42,20 @@ public class SegmentFromItemVisitor extends LogicalOperatorVisitor implements Fr
 
   private boolean isEventTable;
 
-  private SegmentDescriptor segmentDescriptor;
+  private TableDescriptor tableDescriptor;
+
+  private JoinDescriptor joinDescriptor;
 
   protected SegmentFromItemVisitor(FormulaQueryDescriptor descriptor, List<LogicalOperator> operators) {
     super(descriptor, operators);
   }
 
-  public SegmentDescriptor getSegmentDescriptor() {
-    return segmentDescriptor;
+  public TableDescriptor getTableDescriptor() {
+    return tableDescriptor;
+  }
+
+  public JoinDescriptor getJoinDescriptor() {
+    return joinDescriptor;
   }
 
   public FieldReference getRef() {
@@ -87,7 +91,7 @@ public class SegmentFromItemVisitor extends LogicalOperatorVisitor implements Fr
       return;
     }
     this.logicalOperator = segmentSelectVisitor.getLogicalOperator();
-    this.segmentDescriptor = segmentSelectVisitor.getSegmentDescriptor();
+    this.tableDescriptor = segmentSelectVisitor.getTableDescriptor();
   }
 
   @Override
@@ -120,13 +124,12 @@ public class SegmentFromItemVisitor extends LogicalOperatorVisitor implements Fr
       this.exception = new SegmentException("Unsupported join type - " + rightJoin);
       return;
     }
-    JoinCondition[] joinConditions = new JoinCondition[]{new JoinCondition(EQ.getMathOperator(), left, right)
+    JoinCondition[] joinConditions = new JoinCondition[]{new JoinCondition(EQ.getSqlOperator(), left, right)
     };
     logicalOperator = new Join(leftLO, rightLO, joinConditions, getJoinType(rightJoin));
     operators.add(logicalOperator);
-    SegmentTableType stt = ANTI.equals(joinType) ? AJ : IJ;
-    this.segmentDescriptor = new SegmentDescriptor(stt, leftVisitor.getSegmentDescriptor().getContent1(),
-                                                   rightVisitor.getSegmentDescriptor().getContent1());
+    this.joinDescriptor = new JoinDescriptor(joinType, leftVisitor.getTableDescriptor(),
+                                             rightVisitor.getTableDescriptor());
   }
 
   public Join.JoinType getJoinType(net.sf.jsqlparser.statement.select.Join join) {

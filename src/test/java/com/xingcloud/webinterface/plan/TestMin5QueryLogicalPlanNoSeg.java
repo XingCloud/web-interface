@@ -7,7 +7,7 @@ import com.xingcloud.webinterface.enums.Interval;
 import com.xingcloud.webinterface.model.Filter;
 import com.xingcloud.webinterface.model.formula.CommonFormulaQueryDescriptor;
 import com.xingcloud.webinterface.model.formula.FormulaQueryDescriptor;
-import com.xingcloud.webinterface.segment.SegmentEvaluator;
+import com.xingcloud.webinterface.sql.SqlSegmentParser;
 import com.xingcloud.webinterface.utils.WebInterfaceRandomUtils;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.junit.Test;
@@ -40,10 +40,10 @@ public class TestMin5QueryLogicalPlanNoSeg extends TestLogicalPlanBase {
       s1 = DateUtils.date2Short(d1);
       s2 = DateUtils.date2Short(d2);
       event = r.nextBoolean() ? TEST_EVENT_VISIT : TEST_EVENT_VISIT;
-      fqd = new CommonFormulaQueryDescriptor(TEST_TABLE, s1, s2, event, null, null, Filter.ALL, "2013-03-10",
-                                             "2013-03-12", Interval.HOUR, CommonQueryType.NORMAL);
+      fqd = new CommonFormulaQueryDescriptor(TEST_TABLE, s1, s2, event, null, Filter.ALL, "2013-03-10", "2013-03-12",
+                                             Interval.HOUR, CommonQueryType.NORMAL);
 
-      SegmentEvaluator.evaluate(fqd);
+      SqlSegmentParser.getInstance().evaluate(fqd);
       LogicalPlan logicalPlan = fqd.toLogicalPlain();
       String planString = Plans.DEFAULT_DRILL_CONFIG.getMapper().writeValueAsString(logicalPlan);
       System.out.println(planString);

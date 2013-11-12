@@ -92,7 +92,7 @@ public class RedisCacheChecker implements CacheChecker {
     String projectId = descriptor.getProjectId();
     String realBeginDate = descriptor.getRealBeginDate();
     String realEndDate = descriptor.getRealEndDate();
-    String segment = descriptor.getSegment();
+    String segment =null;
 
     long cacheTimestamp = cache.getTimestamp();
     if (cacheTimestamp == 0) {

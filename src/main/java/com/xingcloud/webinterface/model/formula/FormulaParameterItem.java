@@ -33,6 +33,11 @@ public abstract class FormulaParameterItem {
   @Expose
   protected String segment;
 
+  @JsonName("segmentv2")
+  @SerializedName("segmentv2")
+  @Expose
+  protected String sqlSegment;
+
   @JsonName("filter")
   @SerializedName("filter")
   protected Filter filter;
@@ -110,6 +115,14 @@ public abstract class FormulaParameterItem {
 
   public void setSegment(String segment) {
     this.segment = segment;
+  }
+
+  public String getSqlSegment() {
+    return sqlSegment;
+  }
+
+  public void setSqlSegment(String sqlSegment) {
+    this.sqlSegment = sqlSegment;
   }
 
   public Filter getFilter() {

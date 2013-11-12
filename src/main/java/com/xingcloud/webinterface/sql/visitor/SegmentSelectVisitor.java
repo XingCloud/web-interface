@@ -1,12 +1,14 @@
 package com.xingcloud.webinterface.sql.visitor;
 
-import static com.xingcloud.webinterface.enums.GroupByType.USER_PROPERTIES;
+import static com.xingcloud.webinterface.enums.Interval.HOUR;
+import static com.xingcloud.webinterface.enums.Interval.MIN5;
 import static com.xingcloud.webinterface.enums.Operator.EQ;
+import static com.xingcloud.webinterface.enums.Operator.GE;
 import static com.xingcloud.webinterface.enums.Operator.GT;
-import static com.xingcloud.webinterface.enums.Operator.GTE;
+import static com.xingcloud.webinterface.enums.Operator.LE;
 import static com.xingcloud.webinterface.enums.Operator.LT;
-import static com.xingcloud.webinterface.enums.Operator.LTE;
-import static com.xingcloud.webinterface.enums.Operator.SGMT;
+import static com.xingcloud.webinterface.enums.Operator.SGMT300;
+import static com.xingcloud.webinterface.enums.Operator.SGMT3600;
 import static com.xingcloud.webinterface.enums.SegmentTableType.E;
 import static com.xingcloud.webinterface.enums.SegmentTableType.U;
 import static com.xingcloud.webinterface.plan.Plans.DEFAULT_DRILL_CONFIG;
@@ -34,10 +36,10 @@ import com.xingcloud.webinterface.exception.SegmentException;
 import com.xingcloud.webinterface.model.BeginEndDatePair;
 import com.xingcloud.webinterface.model.formula.CommonFormulaQueryDescriptor;
 import com.xingcloud.webinterface.model.formula.FormulaQueryDescriptor;
-import com.xingcloud.webinterface.model.formula.GroupByFormulaQueryDescriptor;
 import com.xingcloud.webinterface.plan.ScanFilter;
 import com.xingcloud.webinterface.plan.ScanSelection;
-import com.xingcloud.webinterface.sql.SegmentDescriptor;
+import com.xingcloud.webinterface.sql.desc.JoinDescriptor;
+import com.xingcloud.webinterface.sql.desc.TableDescriptor;
 import com.xingcloud.webinterface.utils.DateSplitter;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.statement.select.FromItem;
@@ -72,7 +74,16 @@ public class SegmentSelectVisitor extends LogicalOperatorVisitor implements Sele
 
   private Map<String, Map<Operator, Object>> segmentToStringMap;
 
-  private SegmentDescriptor segmentDescriptor;
+  private JoinDescriptor joinDescriptor;
+  private TableDescriptor tableDescriptor;
+
+  public JoinDescriptor getJoinDescriptor() {
+    return joinDescriptor;
+  }
+
+  public TableDescriptor getTableDescriptor() {
+    return tableDescriptor;
+  }
 
   public SegmentSelectVisitor(FormulaQueryDescriptor descriptor, List<LogicalOperator> operators) {
     super(descriptor, operators);
@@ -80,14 +91,6 @@ public class SegmentSelectVisitor extends LogicalOperatorVisitor implements Sele
 
   public LogicalOperator getLogicalOperator() {
     return logicalOperator;
-  }
-
-  public Map<String, Map<Operator, Object>> getSegmentToStringMap() {
-    return segmentToStringMap;
-  }
-
-  public SegmentDescriptor getSegmentDescriptor() {
-    return segmentDescriptor;
   }
 
   @Override public void visit(PlainSelect plainSelect) {
@@ -117,30 +120,36 @@ public class SegmentSelectVisitor extends LogicalOperatorVisitor implements Sele
         this.exception = new SegmentException("There is no any property in where clauses.");
         return;
       }
-      this.segmentDescriptor = new SegmentDescriptor(segmentTableType, whereClausesMap);
       if (E.equals(segmentTableType)) {
         toEventLogicalOperator(storageEngine, whereClausesMap, segmentFromItemVisitor.getRef());
       } else {
-        killSGMT(whereClausesMap);
+        if (descriptor.isCommon()) {
+          replaceSGMTPlaceholder(whereClausesMap, ((CommonFormulaQueryDescriptor) descriptor).getInterval());
+        }
         toUserLogicalOperator(whereClausesMap);
       }
+      this.tableDescriptor = TableDescriptor.create(whereClausesMap, segmentTableType);
     } else {
       if (segmentFromItemVisitor.isOK()) {
         this.logicalOperator = segmentFromItemVisitor.getLogicalOperator();
       } else {
         this.exception = segmentFromItemVisitor.getException();
       }
-      this.segmentDescriptor = segmentFromItemVisitor.getSegmentDescriptor();
+      this.joinDescriptor = segmentFromItemVisitor.getJoinDescriptor();
     }
   }
 
-  private void killSGMT(Map<String, Map<Operator, Object>> whereClausesMap) {
+  private void replaceSGMTPlaceholder(Map<String, Map<Operator, Object>> whereClausesMap, Interval interval) {
     Map<Operator, Object> valMap;
     for (Map.Entry<String, Map<Operator, Object>> entry : whereClausesMap.entrySet()) {
       valMap = entry.getValue();
       if (valMap.containsValue(USING_SGMT_FUNC)) {
         valMap.clear();
-        valMap.put(SGMT, descriptor.getInputBeginDate());
+        if (HOUR.equals(interval)) {
+          valMap.put(SGMT3600, descriptor.getInputBeginDate());
+        } else if (MIN5.equals(interval)) {
+          valMap.put(SGMT300, descriptor.getInputBeginDate());
+        }
       }
     }
   }
@@ -158,9 +167,10 @@ public class SegmentSelectVisitor extends LogicalOperatorVisitor implements Sele
       boolean min5HourQuery = cfqd.getInterval().getDays() < 1;
       additionalProjections = min5HourQuery ? new String[]{KEY_WORD_TIMESTAMP} : null;
     } else {
-      GroupByFormulaQueryDescriptor gbfqd = (GroupByFormulaQueryDescriptor) descriptor;
-      boolean userPropertyGroupBy = USER_PROPERTIES.equals(gbfqd.getGroupByType());
-      additionalProjections = userPropertyGroupBy ? null : new String[]{KEY_WORD_EVENT + gbfqd.getGroupBy()};
+//      GroupByFormulaQueryDescriptor gbfqd = (GroupByFormulaQueryDescriptor) descriptor;
+//      boolean userPropertyGroupBy = USER_PROPERTIES.equals(gbfqd.getGroupByType());
+//      additionalProjections = userPropertyGroupBy ? null : new String[]{KEY_WORD_EVENT + gbfqd.getGroupBy()};
+      additionalProjections = null;
     }
     NamedExpression[] projections;
     boolean emptyProjections = ArrayUtils.isEmpty(additionalProjections);
@@ -185,7 +195,12 @@ public class SegmentSelectVisitor extends LogicalOperatorVisitor implements Sele
       this.exception = new SegmentException("Date range must be assigned in event sql.");
       return;
     }
-    Object eventObj = whereClausesMap.get(EVENT_FIELD).get(EQ);
+    Map<Operator, Object> eventObjectMap = whereClausesMap.get(EVENT_FIELD);
+    if (MapUtils.isEmpty(eventObjectMap)) {
+      this.exception = new SegmentException("Event field must be assigned in event-table-sql.");
+      return;
+    }
+    Object eventObj = eventObjectMap.get(EQ);
     String eventString = eventObj == null ? "*" : eventObj.toString();
     XEvent xEvent;
     try {
@@ -215,7 +230,7 @@ public class SegmentSelectVisitor extends LogicalOperatorVisitor implements Sele
     Object val1 = dateConditionMap.get(EQ), val2;
     String beginDate, endDate;
     if (val1 == null) {
-      val1 = dateConditionMap.get(GTE);
+      val1 = dateConditionMap.get(GE);
       if (val1 == null) {
         val1 = dateConditionMap.get(GT);
         if (val1 == null) {
@@ -223,7 +238,7 @@ public class SegmentSelectVisitor extends LogicalOperatorVisitor implements Sele
           return;
         }
       }
-      val2 = dateConditionMap.get(LTE);
+      val2 = dateConditionMap.get(LE);
       if (val2 == null) {
         val2 = dateConditionMap.get(LT);
         if (val2 == null) {

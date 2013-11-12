@@ -5,7 +5,7 @@ import com.xingcloud.webinterface.enums.GroupByType;
 import com.xingcloud.webinterface.model.Filter;
 import com.xingcloud.webinterface.model.formula.FormulaQueryDescriptor;
 import com.xingcloud.webinterface.model.formula.GroupByFormulaQueryDescriptor;
-import com.xingcloud.webinterface.segment.SegmentEvaluator;
+import com.xingcloud.webinterface.sql.SqlSegmentParser;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.junit.Test;
 
@@ -17,11 +17,29 @@ public class TestUserGroupByQueryLogicalPlanSeg extends TestLogicalPlanBase {
   @Test
   public void testBuildPlan() throws Exception {
     String name = "groupby.prop.withseg.json";
-    String segment = "{\"identifier\":[{\"op\":\"eq\",\"expr\":\"android.global.s77\",\"type\":\"CONST\"}]}";
+    String sqlSegment;
+    // user segment
+    sqlSegment = "select uid from user where grade > '100'";
+    sqlSegment = "select uid from user where grade > 100";
+    sqlSegment = "select uid from user where grade in (2,4,'1','0',3)";
+    sqlSegment = "select uid from user where identifier in (nkj,reogn,cxkvzn,zxcnv)";
+    sqlSegment = "select uid from user where identifier in ('nkj',reogn,'cxkvzn',zxcnv)";
+    sqlSegment = "select uid from user where register_time >= '2013-11-01' and register_time <= '2013-11-02'";
+    sqlSegment = "select uid from user where register_time = '2013-11-01'";
+    sqlSegment = "select uid from user where register_time > '2013-11-01'";
+    sqlSegment = "select uid from user where first_pay_time>=date_add('s',0) and first_pay_time<=date_add('e',0)";
+//    sqlSegment = "select uid from user where first_pay_time>=date_add('s',0)";
+//    sqlSegment = "select uid from user where register_time>=date_add('s',0) and register_time<=date_add('e',0) and grade > '100' and identifier in (nkj,reogn,cxkvzn,zxcnv)";
+
+    // deu segment
+//    sqlSegment = "select uid from deu where event='pay.*' and date = '2013-11-01'";
+//    sqlSegment = "select uid from deu where event='pay.*' and date >= '2013-10-01' and date <= '2013-10-07'";
+//    sqlSegment = "select uid from deu where event='pay.*' and date = '2013-10-01';select uid from deu where event='buy.*' and date = '2013-10-02'";
+    sqlSegment = "select uid from ((select uid from deu_age where event='buy.banana.*' and date>=date_add('s',2) and date<=date_add('e',0)) as deu1 anti join (select uid from deu_age where event='buy.apple.*' and date>=date_add('s',0) and date<= date_add('e',-2)) as deu2 on deu1.uid=deu2.uid)";
     FormulaQueryDescriptor fqd = new GroupByFormulaQueryDescriptor(TEST_TABLE, TEST_REAL_BEGIN_DATE, TEST_REAL_END_DATE,
-                                                                   TEST_EVENT, segment, segment, Filter.ALL, "geoip",
+                                                                   TEST_EVENT, sqlSegment, Filter.ALL, "geoip",
                                                                    GroupByType.USER_PROPERTIES);
-    SegmentEvaluator.evaluate(fqd);
+    SqlSegmentParser.getInstance().evaluate(fqd);
     LogicalPlan logicalPlan = fqd.toLogicalPlain();
     String planString = Plans.DEFAULT_DRILL_CONFIG.getMapper().writeValueAsString(logicalPlan);
     System.out.println(planString);

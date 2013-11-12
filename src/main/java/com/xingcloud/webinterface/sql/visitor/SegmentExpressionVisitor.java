@@ -4,11 +4,11 @@ import static com.xingcloud.mysql.PropType.sql_bigint;
 import static com.xingcloud.mysql.PropType.sql_datetime;
 import static com.xingcloud.webinterface.calculate.func.DateAddFunction.DATE_ADD_FUNCTION_NAME;
 import static com.xingcloud.webinterface.enums.Operator.EQ;
+import static com.xingcloud.webinterface.enums.Operator.GE;
 import static com.xingcloud.webinterface.enums.Operator.GT;
-import static com.xingcloud.webinterface.enums.Operator.GTE;
 import static com.xingcloud.webinterface.enums.Operator.IN;
+import static com.xingcloud.webinterface.enums.Operator.LE;
 import static com.xingcloud.webinterface.enums.Operator.LT;
-import static com.xingcloud.webinterface.enums.Operator.LTE;
 import static com.xingcloud.webinterface.enums.SegmentTableType.E;
 import static com.xingcloud.webinterface.enums.SegmentTableType.U;
 import static com.xingcloud.webinterface.sql.SqlUtilsConstants.USING_SGMT_FUNC;
@@ -54,9 +54,9 @@ public class SegmentExpressionVisitor extends AbstractExprVisitor {
 
   static {
     OPERATOR_MAP.put("=", EQ);
-    OPERATOR_MAP.put(">=", GTE);
+    OPERATOR_MAP.put(">=", GE);
     OPERATOR_MAP.put(">", GT);
-    OPERATOR_MAP.put("<=", LTE);
+    OPERATOR_MAP.put("<=", LE);
     OPERATOR_MAP.put("<", LT);
     OPERATOR_MAP.put("in", IN);
   }
@@ -203,8 +203,8 @@ public class SegmentExpressionVisitor extends AbstractExprVisitor {
     if (E.equals(this.segmentTableType)) {
       conditionVal = stringValue;
       if (EQ.equals(operator) && isDateField(columnName)) {
-        putMapValue(columnName, GTE, conditionVal);
-        putMapValue(columnName, LTE, conditionVal);
+        putMapValue(columnName, GE, conditionVal);
+        putMapValue(columnName, LE, conditionVal);
         return;
       }
     } else {
@@ -218,8 +218,8 @@ public class SegmentExpressionVisitor extends AbstractExprVisitor {
       PropType pt = up.getPropType();
       conditionVal = convertUserPropertyValue(pt, stringValue);
       if (EQ.equals(operator) && (sql_bigint.equals(pt) || sql_datetime.equals(pt))) {
-        putMapValue(columnName, GTE, conditionVal);
-        putMapValue(columnName, LTE, conditionVal);
+        putMapValue(columnName, GE, conditionVal);
+        putMapValue(columnName, LE, conditionVal);
         return;
       }
     }

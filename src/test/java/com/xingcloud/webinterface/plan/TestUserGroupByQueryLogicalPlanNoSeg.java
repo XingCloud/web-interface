@@ -5,7 +5,7 @@ import com.xingcloud.webinterface.enums.GroupByType;
 import com.xingcloud.webinterface.model.Filter;
 import com.xingcloud.webinterface.model.formula.FormulaQueryDescriptor;
 import com.xingcloud.webinterface.model.formula.GroupByFormulaQueryDescriptor;
-import com.xingcloud.webinterface.segment.SegmentEvaluator;
+import com.xingcloud.webinterface.sql.SqlSegmentParser;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.junit.Test;
 
@@ -18,9 +18,9 @@ public class TestUserGroupByQueryLogicalPlanNoSeg extends TestLogicalPlanBase {
   public void testBuildPlan() throws Exception {
     String name = "groupby.prop.noseg.json";
     FormulaQueryDescriptor fqd = new GroupByFormulaQueryDescriptor(TEST_TABLE, TEST_REAL_BEGIN_DATE, TEST_REAL_END_DATE,
-                                                                   TEST_EVENT, null, null, Filter.ALL, "register_time",
+                                                                   TEST_EVENT, null, Filter.ALL, "register_time",
                                                                    GroupByType.USER_PROPERTIES);
-    SegmentEvaluator.evaluate(fqd);
+    SqlSegmentParser.getInstance().evaluate(fqd);
     LogicalPlan logicalPlan = fqd.toLogicalPlain();
     String planString = Plans.DEFAULT_DRILL_CONFIG.getMapper().writeValueAsString(logicalPlan);
     System.out.println(planString);

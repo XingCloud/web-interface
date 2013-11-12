@@ -31,6 +31,10 @@ import java.util.Map.Entry;
 
 public class SegmentSeparator {
 
+  public static String[] generateNewSegments2(String segment) throws SegmentException {
+    return new String[]{segment};
+  }
+
   public static String[] generateNewSegments(String segment) throws SegmentException {
     if (StringUtils.isBlank(segment) || TOTAL_USER.equals(segment)) {
       return new String[]{TOTAL_USER};

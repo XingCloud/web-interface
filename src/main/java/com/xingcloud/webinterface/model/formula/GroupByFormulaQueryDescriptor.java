@@ -24,6 +24,7 @@ import com.xingcloud.webinterface.enums.GroupByType;
 import com.xingcloud.webinterface.enums.Operator;
 import com.xingcloud.webinterface.exception.PlanException;
 import com.xingcloud.webinterface.model.Filter;
+import com.xingcloud.webinterface.segment.XSegment;
 import com.xingcloud.webinterface.utils.UserPropertiesInfoManager;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
@@ -57,17 +58,16 @@ public class GroupByFormulaQueryDescriptor extends FormulaQueryDescriptor {
   }
 
   public GroupByFormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
-                                       String segment, String sqlSegments, Filter filter, String groupBy,
-                                       GroupByType groupByType) {
-    super(projectId, realBeginDate, realEndDate, event, segment, sqlSegments, filter);
+                                       String sqlSegments, Filter filter, String groupBy, GroupByType groupByType) {
+    super(projectId, realBeginDate, realEndDate, event, sqlSegments, filter);
     this.groupBy = groupBy;
     this.groupByType = groupByType;
   }
 
   public GroupByFormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
-                                       String segment, String sqlSegments, Filter filter, String inputBeginDate,
-                                       String inputEndDate, String groupBy, GroupByType groupByType) {
-    super(projectId, realBeginDate, realEndDate, event, segment, sqlSegments, filter, inputBeginDate, inputEndDate);
+                                       String sqlSegments, Filter filter, String inputBeginDate, String inputEndDate,
+                                       String groupBy, GroupByType groupByType) {
+    super(projectId, realBeginDate, realEndDate, event, sqlSegments, filter, inputBeginDate, inputEndDate);
     this.groupBy = groupBy;
     this.groupByType = groupByType;
   }
@@ -164,15 +164,15 @@ public class GroupByFormulaQueryDescriptor extends FormulaQueryDescriptor {
     LogicalOperator scanRoot, segmentLogicalOperator, userTableScan;
 
     FieldReference uidFR = buildColumn(KEY_WORD_UID);
+    XSegment xSegment ;
     if (userPropertyGroupBy) {
       userTableScan = getUserScan(this.projectId, this.groupBy);
       logicalOperators.add(userTableScan);
       if (hasSegment()) {
-        Map<String, Map<Operator, Object>> segmentMap = getSegmentMap();
-        if (segmentMap.containsKey("N/A")) {
-          return null;
-        }
-        segmentLogicalOperator = getChainedMysqlSegmentScan(this.projectId, logicalOperators, segmentMap);
+        xSegment = getSegment();
+        segmentLogicalOperator = xSegment.getSegmentLogicalOperator();
+        logicalOperators.addAll(xSegment.getLogicalOperators());
+
         joinConditions = new JoinCondition[1];
         joinConditions[0] = new JoinCondition("==", uidFR, uidFR);
         join = new Join(segmentLogicalOperator, eventTableScan, joinConditions, Join.JoinType.INNER);
@@ -192,11 +192,10 @@ public class GroupByFormulaQueryDescriptor extends FormulaQueryDescriptor {
       }
     } else {
       if (hasSegment()) {
-        Map<String, Map<Operator, Object>> segmentMap = getSegmentMap();
-        if (segmentMap.containsKey("N/A")) {
-          return null;
-        }
-        segmentLogicalOperator = getChainedMysqlSegmentScan(this.projectId, logicalOperators, segmentMap);
+        xSegment = getSegment();
+        segmentLogicalOperator = xSegment.getSegmentLogicalOperator();
+        logicalOperators.addAll(xSegment.getLogicalOperators());
+
         joinConditions = new JoinCondition[1];
         joinConditions[0] = new JoinCondition("==", buildColumn(KEY_WORD_UID), buildColumn(KEY_WORD_UID));
         join = new Join(segmentLogicalOperator, eventTableScan, joinConditions, Join.JoinType.INNER);

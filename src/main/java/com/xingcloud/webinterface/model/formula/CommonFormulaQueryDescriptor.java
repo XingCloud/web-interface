@@ -11,8 +11,7 @@ import static com.xingcloud.webinterface.plan.Plans.KEY_WORD_TIMESTAMP;
 import static com.xingcloud.webinterface.plan.Plans.KEY_WORD_UID;
 import static com.xingcloud.webinterface.plan.Plans.KEY_WORD_VALUE;
 import static com.xingcloud.webinterface.plan.Plans.buildPlanProperties;
-import static com.xingcloud.webinterface.plan.Plans.getChainedMysqlSegmentScan;
-import static com.xingcloud.webinterface.plan.Plans.getChainedSegmentFilter;
+import static com.xingcloud.webinterface.plan.Plans.getChainedSegmentFilter2;
 import static com.xingcloud.webinterface.plan.Plans.getEventScan;
 import static com.xingcloud.webinterface.plan.Plans.getStore;
 import static org.apache.drill.common.enums.Aggregator.COUNT;
@@ -25,6 +24,8 @@ import com.xingcloud.webinterface.enums.Interval;
 import com.xingcloud.webinterface.enums.Operator;
 import com.xingcloud.webinterface.exception.PlanException;
 import com.xingcloud.webinterface.model.Filter;
+import com.xingcloud.webinterface.segment.XSegment;
+import org.apache.commons.collections.MapUtils;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionCall;
@@ -62,17 +63,17 @@ public class CommonFormulaQueryDescriptor extends FormulaQueryDescriptor {
   }
 
   public CommonFormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
-                                      String segment, String sqlSegments, Filter filter, Interval interval,
+                                      String sqlSegments, Filter filter, Interval interval,
                                       CommonQueryType commonQueryType) {
-    super(projectId, realBeginDate, realEndDate, event, segment, sqlSegments, filter);
+    super(projectId, realBeginDate, realEndDate, event, sqlSegments, filter);
     this.interval = interval;
     this.commonQueryType = commonQueryType;
   }
 
   public CommonFormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
-                                      String segment, String sqlSegments, Filter filter, String inputBeginDate,
-                                      String inputEndDate, Interval interval, CommonQueryType commonQueryType) {
-    super(projectId, realBeginDate, realEndDate, event, segment, sqlSegments, filter, inputBeginDate, inputEndDate);
+                                      String sqlSegments, Filter filter, String inputBeginDate, String inputEndDate,
+                                      Interval interval, CommonQueryType commonQueryType) {
+    super(projectId, realBeginDate, realEndDate, event, sqlSegments, filter, inputBeginDate, inputEndDate);
     this.interval = interval;
     this.commonQueryType = commonQueryType;
   }
@@ -151,7 +152,7 @@ public class CommonFormulaQueryDescriptor extends FormulaQueryDescriptor {
 
   @Override
   public LogicalPlan toLogicalPlain() throws PlanException {
-    boolean hasFunctionalSegment = hasFunctionalSegment();
+    boolean hasFunctionalSegment = false;
     List<LogicalOperator> logicalOperators = new ArrayList<LogicalOperator>();
     boolean min5HourQuery = this.interval.getDays() < 1;
     String[] additionalProjections = min5HourQuery ? new String[]{KEY_WORD_TIMESTAMP} : null;
@@ -162,20 +163,23 @@ public class CommonFormulaQueryDescriptor extends FormulaQueryDescriptor {
     JoinCondition[] joinConditions;
 
     LogicalOperator scanRoot, segmentLogicalOperator;
+    XSegment xSegment = null;
+    Map<String, Operator> functionalPropertiesMap = null;
     if (hasSegment()) {
-      Map<String, Map<Operator, Object>> segmentMap = getSegmentMap();
-      if (segmentMap.containsKey("N/A")) {
-        return null;
-      }
-      segmentLogicalOperator = getChainedMysqlSegmentScan(this.projectId, logicalOperators, segmentMap);
+      xSegment = getSegment();
+      functionalPropertiesMap = xSegment.getFunctionalPropertiesMap();
+      segmentLogicalOperator = xSegment.getSegmentLogicalOperator();
+      logicalOperators.addAll(xSegment.getLogicalOperators());
       joinConditions = new JoinCondition[1];
       joinConditions[0] = new JoinCondition("==", buildColumn(KEY_WORD_UID), buildColumn(KEY_WORD_UID));
       join = new Join(segmentLogicalOperator, eventTableScan, joinConditions, Join.JoinType.INNER);
       logicalOperators.add(join);
       scanRoot = join;
+
     } else {
       scanRoot = eventTableScan;
     }
+
     String segmentFunc;
     switch (this.interval) {
       case MIN5:
@@ -189,13 +193,13 @@ public class CommonFormulaQueryDescriptor extends FormulaQueryDescriptor {
     }
 
     org.apache.drill.common.logical.data.Filter logicalFilter = null;
-    if (hasFunctionalSegment) {
-      LogicalExpression filterExpression = getChainedSegmentFilter(getSegmentMap(), segmentFunc, KEY_WORD_TIMESTAMP);
+    if (MapUtils.isNotEmpty(functionalPropertiesMap)) {
+      LogicalExpression filterExpression = getChainedSegmentFilter2(xSegment.getFunctionalPropertiesMap(), segmentFunc,
+                                                                    KEY_WORD_TIMESTAMP);
       logicalFilter = new org.apache.drill.common.logical.data.Filter(filterExpression);
       logicalFilter.setInput(scanRoot);
       logicalOperators.add(logicalFilter);
     }
-
     // build min5 groupby
     Segment segment = null;
     LogicalExpression singleGroupByLE;

@@ -1,7 +1,6 @@
 package com.xingcloud.webinterface.sql;
 
 import static com.xingcloud.webinterface.plan.Plans.buildUidEQJoinCondition;
-import static com.xingcloud.webinterface.utils.WebInterfaceConstants.TOTAL_USER;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.xingcloud.events.XEvent;
@@ -13,6 +12,10 @@ import com.xingcloud.webinterface.model.Filter;
 import com.xingcloud.webinterface.model.formula.CommonFormulaQueryDescriptor;
 import com.xingcloud.webinterface.model.formula.FormulaQueryDescriptor;
 import com.xingcloud.webinterface.plan.Plans;
+import com.xingcloud.webinterface.segment.XSegment;
+import com.xingcloud.webinterface.sql.desc.JoinDescriptor;
+import com.xingcloud.webinterface.sql.desc.SegmentDescriptor;
+import com.xingcloud.webinterface.sql.desc.TableDescriptor;
 import com.xingcloud.webinterface.sql.visitor.SegmentSelectVisitor;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.parser.CCJSqlParserManager;
@@ -30,24 +33,25 @@ import org.apache.drill.common.logical.data.Store;
 
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * User: Z J Wu Date: 13-10-28 Time: 下午5:02 Package: com.xingcloud.webinterface.sql
  */
-public class SqlParser {
-  private static SqlParser instance;
+public class SqlSegmentParser {
+  private static SqlSegmentParser instance;
 
-  public synchronized static SqlParser getInstance() {
+  public synchronized static SqlSegmentParser getInstance() {
     if (instance == null) {
-      instance = new SqlParser();
+      instance = new SqlSegmentParser();
     }
     return instance;
   }
 
-  private SqlParser() {
+  private SqlSegmentParser() {
   }
 
   private CCJSqlParserManager pm = new CCJSqlParserManager();
@@ -56,25 +60,38 @@ public class SqlParser {
     return statement instanceof Select;
   }
 
-  public LogicalOperator toLogicalOperator(FormulaQueryDescriptor fqd, List<LogicalOperator> operators) throws
-    SegmentException {
-    try {
-      return _toLogicalOperator(fqd, operators);
-    } catch (Exception e) {
-      throw new SegmentException(e);
+  public void evaluate(List<FormulaQueryDescriptor> descriptors) throws SegmentException {
+    for (FormulaQueryDescriptor descriptor : descriptors) {
+      evaluate(descriptor);
     }
   }
 
-  private LogicalOperator _toLogicalOperator(FormulaQueryDescriptor fqd, List<LogicalOperator> operators) throws
-    SegmentException, JSQLParserException {
-    String sqlSegments = fqd.getSqlSegments();
-    if (StringUtils.isBlank(sqlSegments) || TOTAL_USER.equals(sqlSegments)) {
-      return null;
+  public void evaluate(FormulaQueryDescriptor descriptor) throws SegmentException {
+    if (!descriptor.hasSegment()) {
+      descriptor.setSegment(null);
+      return;
     }
-    String[] segments = sqlSegments.split(";");
-    System.out.println(Arrays.toString(segments));
+    List<LogicalOperator> logicalOperators = new ArrayList<LogicalOperator>(3);
+    XSegment segment;
+    try {
+      segment = parseSegment(descriptor, logicalOperators);
+    } catch (SegmentException e) {
+      throw e;
+    } catch (JSQLParserException e) {
+      throw new SegmentException(e);
+    }
+    descriptor.setSegment(segment);
+  }
+
+  private XSegment parseSegment(FormulaQueryDescriptor descriptor, List<LogicalOperator> logicalOperators) throws
+    SegmentException, JSQLParserException {
+    String[] segments = descriptor.getSqlSegments().split(";");
     if (ArrayUtils.isEmpty(segments)) {
       return null;
+    }
+    Set<String> segmentSet = new HashSet<String>(segments.length);
+    for (String sql : segments) {
+      segmentSet.add(sql);
     }
     Statement statement;
     SegmentSelectVisitor ssv;
@@ -82,31 +99,45 @@ public class SqlParser {
     LogicalOperator lo1 = null, lo2;
     JoinCondition[] joinConditions = new JoinCondition[]{buildUidEQJoinCondition()};
 
-    SegmentDescriptor sd;
-    for (int i = 0; i < segments.length; i++) {
-      statement = pm.parse(new StringReader(segments[i]));
+    TableDescriptor td;
+    JoinDescriptor jd;
+    SegmentDescriptor sd = new SegmentDescriptor();
+    for (String sql : segmentSet) {
+      statement = pm.parse(new StringReader(sql));
       if (!isSelect(statement)) {
         throw new SegmentException("Unsupported sql operation - " + statement.getClass());
       }
       selectBody = ((Select) statement).getSelectBody();
-      ssv = new SegmentSelectVisitor(fqd, operators);
+      ssv = new SegmentSelectVisitor(descriptor, logicalOperators);
       selectBody.accept(ssv);
       if (ssv.isWrong()) {
         throw new SegmentException(ssv.getException());
-
       }
       lo2 = ssv.getLogicalOperator();
-      operators.add(lo2);
-      sd = ssv.getSegmentDescriptor();
-      System.out.println(sd);
+      logicalOperators.add(lo2);
+      jd = ssv.getJoinDescriptor();
+      if (jd == null) {
+        td = ssv.getTableDescriptor();
+        if (td == null) {
+          throw new SegmentException("JoinDescriptor and TableDescriptor are all null.");
+        } else {
+          sd.addDescriptor(td);
+        }
+      } else {
+        sd.addDescriptor(jd);
+      }
       if (lo1 == null) {
         lo1 = lo2;
       } else {
         lo1 = new Join(lo1, lo2, joinConditions, Join.JoinType.INNER);
-        operators.add(lo1);
+        logicalOperators.add(lo1);
       }
     }
-    return lo1;
+    return new XSegment(sd.toSegmentKey(), lo1, logicalOperators, sd.getFunctionalPropertiesMap());
+  }
+
+  private boolean parseIncremental(FormulaQueryDescriptor descriptor){
+
   }
 
   @Deprecated
@@ -163,27 +194,31 @@ public class SqlParser {
 
   public static void main(String[] args) throws JSQLParserException, JsonProcessingException, XEventException,
     SegmentException {
-    SqlParser paser = SqlParser.getInstance();
+    SqlSegmentParser paser = SqlSegmentParser.getInstance();
     String sql = "select uid from ((select uid from deu_age where event='visit.*.b' and date>=date_add('s',2) and date<=date_add('e',0)) as deu1 anti join (select uid from deu_age where event='visit.*' and date>=date_add('s',0) and date<= date_add('e',-2)) as deu2 on deu1.uid=deu2.uid)";
+    sql = "select uid from event where date='2013-11-02' and event='pay.*';" +
+      "select uid from event where date='2013-11-01' and event='visit.*';" +
+      "select uid from user where grade in (2,4,'1','0',3);" +
+      "select uid from event where date='2013-11-03' and event='consume.*';" +
+      "select uid from user where register_time>=date_add('s',0) and register_time<=date_add('e',0) and pay_amount > '100';" +
+      "select uid from ((select uid from deu_age where event='buy.banana.*' and date>=date_add('s',2) and date<=date_add('e',0)) as deu1 anti join (select uid from deu_age where event='buy.apple.*' and date>=date_add('s',0) and date<= date_add('e',-2)) as deu2 on deu1.uid=deu2.uid)";
+
 //    sql = "select uid from deu_age where date>=date_add('s',3) and event='visit.*.b' and date<=date_add('e',0)";
 //    sql = "select uid from deu_age where date ='2013-11-05' and event='visit.*.b'";
-//    sql = "select uid from user where register_time>=date_add('s',0) and register_time<=date_add('e',0) and grade > '100' and identifier in (nkj,reogn,cxkvzn,zxcnv)";
+    sql = "select uid from user where first_pay_time>=date_add('s',0) and first_pay_time<=date_add('e',0);select uid from user where register_time>=date_add('s',0) and register_time<=date_add('e',0) and grade > '100' and identifier in (nkj,reogn,cxkvzn,zxcnv)";
 //    sql = "select uid from user where register_time>=date_add('s',0) and register_time<=date_add('e',0)";
-//    sql = "select uid from user where register_time=date_add('s',0) ";
-    sql = "select uid from ((select uid from deu_age where event='visit.*.b' and date>=date_add('s',2) and date<=date_add('e',0)) as deu1 anti join (select uid from deu_age where event='visit.*' and date>=date_add('s',0) and date<= date_add('e',-2)) as deu2 on deu1.uid=deu2.uid);select uid from user where grade in ('1',2,3);select uid from deu_age where date ='2013-11-05' and event='pay.*'";
+//    sql = "select uid from deu_age where date ='2013-11-05' and event='visit.*.b';select uid from user where register_time=date_add('s',0);select uid from user where grade in ('1',2,3)";
+//    sql = "select uid from user where grade in (2,4,'1','0',3)";
+//    sql = "select uid from deu_age where date ='2013-11-05' and event='pay.*';select uid from ((select uid from deu_age where event='visit.*.b' and date>=date_add('s',2) and date<=date_add('e',0)) as deu1 anti join (select uid from deu_age where event='visit.*' and date>=date_add('s',0) and date<= date_add('e',-2)) as deu2 on deu1.uid=deu2.uid);select uid from user where grade in ('1',2,3)";
 //    sql = "select uid from deu_age where date ='2013-11-05' and event='visit.*.b';select uid from user where identifier=a and grade in ('1',2,3);select uid from user where register_time>=date_add('s',0) and register_time<=date_add('e',0)";
 //    sql = "select uid from ((select uid from deu_age where date='2013-11-06' and event='visit.*') as deu1 anti join (select uid from deu_age where date='2013-11-07' and event='visit.*') as deu2 on deu1.uid=deu2.uid)";
-    FormulaQueryDescriptor descriptor = new CommonFormulaQueryDescriptor("age", "2013-10-01", "2013-10-01", "visit.*",
-                                                                         sql, sql, Filter.ALL, Interval.PERIOD,
-                                                                         CommonQueryType.NORMAL);
-    List<LogicalOperator> operators = new ArrayList<LogicalOperator>();
-    LogicalOperator lo = paser.toLogicalOperator(descriptor, operators);
-    Store store = new Store("DEFAULT-STORE", null, null);
-    store.setInput(lo);
-    operators.add(store);
 
-    LogicalPlan lp = new LogicalPlan(Plans.buildPlanProperties("a"), new HashMap<String, StorageEngineConfig>(),
-                                     operators);
+    FormulaQueryDescriptor descriptor = new CommonFormulaQueryDescriptor("age", "2013-11-08", "2013-11-08", "visit.*",
+                                                                         sql, Filter.ALL, Interval.PERIOD,
+                                                                         CommonQueryType.NORMAL);
+    paser.evaluate(descriptor);
+    System.out.println(descriptor);
+
 //    System.out.println(Plans.DEFAULT_DRILL_CONFIG.getMapper().writeValueAsString(lp));
 
   }

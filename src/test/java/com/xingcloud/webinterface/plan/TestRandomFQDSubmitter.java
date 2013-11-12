@@ -12,7 +12,7 @@ import com.xingcloud.webinterface.model.Filter;
 import com.xingcloud.webinterface.model.formula.CommonFormulaQueryDescriptor;
 import com.xingcloud.webinterface.model.formula.FormulaQueryDescriptor;
 import com.xingcloud.webinterface.model.formula.GroupByFormulaQueryDescriptor;
-import com.xingcloud.webinterface.segment.SegmentEvaluator;
+import com.xingcloud.webinterface.sql.SqlSegmentParser;
 import com.xingcloud.webinterface.utils.WebInterfaceRandomUtils;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.junit.Test;
@@ -65,17 +65,17 @@ public class TestRandomFQDSubmitter extends TestLogicalPlanBase {
       if (commonQuery) {
         Interval interval = intervalPool[random.nextInt(intervalPool.length)];
         if (Interval.PERIOD.equals(interval)) {
-          descriptor = new CommonFormulaQueryDescriptor(TEST_TABLE, s1, s2, event, seg, seg, Filter.ALL, interval,
+          descriptor = new CommonFormulaQueryDescriptor(TEST_TABLE, s1, s2, event,  seg, Filter.ALL, interval,
                                                         CommonQueryType.NORMAL);
         } else {
-          descriptor = new CommonFormulaQueryDescriptor(TEST_TABLE, s1, s1, event, seg, seg, Filter.ALL, interval,
+          descriptor = new CommonFormulaQueryDescriptor(TEST_TABLE, s1, s1, event,  seg, Filter.ALL, interval,
                                                         CommonQueryType.NORMAL);
         }
       } else {
-        descriptor = new GroupByFormulaQueryDescriptor(TEST_TABLE, s1, s2, event, seg, seg, Filter.ALL, "ref",
+        descriptor = new GroupByFormulaQueryDescriptor(TEST_TABLE, s1, s2, event,  seg, Filter.ALL, "ref",
                                                        GroupByType.USER_PROPERTIES);
       }
-      SegmentEvaluator.evaluate(descriptor);
+      SqlSegmentParser.getInstance().evaluate(descriptor);
       LogicalPlan logicalPlan = descriptor.toLogicalPlain();
       String planString = Plans.DEFAULT_DRILL_CONFIG.getMapper().writeValueAsString(logicalPlan);
       write2File(name + "." + i + ".json", planString);
@@ -105,9 +105,9 @@ public class TestRandomFQDSubmitter extends TestLogicalPlanBase {
     String beginDate = "2013-09-01";
     String endDate = "2013-09-10";
     FormulaQueryDescriptor desc = new CommonFormulaQueryDescriptor(pID, beginDate, endDate, eventsPool[0],
-                                                                   segmentPool[2], segmentPool[2], Filter.ALL,
+                                                                    segmentPool[2], Filter.ALL,
                                                                    intervalPool[1], CommonQueryType.NORMAL);
-    SegmentEvaluator.evaluate(desc);
+    SqlSegmentParser.getInstance().evaluate(desc);
     LogicalPlan logicalPlan = desc.toLogicalPlain();
     String planString = Plans.DEFAULT_DRILL_CONFIG.getMapper().writeValueAsString(logicalPlan);
     System.out.println(planString);

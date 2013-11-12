@@ -9,113 +9,104 @@ import java.util.Set;
 
 public enum Operator {
   // Hour function
-  SGMT("sgmt", "sgmt", "sgmt", true),
+  SGMT("sgmt", "sgmt", true, true),
   // Hour function
-  SGMT300("sgmt300", "sgmt300", "sgmt300", true),
+  SGMT300("sgmt300", "sgmt300", true, true),
   // Min5 function
-  SGMT3600("sgmt3600", "sgmt3600", "sgmt3600", true),
+  SGMT3600("sgmt3600", "sgmt3600", true, true),
   // Do not filter anything.
   ALL(),
   // >
-  GT("gt", "$gt", ">", false),
+  GT("gt", ">", false, false),
   // <
-  LT("lt", "$lt", "<", false),
+  LT("lt", "<", false, false),
   // >=
-  GTE("gte", "$gte", ">=", false),
+  GE("ge", ">=", false, false),
   // <=
-  LTE("lte", "$lte", "<=", false),
+  LE("le", "<=", false, false),
   // ==
-  EQ("eq", "eq", "==", false),
+  EQ("eq", "==", false, false),
   // !=
-  NE("ne", "$ne", "!=", false),
-  IN("in", "in", "in", false),
+  NE("ne", "<>", false, false),
+  IN("in", "in", false, true),
   // between ... and ...[x, y]
   BETWEEN;
 
   private static final Set<Operator> SET = EnumSet.allOf(Operator.class);
   public static final BiMap<Operator, String> OPERATOR_COMMON_KEYWORDS_BIMAP = HashBiMap.create();
-  public static final BiMap<Operator, String> OPERATOR_MONGO_KEYWORDS_BIMAP = HashBiMap.create();
 
   static {
     String keyword;
     for (Operator operator : SET) {
-      keyword = operator.getCommonKeyword();
+      keyword = operator.getId();
       if (keyword != null) {
         OPERATOR_COMMON_KEYWORDS_BIMAP.put(operator, keyword);
-      }
-      keyword = operator.getMongoKeyword();
-      if (keyword != null) {
-        OPERATOR_MONGO_KEYWORDS_BIMAP.put(operator, keyword);
       }
     }
   }
 
-  private String commonKeyword;
+  private String id;
 
-  private String mongoKeyword;
-
-  private String mathOperator;
+  private String sqlOperator;
 
   private boolean isFunctional;
+
+  private boolean needWhiteSpaceInToString;
 
   private Operator() {
   }
 
-  private Operator(String commonKeyword, String mongoKeyword, String mathOperator, boolean isFunctional) {
-    this.commonKeyword = commonKeyword;
-    this.mongoKeyword = mongoKeyword;
-    this.mathOperator = mathOperator;
-    this.isFunctional = isFunctional;
+  private Operator(String id, String sqlOperator, boolean functional, boolean needWhiteSpaceInToString) {
+    this.id = id;
+    this.sqlOperator = sqlOperator;
+    isFunctional = functional;
+    this.needWhiteSpaceInToString = needWhiteSpaceInToString;
   }
 
   public boolean isFunctional() {
     return isFunctional;
   }
 
-  public String getCommonKeyword() {
-    return commonKeyword;
+  public boolean needWhiteSpaceInToString() {
+    return needWhiteSpaceInToString;
   }
 
-  public void setCommonKeyword(String commonKeyword) {
-    this.commonKeyword = commonKeyword;
+  public String getId() {
+    return id;
   }
 
-  public String getMongoKeyword() {
-    return mongoKeyword;
+  public void setId(String id) {
+    this.id = id;
   }
 
-  public void setMongoKeyword(String mongoKeyword) {
-    this.mongoKeyword = mongoKeyword;
+  public String getSqlOperator() {
+    return sqlOperator;
   }
 
-  public String getMathOperator() {
-    return mathOperator;
+  public void setSqlOperator(String sqlOperator) {
+    this.sqlOperator = sqlOperator;
   }
 
-  public void setMathOperator(String mathOperator) {
-    this.mathOperator = mathOperator;
+  public void setFunctional(boolean functional) {
+    isFunctional = functional;
   }
 
-  public static String mongo2Math(String mongoKeyword) throws UnknownObjectException {
+  public void setNeedWhiteSpaceInToString(boolean needWhiteSpaceInToString) {
+    this.needWhiteSpaceInToString = needWhiteSpaceInToString;
+  }
+
+  public static String toSqlOperator(String id) throws UnknownObjectException {
     try {
-      return OPERATOR_MONGO_KEYWORDS_BIMAP.inverse().get(mongoKeyword).getMathOperator();
+      return OPERATOR_COMMON_KEYWORDS_BIMAP.inverse().get(id).getSqlOperator();
     } catch (Exception e) {
-      throw new UnknownObjectException("Unknown mongo operation key word - " + mongoKeyword);
-    }
-  }
-
-  public static String common2Math(String commonKeyword) throws UnknownObjectException {
-    try {
-      return OPERATOR_COMMON_KEYWORDS_BIMAP.inverse().get(commonKeyword).getMathOperator();
-    } catch (Exception e) {
-      throw new UnknownObjectException("Unknown common operation key word - " + commonKeyword);
+      throw new UnknownObjectException("Unknown common operation key word - " + id);
     }
   }
 
   public static void main(String[] args) throws UnknownObjectException {
     Set<Operator> set = EnumSet.allOf(Operator.class);
     for (Operator o : set) {
-      System.out.println(o.getMathOperator());
+      System.out.println(o.getSqlOperator());
     }
   }
 

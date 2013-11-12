@@ -1,9 +1,9 @@
 package com.xingcloud.webinterface.plan;
 
 import static com.xingcloud.webinterface.enums.Operator.EQ;
-import static com.xingcloud.webinterface.enums.Operator.GTE;
-import static com.xingcloud.webinterface.enums.Operator.LTE;
-import static com.xingcloud.webinterface.enums.Operator.SGMT;
+import static com.xingcloud.webinterface.enums.Operator.GE;
+import static com.xingcloud.webinterface.enums.Operator.GT;
+import static com.xingcloud.webinterface.enums.Operator.LE;
 import static com.xingcloud.webinterface.enums.Operator.SGMT300;
 import static com.xingcloud.webinterface.enums.Operator.SGMT3600;
 import static org.apache.drill.common.expression.ExpressionPosition.UNKNOWN;
@@ -103,7 +103,7 @@ public class Plans {
   }
 
   private static boolean usingBeginSuffix(Operator op) {
-    return GTE.equals(op);
+    return GE.equals(op) || GT.equals(op);
   }
 
   private static Object object2String(boolean transformDate, boolean beginSuffix, Object o) {
@@ -112,7 +112,6 @@ public class Plans {
       if (ArrayUtils.isEmpty(obj)) {
         return null;
       }
-      System.out.println((obj[0].getClass()));
       String separator = ((obj[0] instanceof String) ? "','" : ",");
       StringBuilder sb = new StringBuilder(obj[0].toString());
       for (int i = 1; i < obj.length; i++) {
@@ -188,8 +187,8 @@ public class Plans {
           valueMap.remove(SGMT300);
         }
       }
-      valueMap.put(GTE, valueObject);
-      valueMap.put(LTE, valueObject);
+      valueMap.put(GE, valueObject);
+      valueMap.put(LE, valueObject);
     }
     String sqlOperator;
     List<LogicalExpression> logicalExpressions = new ArrayList<LogicalExpression>(valueMap.size());
@@ -203,7 +202,7 @@ public class Plans {
 
     for (Map.Entry<Operator, Object> entry : valueMap.entrySet()) {
       operator = entry.getKey();
-      sqlOperator = operator.getMathOperator();
+      sqlOperator = operator.getSqlOperator();
       usingBeginSuffix = usingBeginSuffix(operator);
       valueObject = entry.getValue();
       fieldValue = object2String(transformDate, usingBeginSuffix, valueObject);
@@ -243,18 +242,23 @@ public class Plans {
     }
     String table = toUserMysqlTableName(projectId, propertyName);
     boolean transformDate = usingDateFunc(projectId, propertyName), hasFunctionalSegment = valueMap
-      .containsKey(SGMT), hasEQ = valueMap.containsKey(EQ);
+      .containsKey(SGMT300) || valueMap.containsKey(SGMT3600), hasEQ = valueMap.containsKey(EQ);
     Object valueObject = null;
     if (transformDate && (hasEQ || hasFunctionalSegment)) {
       if (hasEQ) {
         valueObject = valueMap.get(EQ);
         valueMap.remove(EQ);
       } else if (hasFunctionalSegment) {
-        valueObject = valueMap.get(SGMT);
-        valueMap.remove(SGMT);
+        valueObject = valueMap.get(SGMT300);
+        if (valueObject == null) {
+          valueObject = valueMap.get(SGMT3600);
+          valueMap.remove(SGMT3600);
+        } else {
+          valueMap.remove(SGMT300);
+        }
       }
-      valueMap.put(GTE, valueObject);
-      valueMap.put(LTE, valueObject);
+      valueMap.put(GE, valueObject);
+      valueMap.put(LE, valueObject);
     }
     String sqlOperator;
     List<LogicalExpression> logicalExpressions = new ArrayList<LogicalExpression>(valueMap.size());
@@ -268,7 +272,7 @@ public class Plans {
 
     for (Map.Entry<Operator, Object> entry : valueMap.entrySet()) {
       operator = entry.getKey();
-      sqlOperator = operator.getMathOperator();
+      sqlOperator = operator.getSqlOperator();
       usingBeginSuffix = usingBeginSuffix(operator);
       valueObject = entry.getValue();
       if (valueObject instanceof Collection) {
@@ -397,6 +401,29 @@ public class Plans {
           }
           logicalExpressions.add(left);
         }
+      }
+    }
+    return toBinaryExpression(logicalExpressions, "and");
+  }
+
+  public static LogicalExpression getChainedSegmentFilter2(Map<String, Operator> segmentMap, String rightFunc,
+                                                           String rightFuncColumn) throws PlanException {
+    Collection<LogicalExpression> logicalExpressions = null;
+    Map<Operator, Object> valueMap;
+    Operator operator;
+    String functionString;
+    LogicalExpression left, right;
+    for (Map.Entry<String, Operator> entry : segmentMap.entrySet()) {
+      operator = entry.getValue();
+      if (operator.isFunctional()) {
+        functionString = operator.name().toLowerCase();
+        left = DFR.createExpression(functionString, UNKNOWN, buildColumn(entry.getKey()));
+        right = DFR.createExpression(rightFunc, UNKNOWN, buildColumn(rightFuncColumn));
+        left = DFR.createExpression("==", UNKNOWN, left, right);
+        if (logicalExpressions == null) {
+          logicalExpressions = new ArrayList<LogicalExpression>();
+        }
+        logicalExpressions.add(left);
       }
     }
     return toBinaryExpression(logicalExpressions, "and");
