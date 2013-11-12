@@ -4,13 +4,11 @@ import static com.xingcloud.webinterface.utils.HttpUtils.ENABLE_SYSTEM_MONITOR;
 
 import com.xingcloud.webinterface.cache.UITableChecker;
 import com.xingcloud.webinterface.conf.WebInterfaceConfig;
-import com.xingcloud.webinterface.cron.XScheduler;
 import com.xingcloud.webinterface.monitor.MonitorInfoSender;
 import com.xingcloud.webinterface.remote.WebServiceProvider;
 import com.xingcloud.webinterface.thread.XMonitorExecutorServiceProvider;
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
-import org.quartz.SchedulerException;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -33,10 +31,11 @@ public class StartUplistener implements ServletContextListener {
         service.execute(new MonitorInfoSender(new Integer(1 + i).toString(), ENABLE_SYSTEM_MONITOR));
       }
       service.shutdown();
+    } else {
+      LOGGER.info("[MONITOR] - Disabled.");
     }
 
     UITableChecker.loadInitedUITables();
-
 
 //    try {
 //      XScheduler.getInstance().start();
