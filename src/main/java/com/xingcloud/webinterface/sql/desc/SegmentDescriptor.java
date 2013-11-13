@@ -1,6 +1,18 @@
 package com.xingcloud.webinterface.sql.desc;
 
+import static com.xingcloud.webinterface.enums.Operator.EQ;
+import static com.xingcloud.webinterface.enums.Operator.GE;
+import static com.xingcloud.webinterface.enums.Operator.GT;
+import static com.xingcloud.webinterface.enums.Operator.LE;
+import static com.xingcloud.webinterface.enums.Operator.LT;
 import static com.xingcloud.webinterface.enums.SegmentTableType.E;
+import static com.xingcloud.webinterface.plan.Plans.KEY_WORD_TIMESTAMP;
+import static com.xingcloud.webinterface.plan.Plans.getChainedMysqlSegmentScan2;
+import static com.xingcloud.webinterface.plan.Plans.getEventScan;
+import static com.xingcloud.webinterface.plan.PlansNew.buildUIDAntiJoin;
+import static com.xingcloud.webinterface.plan.PlansNew.buildUIDInnerJoin;
+import static com.xingcloud.webinterface.sql.SqlUtilsConstants.DATE_FIELD;
+import static com.xingcloud.webinterface.sql.SqlUtilsConstants.EVENT_FIELD;
 import static com.xingcloud.webinterface.sql.SqlUtilsConstants.EVENT_TABLE_PREFIX;
 import static com.xingcloud.webinterface.sql.SqlUtilsConstants.SEGMENT_TOSTRING_BEGIN;
 import static com.xingcloud.webinterface.sql.SqlUtilsConstants.SEGMENT_TOSTRING_END;
@@ -9,8 +21,13 @@ import static com.xingcloud.webinterface.sql.SqlUtilsConstants.USER_TABLE_PREFIX
 
 import com.xingcloud.webinterface.enums.Operator;
 import com.xingcloud.webinterface.enums.SegmentTableType;
+import com.xingcloud.webinterface.exception.PlanException;
+import com.xingcloud.webinterface.exception.SegmentException;
+import com.xingcloud.webinterface.model.formula.CommonFormulaQueryDescriptor;
+import com.xingcloud.webinterface.model.formula.FormulaQueryDescriptor;
 import org.apache.commons.collections.MapUtils;
 import org.apache.drill.common.logical.data.Join;
+import org.apache.drill.common.logical.data.LogicalOperator;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -20,12 +37,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 /**
  * User: Z J Wu Date: 13-11-7 Time: 下午2:21 Package: com.xingcloud.webinterface.sql
  */
 public class SegmentDescriptor {
+
+  private FormulaQueryDescriptor descriptor;
+
   private Set<JoinDescriptor> joins;
 
   private List<TableDescriptor> event;
@@ -33,6 +54,23 @@ public class SegmentDescriptor {
   private TableDescriptor user;
 
   private Map<String, Operator> functionalPropertiesMap;
+
+  private LogicalOperator rootSegmentLogicalOperator;
+
+  private List<LogicalOperator> logicalOperators;
+
+  public SegmentDescriptor(FormulaQueryDescriptor descriptor) {
+    this.descriptor = descriptor;
+    this.logicalOperators = new ArrayList<LogicalOperator>(5);
+  }
+
+  public LogicalOperator getRootSegmentLogicalOperator() {
+    return rootSegmentLogicalOperator;
+  }
+
+  public List<LogicalOperator> getLogicalOperators() {
+    return logicalOperators;
+  }
 
   public Map<String, Operator> getFunctionalPropertiesMap() {
     return functionalPropertiesMap;
@@ -66,9 +104,24 @@ public class SegmentDescriptor {
       functionalPropertiesMap.putAll(existFunctionalPropertiesMap);
       return;
     }
+    String fieldName;
+
+    Map<String, Map<Operator, Object>> thisWhereClause = this.user.getWhereClauseMap();
+    Map<String, Map<Operator, Object>> whereClause = td.getWhereClauseMap();
+    Map<Operator, Object> map;
+    for (Map.Entry<String, Map<Operator, Object>> entry : whereClause.entrySet()) {
+      fieldName = entry.getKey();
+      map = thisWhereClause.get(fieldName);
+      if (map == null) {
+        map = new TreeMap<Operator, Object>();
+        thisWhereClause.put(fieldName, map);
+        continue;
+      }
+      map.putAll(entry.getValue());
+    }
+
     Map<String, List<ConditionUnit>> conditionUnits = this.user.getConditionUnits();
     Map<String, List<ConditionUnit>> cu = td.getConditionUnits();
-    String fieldName;
     List<ConditionUnit> units;
     for (Map.Entry<String, List<ConditionUnit>> entry : cu.entrySet()) {
       fieldName = entry.getKey();
@@ -96,22 +149,23 @@ public class SegmentDescriptor {
     event.add(td);
   }
 
-  public String toSegmentKey() {
+  public String toSegment() throws SegmentException {
+    try {
+      return _toSegment();
+    } catch (SegmentException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new SegmentException(e);
+    }
+  }
+
+  public String _toSegment() throws Exception {
+    LogicalOperator lo1 = null, lo2;
     StringBuilder sb = new StringBuilder(SEGMENT_TOSTRING_BEGIN);
+
     boolean hasJoin = true;
     if (this.joins != null) {
-      JoinDescriptor jd;
-      Iterator<JoinDescriptor> it = joins.iterator();
-      jd = it.next();
-      appendJoin(sb, jd.getJoinType(), jd.getLeft(), jd.getRight());
-      for (; ; ) {
-        if (!it.hasNext()) {
-          break;
-        }
-        sb.append(SQL_CONDITION_SEPARATOR);
-        jd = it.next();
-        appendJoin(sb, jd.getJoinType(), jd.getLeft(), jd.getRight());
-      }
+      lo1 = appendAllJoins(sb);
     } else {
       hasJoin = false;
     }
@@ -121,7 +175,13 @@ public class SegmentDescriptor {
       if (hasJoin) {
         sb.append(SQL_CONDITION_SEPARATOR);
       }
-      appendEvents(sb);
+      lo2 = appendAllEvents(sb);
+      if (lo1 == null) {
+        lo1 = lo2;
+      } else {
+        lo1 = buildUIDInnerJoin(lo1, lo2);
+        this.logicalOperators.add(lo1);
+      }
     } else {
       hasEvent = false;
     }
@@ -130,64 +190,159 @@ public class SegmentDescriptor {
       if (hasEvent) {
         sb.append(SQL_CONDITION_SEPARATOR);
       }
-      appendSingleTableDescriptor(sb, user);
+      lo2 = appendAllUsers(sb);
+      if (lo1 == null) {
+        lo1 = lo2;
+      } else {
+        lo1 = buildUIDInnerJoin(lo1, lo2);
+        this.logicalOperators.add(lo1);
+      }
     }
     sb.append(SEGMENT_TOSTRING_END);
+    this.rootSegmentLogicalOperator = lo1;
     return sb.toString();
   }
 
-  private void appendEvents(StringBuilder sb) {
-    Collections.sort(this.event);
-    System.out.println(this.event);
-    String fieldName;
-    Operator operator;
-    List<ConditionUnit> conditionUnits;
-    Map<String, List<ConditionUnit>> cus;
-    String prefix = EVENT_TABLE_PREFIX;
-    int s1 = this.event.size(), s2, s3, i = 0, j, k;
-    for (TableDescriptor td : this.event) {
-      ++i;
-      cus = td.getConditionUnits();
-      s2 = cus.size();
-      j = 0;
-      for (Map.Entry<String, List<ConditionUnit>> entry : cus.entrySet()) {
-        ++j;
-        fieldName = entry.getKey();
-        conditionUnits = entry.getValue();
-        Collections.sort(conditionUnits);
-        s3 = conditionUnits.size();
-        k = 0;
-        for (ConditionUnit cu : conditionUnits) {
-          ++k;
-          sb.append(prefix);
-          sb.append(fieldName);
-          operator = cu.getOperator();
-          if (operator.needWhiteSpaceInToString()) {
-            sb.append(' ');
-            sb.append(cu.getOperator().getSqlOperator());
-            sb.append(' ');
-          } else {
-            sb.append(cu.getOperator().getSqlOperator());
-          }
-          sb.append(object2String(cu.getValueObject()));
-          if (!(i >= s1 && j >= s2 && k >= s3)) {
-            sb.append(SQL_CONDITION_SEPARATOR);
-          }
+  private LogicalOperator makeOneEventTableLO(Map<String, Map<Operator, Object>> whereClauseMap) throws PlanException {
+    // 额外的投影
+    String[] additionalProjections;
+    if (descriptor.isCommon()) {
+      CommonFormulaQueryDescriptor cfqd = (CommonFormulaQueryDescriptor) descriptor;
+      boolean min5HourQuery = cfqd.getInterval().getDays() < 1;
+      additionalProjections = min5HourQuery ? new String[]{KEY_WORD_TIMESTAMP} : null;
+    } else {
+      additionalProjections = null;
+    }
+    // 拆分日期
+    String beginDate, endDate;
+    Map<Operator, Object> conditionMap = whereClauseMap.get(DATE_FIELD);
+    Object val1 = conditionMap.get(EQ), val2;
+    if (val1 == null) {
+      val1 = conditionMap.get(GE);
+      if (val1 == null) {
+        val1 = conditionMap.get(GT);
+        if (val1 == null) {
+          throw new PlanException("Cannot parse lower bound in event table.");
         }
       }
+      val2 = conditionMap.get(LE);
+      if (val2 == null) {
+        val2 = conditionMap.get(LT);
+        if (val2 == null) {
+          throw new PlanException("Cannot parse upper bound in event table.");
+        }
+      }
+      endDate = val2.toString();
+    } else {
+      endDate = val1.toString();
     }
+    beginDate = val1.toString();
+
+    // 获取事件信息
+    conditionMap = whereClauseMap.get(EVENT_FIELD);
+    if (MapUtils.isEmpty(conditionMap)) {
+      throw new PlanException("Event field must be assigned in event-table-sql.");
+    }
+    Object eventObj = conditionMap.get(EQ);
+    if (eventObj == null) {
+      throw new PlanException("Event operator must be EQ in event-table-sql - " + conditionMap);
+    }
+    LogicalOperator lo = getEventScan(descriptor.getProjectId(), eventObj.toString(), beginDate, endDate,
+                                      additionalProjections);
+    this.logicalOperators.add(lo);
+    return lo;
   }
 
-  private void appendJoin(StringBuilder sb, Join.JoinType joinType, TableDescriptor left, TableDescriptor right) {
-    sb.append(joinType);
+  // 由于以前的设计, logicalOperators.add(lo)这个操作已经在方法 getChainedMysqlSegmentScan2 里面了, 这里不用显示调用
+  private LogicalOperator makeOneUserTableLO(Map<String, Map<Operator, Object>> whereClauseMap) throws PlanException {
+    return getChainedMysqlSegmentScan2(this.descriptor.getProjectId(), this.logicalOperators, whereClauseMap);
+  }
+
+  private LogicalOperator makeOneJoinLO(JoinDescriptor jd) throws PlanException {
+    LogicalOperator lo;
+    Join.JoinType joinType = jd.getJoinType();
+    TableDescriptor leftTD = jd.getLeft(), rightTD = jd.getRight();
+    Map<String, Map<Operator, Object>> leftWhereClauseMap = leftTD.getWhereClauseMap();
+    Map<String, Map<Operator, Object>> rightWhereClauseMap = rightTD.getWhereClauseMap();
+    LogicalOperator leftLO =
+      E.equals(leftTD.getType()) ? makeOneEventTableLO(leftWhereClauseMap) : makeOneUserTableLO(leftWhereClauseMap);
+    LogicalOperator rightLO =
+      E.equals(leftTD.getType()) ? makeOneEventTableLO(rightWhereClauseMap) : makeOneUserTableLO(rightWhereClauseMap);
+    switch (joinType) {
+      case INNER:
+        lo = buildUIDInnerJoin(leftLO, rightLO);
+        break;
+      case ANTI:
+        lo = buildUIDAntiJoin(leftLO, rightLO);
+        break;
+      default:
+        throw new PlanException("Join type does not supported in segment-join - " + joinType);
+    }
+    System.out.println("-------"+lo);
+    this.logicalOperators.add(lo);
+    return lo;
+  }
+
+  private LogicalOperator appendAllJoins(StringBuilder sb) throws PlanException {
+    JoinDescriptor jd;
+    Iterator<JoinDescriptor> it = joins.iterator();
+    jd = it.next();
+    appendOneJoinDescriptorString(sb, jd);
+    LogicalOperator lo1 = null, lo2;
+    for (; ; ) {
+      if (!it.hasNext()) {
+        break;
+      }
+      sb.append(SQL_CONDITION_SEPARATOR);
+      jd = it.next();
+      appendOneJoinDescriptorString(sb, jd);
+      lo2 = makeOneJoinLO(jd);
+      if (lo1 == null) {
+        lo1 = lo2;
+      } else {
+        lo1 = buildUIDInnerJoin(lo1, lo2);
+        logicalOperators.add(lo1);
+      }
+    }
+    return lo1;
+  }
+
+  private LogicalOperator appendAllUsers(StringBuilder sb) throws PlanException {
+    appendOneTableDescriptorString(sb, this.user);
+    return makeOneUserTableLO(this.user.getWhereClauseMap());
+  }
+
+  private LogicalOperator appendAllEvents(StringBuilder sb) throws PlanException {
+    Collections.sort(this.event);
+    int s1 = event.size(), i = 0;
+    LogicalOperator lo1 = null, lo2;
+    for (TableDescriptor td : event) {
+      ++i;
+      appendOneTableDescriptorString(sb, td);
+      if (!(i >= s1)) {
+        sb.append(SQL_CONDITION_SEPARATOR);
+      }
+      lo2 = makeOneEventTableLO(td.getWhereClauseMap());
+      if (lo1 == null) {
+        lo1 = lo2;
+      } else {
+        lo1 = buildUIDInnerJoin(lo1, lo2);
+        logicalOperators.add(lo1);
+      }
+    }
+    return lo1;
+  }
+
+  private void appendOneJoinDescriptorString(StringBuilder sb, JoinDescriptor joinDescriptor) {
+    sb.append(joinDescriptor.getJoinType());
     sb.append('(');
-    appendSingleTableDescriptor(sb, left);
+    appendOneTableDescriptorString(sb, joinDescriptor.getLeft());
     sb.append('|');
-    appendSingleTableDescriptor(sb, right);
+    appendOneTableDescriptorString(sb, joinDescriptor.getRight());
     sb.append(')');
   }
 
-  private void appendSingleTableDescriptor(StringBuilder sb, TableDescriptor td) {
+  private void appendOneTableDescriptorString(StringBuilder sb, TableDescriptor td) {
     String fieldName;
     Operator operator;
     List<ConditionUnit> conditionUnits;
@@ -219,7 +374,6 @@ public class SegmentDescriptor {
           sb.append(SQL_CONDITION_SEPARATOR);
         }
       }
-
     }
   }
 
@@ -255,4 +409,5 @@ public class SegmentDescriptor {
   public TableDescriptor getUser() {
     return user;
   }
+
 }

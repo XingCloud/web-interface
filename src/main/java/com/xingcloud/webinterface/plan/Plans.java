@@ -299,10 +299,23 @@ public class Plans {
     ScanSelection[] sss = new ScanSelection[]{ss};
     ObjectMapper mapper = DEFAULT_DRILL_CONFIG.getMapper();
     String str;
+
+    StringBuilder sqlSB=new StringBuilder("Scan(From ");
+    sqlSB.append(table);
+    sqlSB.append(" where val ");
+    sqlSB.append('[');
+    for(Map.Entry<Operator,Object> entry:valueMap.entrySet()){
+      sqlSB.append(entry.getKey().getSqlOperator());
+      sqlSB.append(' ');
+      sqlSB.append(entry.getValue());
+      sqlSB.append(';');
+    }
+    sqlSB.append(']');
+
     try {
       str = mapper.writeValueAsString(sss);
       Scan scan = new Scan(SE_MYSQL, mapper.readValue(str, JSONOptions.class), buildTable(KEY_WORD_USER));
-      scan.setMemo("Scan(Table=" + table + ", Prop=" + propertyName + ", Val=" + valueMap + ")");
+      scan.setMemo(sqlSB.toString());
       return scan;
     } catch (Exception e) {
       throw new PlanException(e);
@@ -409,7 +422,6 @@ public class Plans {
   public static LogicalExpression getChainedSegmentFilter2(Map<String, Operator> segmentMap, String rightFunc,
                                                            String rightFuncColumn) throws PlanException {
     Collection<LogicalExpression> logicalExpressions = null;
-    Map<Operator, Object> valueMap;
     Operator operator;
     String functionString;
     LogicalExpression left, right;

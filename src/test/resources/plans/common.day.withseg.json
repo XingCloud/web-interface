@@ -11,11 +11,12 @@
   query : [ {
     op : "scan",
     @id : 1,
+    memo : "deu_ram,2013-10-01,2013-10-01,pay.*",
     storageengine : "hbase",
     selection : [ {
       table : "deu_ram",
       filter : {
-        expression : " ( (date)  == ('20131101') )  && ( (event0)  == ('pay') ) "
+        expression : " ( (date)  == ('20131001') )  && ( (event0)  == ('pay') ) "
       },
       projections : [ {
         ref : "uid",
@@ -29,6 +30,36 @@
   }, {
     op : "scan",
     @id : 2,
+    memo : "deu_ram,2013-10-03,2013-10-03,buy.*",
+    storageengine : "hbase",
+    selection : [ {
+      table : "deu_ram",
+      filter : {
+        expression : " ( (date)  == ('20131003') )  && ( (event0)  == ('buy') ) "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      }, {
+        ref : "value",
+        expr : "value"
+      } ]
+    } ],
+    ref : "event"
+  }, {
+    op : "join",
+    @id : 3,
+    left : 1,
+    right : 2,
+    conditions : [ {
+      relationship : "==",
+      left : "uid",
+      right : "uid"
+    } ],
+    type : "INNER"
+  }, {
+    op : "scan",
+    @id : 4,
     memo : "deu_ram,2013-11-01,2013-11-02,visit.*",
     storageengine : "hbase",
     selection : [ {
@@ -59,9 +90,9 @@
     ref : "event"
   }, {
     op : "join",
-    @id : 3,
-    left : 1,
-    right : 2,
+    @id : 5,
+    left : 3,
+    right : 4,
     conditions : [ {
       relationship : "==",
       left : "uid",
@@ -70,8 +101,8 @@
     type : "INNER"
   }, {
     op : "collapsingaggregate",
-    @id : 4,
-    input : 3,
+    @id : 6,
+    input : 5,
     within : null,
     target : null,
     carryovers : null,
@@ -87,11 +118,11 @@
     } ]
   }, {
     op : "project",
-    @id : 5,
-    input : 4,
+    @id : 7,
+    input : 6,
     projections : [ {
       ref : "query_id",
-      expr : "'COMMON,ram,2013-11-01,2013-11-02,visit.*,s{{e.date>=2013-11-01;e.date<=2013-11-01;e.event==pay.*}}s,VF-ALL-0-0,PERIOD'"
+      expr : "'COMMON,ram,2013-11-01,2013-11-02,visit.*,s{{e.date>=2013-10-01;e.date<=2013-10-01;e.event==pay.*;e.date>=2013-10-03;e.date<=2013-10-03;e.event==buy.*}}s,VF-ALL-0-0,PERIOD'"
     }, {
       ref : "dimension",
       expr : "'2013-11-01 00:00'"
@@ -107,8 +138,8 @@
     } ]
   }, {
     op : "store",
-    @id : 6,
-    input : 5,
+    @id : 8,
+    input : 7,
     target : null,
     partition : null,
     storageEngine : "DEFAULT-STORE"

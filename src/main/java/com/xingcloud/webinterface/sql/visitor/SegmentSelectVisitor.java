@@ -16,7 +16,6 @@ import static com.xingcloud.webinterface.plan.Plans.KEY_WORD_EVENT;
 import static com.xingcloud.webinterface.plan.Plans.KEY_WORD_TIMESTAMP;
 import static com.xingcloud.webinterface.plan.Plans.KEY_WORD_UID;
 import static com.xingcloud.webinterface.plan.Plans.KEY_WORD_VALUE;
-import static com.xingcloud.webinterface.plan.Plans.getChainedMysqlSegmentScan2;
 import static com.xingcloud.webinterface.plan.Plans.toBinaryExpression;
 import static com.xingcloud.webinterface.plan.Plans.toEventTableName;
 import static com.xingcloud.webinterface.sql.SqlUtilsConstants.DATE_FIELD;
@@ -54,9 +53,7 @@ import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.ValueExpressions;
-import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.NamedExpression;
-import org.apache.drill.common.logical.data.Scan;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -70,7 +67,7 @@ import java.util.TreeMap;
  */
 public class SegmentSelectVisitor extends LogicalOperatorVisitor implements SelectVisitor {
 
-  private LogicalOperator logicalOperator;
+  //  private LogicalOperator logicalOperator;
   private JoinDescriptor joinDescriptor;
   private TableDescriptor tableDescriptor;
 
@@ -82,24 +79,24 @@ public class SegmentSelectVisitor extends LogicalOperatorVisitor implements Sele
     return tableDescriptor;
   }
 
-  public SegmentSelectVisitor(FormulaQueryDescriptor descriptor, List<LogicalOperator> operators) {
-    super(descriptor, operators);
+  public SegmentSelectVisitor(FormulaQueryDescriptor descriptor) {
+    super(descriptor);
   }
 
-  public LogicalOperator getLogicalOperator() {
-    return logicalOperator;
-  }
+//  public LogicalOperator getLogicalOperator() {
+//    return logicalOperator;
+//  }
 
-  @Override public void visit(PlainSelect plainSelect) {
+  @Override
+  public void visit(PlainSelect plainSelect) {
     FromItem fi = plainSelect.getFromItem();
-    SegmentFromItemVisitor segmentFromItemVisitor = new SegmentFromItemVisitor(descriptor, operators);
+    SegmentFromItemVisitor segmentFromItemVisitor = new SegmentFromItemVisitor(descriptor);
     fi.accept(segmentFromItemVisitor);
     if (segmentFromItemVisitor.isWrong()) {
       this.exception = segmentFromItemVisitor.getException();
       return;
     }
     if (segmentFromItemVisitor.isSingleTable()) {
-      String storageEngine = segmentFromItemVisitor.getStorageEngine();
       boolean isEventTable = segmentFromItemVisitor.isEventTable();
       Expression whereClause = plainSelect.getWhere();
 
@@ -117,19 +114,20 @@ public class SegmentSelectVisitor extends LogicalOperatorVisitor implements Sele
         return;
       }
       if (E.equals(segmentTableType)) {
-        toEventLogicalOperator(storageEngine, whereClausesMap, segmentFromItemVisitor.getRef());
+//        toEventLogicalOperator(storageEngine, whereClausesMap, segmentFromItemVisitor.getRef());
       } else {
         if (descriptor.isCommon()) {
           replaceSGMTPlaceholder(whereClausesMap, ((CommonFormulaQueryDescriptor) descriptor).getInterval());
         }
-        toUserLogicalOperator(whereClausesMap);
+//        toUserLogicalOperator(whereClausesMap);
       }
       this.tableDescriptor = TableDescriptor.create(whereClausesMap, segmentTableType);
     } else {
       if (segmentFromItemVisitor.isOK()) {
-        this.logicalOperator = segmentFromItemVisitor.getLogicalOperator();
+//        this.logicalOperator = segmentFromItemVisitor.getLogicalOperator();
       } else {
         this.exception = segmentFromItemVisitor.getException();
+        return;
       }
       this.joinDescriptor = segmentFromItemVisitor.getJoinDescriptor();
     }
@@ -150,6 +148,7 @@ public class SegmentSelectVisitor extends LogicalOperatorVisitor implements Sele
     }
   }
 
+  @Deprecated
   private void toEventLogicalOperator(String storageEngine, Map<String, Map<Operator, Object>> whereClausesMap,
                                       FieldReference ref) {
     ScanSelection ss;
@@ -222,9 +221,8 @@ public class SegmentSelectVisitor extends LogicalOperatorVisitor implements Sele
         logicalExpressionMap.put(KEY_WORD_EVENT + i, new ValueExpressions.QuotedString(arr[i], UNKNOWN));
       }
     }
-
-    Object val1 = dateConditionMap.get(EQ), val2;
     String beginDate, endDate;
+    Object val1 = dateConditionMap.get(EQ), val2;
     if (val1 == null) {
       val1 = dateConditionMap.get(GE);
       if (val1 == null) {
@@ -285,17 +283,18 @@ public class SegmentSelectVisitor extends LogicalOperatorVisitor implements Sele
     } catch (IOException e) {
       this.exception = e;
     }
-    this.logicalOperator = new Scan(storageEngine, selections, ref);
-    operators.add(logicalOperator);
+//    this.logicalOperator = new Scan(storageEngine, selections, ref);
+//    operators.add(logicalOperator);
   }
 
+  @Deprecated
   private void toUserLogicalOperator(Map<String, Map<Operator, Object>> whereClausesMap) {
-    try {
-      this.logicalOperator = getChainedMysqlSegmentScan2(this.descriptor.getProjectId(), this.operators,
-                                                         whereClausesMap);
-    } catch (PlanException e) {
-      this.exception = e;
-    }
+//    try {
+//      this.logicalOperator = getChainedMysqlSegmentScan2(this.descriptor.getProjectId(), this.operators,
+//                                                         whereClausesMap);
+//    } catch (PlanException e) {
+//      this.exception = e;
+//    }
   }
 
   // Current not supported.

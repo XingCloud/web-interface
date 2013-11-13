@@ -1,15 +1,10 @@
 package com.xingcloud.webinterface.sql.visitor;
 
 import static com.xingcloud.webinterface.enums.Operator.EQ;
-import static com.xingcloud.webinterface.plan.Plans.KEY_WORD_EVENT;
 import static com.xingcloud.webinterface.plan.Plans.KEY_WORD_UID;
-import static com.xingcloud.webinterface.plan.Plans.KEY_WORD_USER;
 import static org.apache.drill.common.logical.data.Join.JoinType.ANTI;
 import static org.apache.drill.common.logical.data.Join.JoinType.INNER;
-import static org.apache.drill.common.util.DrillConstants.SE_HBASE;
-import static org.apache.drill.common.util.DrillConstants.SE_MYSQL;
 import static org.apache.drill.common.util.FieldReferenceBuilder.buildColumn;
-import static org.apache.drill.common.util.FieldReferenceBuilder.buildTable;
 
 import com.xingcloud.webinterface.exception.SegmentException;
 import com.xingcloud.webinterface.model.formula.FormulaQueryDescriptor;
@@ -21,24 +16,16 @@ import net.sf.jsqlparser.statement.select.FromItem;
 import net.sf.jsqlparser.statement.select.FromItemVisitor;
 import net.sf.jsqlparser.statement.select.SubJoin;
 import net.sf.jsqlparser.statement.select.SubSelect;
-import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.Join;
 import org.apache.drill.common.logical.data.JoinCondition;
-import org.apache.drill.common.logical.data.LogicalOperator;
-
-import java.util.List;
 
 /**
  * User: Z J Wu Date: 13-10-29 Time: 上午11:51 Package: com.xingcloud.webinterface.sql.visitor
  */
 public class SegmentFromItemVisitor extends LogicalOperatorVisitor implements FromItemVisitor {
 
-  private LogicalOperator logicalOperator;
-
-  private FieldReference ref;
-
-  private String storageEngine;
+  private boolean singleTalbe = false;
 
   private boolean isEventTable;
 
@@ -46,8 +33,8 @@ public class SegmentFromItemVisitor extends LogicalOperatorVisitor implements Fr
 
   private JoinDescriptor joinDescriptor;
 
-  protected SegmentFromItemVisitor(FormulaQueryDescriptor descriptor, List<LogicalOperator> operators) {
-    super(descriptor, operators);
+  protected SegmentFromItemVisitor(FormulaQueryDescriptor descriptor) {
+    super(descriptor);
   }
 
   public TableDescriptor getTableDescriptor() {
@@ -58,18 +45,6 @@ public class SegmentFromItemVisitor extends LogicalOperatorVisitor implements Fr
     return joinDescriptor;
   }
 
-  public FieldReference getRef() {
-    return ref;
-  }
-
-  public LogicalOperator getLogicalOperator() {
-    return logicalOperator;
-  }
-
-  public String getStorageEngine() {
-    return storageEngine;
-  }
-
   public boolean isEventTable() {
     return isEventTable;
   }
@@ -78,19 +53,18 @@ public class SegmentFromItemVisitor extends LogicalOperatorVisitor implements Fr
   public void visit(Table table) {
     String tableName = table.getName();
     isEventTable = SqlUtilsConstants.isEventTable(tableName);
-    this.ref = isEventTable ? buildTable(KEY_WORD_EVENT) : buildTable(KEY_WORD_USER);
-    this.storageEngine = isEventTable ? SE_HBASE : SE_MYSQL;
+    this.singleTalbe = true;
   }
 
   @Override
   public void visit(SubSelect subSelect) {
-    SegmentSelectVisitor segmentSelectVisitor = new SegmentSelectVisitor(descriptor, operators);
+    SegmentSelectVisitor segmentSelectVisitor = new SegmentSelectVisitor(descriptor);
     subSelect.getSelectBody().accept(segmentSelectVisitor);
     if (segmentSelectVisitor.isWrong()) {
       this.exception = segmentSelectVisitor.getException();
       return;
     }
-    this.logicalOperator = segmentSelectVisitor.getLogicalOperator();
+//    this.logicalOperator = segmentSelectVisitor.getLogicalOperator();
     this.tableDescriptor = segmentSelectVisitor.getTableDescriptor();
   }
 
@@ -98,23 +72,23 @@ public class SegmentFromItemVisitor extends LogicalOperatorVisitor implements Fr
   public void visit(SubJoin join) {
     // Build left
     FromItem leftItem = join.getLeft();
-    SegmentFromItemVisitor leftVisitor = new SegmentFromItemVisitor(descriptor, operators);
+    SegmentFromItemVisitor leftVisitor = new SegmentFromItemVisitor(descriptor);
     leftItem.accept(leftVisitor);
     if (leftVisitor.isWrong()) {
       this.exception = leftVisitor.getException();
       return;
     }
-    LogicalOperator leftLO = leftVisitor.getLogicalOperator();
+//    LogicalOperator leftLO = leftVisitor.getLogicalOperator();
     // Build right
     net.sf.jsqlparser.statement.select.Join rightJoin = join.getJoin();
     FromItem rightItem = rightJoin.getRightItem();
-    SegmentFromItemVisitor rightVisitor = new SegmentFromItemVisitor(descriptor, operators);
+    SegmentFromItemVisitor rightVisitor = new SegmentFromItemVisitor(descriptor);
     rightItem.accept(rightVisitor);
     if (rightVisitor.isWrong()) {
       this.exception = rightVisitor.getException();
       return;
     }
-    LogicalOperator rightLO = rightVisitor.getLogicalOperator();
+//    LogicalOperator rightLO = rightVisitor.getLogicalOperator();
 
     // Build join conditions
     LogicalExpression left = buildColumn(leftItem.getAlias(), KEY_WORD_UID);
@@ -126,8 +100,8 @@ public class SegmentFromItemVisitor extends LogicalOperatorVisitor implements Fr
     }
     JoinCondition[] joinConditions = new JoinCondition[]{new JoinCondition(EQ.getSqlOperator(), left, right)
     };
-    logicalOperator = new Join(leftLO, rightLO, joinConditions, getJoinType(rightJoin));
-    operators.add(logicalOperator);
+//    logicalOperator = new Join(leftLO, rightLO, joinConditions, getJoinType(rightJoin));
+//    operators.add(logicalOperator);
     this.joinDescriptor = new JoinDescriptor(joinType, leftVisitor.getTableDescriptor(),
                                              rightVisitor.getTableDescriptor());
   }
@@ -149,10 +123,6 @@ public class SegmentFromItemVisitor extends LogicalOperatorVisitor implements Fr
   }
 
   public boolean isSingleTable() {
-    return this.ref != null;
-  }
-
-  public boolean isJoin() {
-    return this.logicalOperator != null;
+    return singleTalbe;
   }
 }

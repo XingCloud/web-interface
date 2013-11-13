@@ -152,7 +152,6 @@ public class CommonFormulaQueryDescriptor extends FormulaQueryDescriptor {
 
   @Override
   public LogicalPlan toLogicalPlain() throws PlanException {
-    boolean hasFunctionalSegment = false;
     List<LogicalOperator> logicalOperators = new ArrayList<LogicalOperator>();
     boolean min5HourQuery = this.interval.getDays() < 1;
     String[] additionalProjections = min5HourQuery ? new String[]{KEY_WORD_TIMESTAMP} : null;
@@ -175,7 +174,6 @@ public class CommonFormulaQueryDescriptor extends FormulaQueryDescriptor {
       join = new Join(segmentLogicalOperator, eventTableScan, joinConditions, Join.JoinType.INNER);
       logicalOperators.add(join);
       scanRoot = join;
-
     } else {
       scanRoot = eventTableScan;
     }

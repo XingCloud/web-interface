@@ -24,10 +24,13 @@ public class TableDescriptor implements Comparable<TableDescriptor> {
   @SerializedName("c")
   private Map<String, List<ConditionUnit>> conditionUnits;
 
+  private Map<String, Map<Operator, Object>> whereClauseMap;
+
   private Map<String, Operator> functionalPropertiesMap;
 
   public static TableDescriptor create(Map<String, Map<Operator, Object>> whereClauseMap, SegmentTableType type) {
     TableDescriptor tableDescriptor = new TableDescriptor();
+    tableDescriptor.whereClauseMap = whereClauseMap;
     tableDescriptor.type = type;
     tableDescriptor.conditionUnits = new TreeMap<String, List<ConditionUnit>>();
     List<ConditionUnit> list;
@@ -49,6 +52,10 @@ public class TableDescriptor implements Comparable<TableDescriptor> {
       }
     }
     return tableDescriptor;
+  }
+
+  public Map<String, Map<Operator, Object>> getWhereClauseMap() {
+    return whereClauseMap;
   }
 
   public SegmentTableType getType() {
