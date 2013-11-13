@@ -32,7 +32,7 @@ public class QueueBatchQueryTask extends AbstractQueueQueryTask {
     try {
       doQuery();
     } catch (Exception e) {
-      e.printStackTrace();
+      LOGGER.error("[QUERY] - Query failed - " + e.getMessage(), e);
     }
   }
 
