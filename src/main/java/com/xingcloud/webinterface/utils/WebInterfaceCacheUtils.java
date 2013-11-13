@@ -30,7 +30,7 @@ public class WebInterfaceCacheUtils {
 
       if (numberOf7Days == 0) {
         strict = 300;
-        loose = strict * 36;
+        loose = 450;
       } else {
         strict = 7200 * numberOf7Days;
         loose = strict * 2;
