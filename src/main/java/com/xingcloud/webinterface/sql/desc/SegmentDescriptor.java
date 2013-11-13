@@ -115,7 +115,6 @@ public class SegmentDescriptor {
       if (map == null) {
         map = new TreeMap<Operator, Object>();
         thisWhereClause.put(fieldName, map);
-        continue;
       }
       map.putAll(entry.getValue());
     }
@@ -267,7 +266,7 @@ public class SegmentDescriptor {
     LogicalOperator leftLO =
       E.equals(leftTD.getType()) ? makeOneEventTableLO(leftWhereClauseMap) : makeOneUserTableLO(leftWhereClauseMap);
     LogicalOperator rightLO =
-      E.equals(leftTD.getType()) ? makeOneEventTableLO(rightWhereClauseMap) : makeOneUserTableLO(rightWhereClauseMap);
+      E.equals(rightTD.getType()) ? makeOneEventTableLO(rightWhereClauseMap) : makeOneUserTableLO(rightWhereClauseMap);
     switch (joinType) {
       case INNER:
         lo = buildUIDInnerJoin(leftLO, rightLO);
@@ -278,24 +277,19 @@ public class SegmentDescriptor {
       default:
         throw new PlanException("Join type does not supported in segment-join - " + joinType);
     }
-    System.out.println("-------"+lo);
     this.logicalOperators.add(lo);
     return lo;
   }
 
   private LogicalOperator appendAllJoins(StringBuilder sb) throws PlanException {
-    JoinDescriptor jd;
-    Iterator<JoinDescriptor> it = joins.iterator();
-    jd = it.next();
-    appendOneJoinDescriptorString(sb, jd);
+    int s1 = joins.size(), i = 0;
     LogicalOperator lo1 = null, lo2;
-    for (; ; ) {
-      if (!it.hasNext()) {
-        break;
-      }
-      sb.append(SQL_CONDITION_SEPARATOR);
-      jd = it.next();
+    for (JoinDescriptor jd : joins) {
+      ++i;
       appendOneJoinDescriptorString(sb, jd);
+      if (!(i >= s1)) {
+        sb.append(SQL_CONDITION_SEPARATOR);
+      }
       lo2 = makeOneJoinLO(jd);
       if (lo1 == null) {
         lo1 = lo2;
@@ -304,6 +298,7 @@ public class SegmentDescriptor {
         logicalOperators.add(lo1);
       }
     }
+
     return lo1;
   }
 
