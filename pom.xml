@@ -237,13 +237,6 @@
     </dependency>
 
     <!-- Hadoop, HDFS, Hbase, ZK -->
-    <!--
-    <dependency>
-      <groupId>com.xingcloud</groupId>
-      <artifactId>AdhocProcessorRPC</artifactId>
-      <version>4.3</version>
-    </dependency>
-    -->
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-client</artifactId>
