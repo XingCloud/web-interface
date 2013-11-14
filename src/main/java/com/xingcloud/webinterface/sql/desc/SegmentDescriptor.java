@@ -258,7 +258,7 @@ public class SegmentDescriptor {
     if (eventObj == null) {
       throw new PlanException("Event operator must be EQ in event-table-sql - " + conditionMap);
     }
-    LogicalOperator lo = getEventScan(descriptor.getProjectId(), eventObj.toString(), beginDate, endDate,
+    LogicalOperator lo = getEventScan(descriptor.getProjectId(), eventObj.toString(), beginDate, endDate, false,
                                       additionalProjections);
     this.logicalOperators.add(lo);
     return lo;

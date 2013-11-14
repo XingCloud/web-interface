@@ -300,11 +300,11 @@ public class Plans {
     ObjectMapper mapper = DEFAULT_DRILL_CONFIG.getMapper();
     String str;
 
-    StringBuilder sqlSB=new StringBuilder("Scan(From ");
+    StringBuilder sqlSB = new StringBuilder("Scan(From ");
     sqlSB.append(table);
     sqlSB.append(" where val ");
     sqlSB.append('[');
-    for(Map.Entry<Operator,Object> entry:valueMap.entrySet()){
+    for (Map.Entry<Operator, Object> entry : valueMap.entrySet()) {
       sqlSB.append(entry.getKey().getSqlOperator());
       sqlSB.append(' ');
       sqlSB.append(entry.getValue());
@@ -467,6 +467,12 @@ public class Plans {
 
   public static LogicalOperator getEventScan(String projectId, String event, String realBeginDate, String realEndDate,
                                              String... additionalProjections) throws PlanException {
+    return getEventScan(projectId, event, realBeginDate, realEndDate, true, additionalProjections);
+  }
+
+  public static LogicalOperator getEventScan(String projectId, String event, String realBeginDate, String realEndDate,
+                                             boolean needValProjection, String... additionalProjections) throws
+    PlanException {
     JSONOptions selection;
     XEvent parameterEvent;
 
@@ -477,7 +483,8 @@ public class Plans {
     }
 
     try {
-      selection = getEventSelections(projectId, parameterEvent, realBeginDate, realEndDate, additionalProjections);
+      selection = getEventSelections(projectId, parameterEvent, realBeginDate, realEndDate, needValProjection,
+                                     additionalProjections);
     } catch (Exception e) {
       throw new PlanException(e);
     }
@@ -529,27 +536,46 @@ public class Plans {
   }
 
   public static JSONOptions getEventSelections(String projectId, XEvent originalXEvent, String realBeginDate,
-                                               String realEndDate, String... additionalProjections) throws IOException,
-    ParseException, TException, XEventException, MemCacheException, PlanException {
+                                               String realEndDate, boolean needValProjection,
+                                               String... additionalProjections) throws IOException, ParseException,
+    TException, XEventException, MemCacheException, PlanException {
 
     // 拆解日期至单天, 保证每个selection都是连续的范围
     List<BeginEndDatePair> dates = DateSplitter.split2Pairs(realBeginDate, realEndDate, Interval.DAY);
     // 额外的投影运算, 根据外部需要什么投影决定
     NamedExpression[] projections;
-    boolean emptyProjections = ArrayUtils.isEmpty(additionalProjections);
-    if (emptyProjections) {
-      projections = new NamedExpression[2];
-    } else {
-      projections = new NamedExpression[2 + additionalProjections.length];
-    }
     FieldReference fr = buildColumn(KEY_WORD_UID);
+    boolean emptyProjections = ArrayUtils.isEmpty(additionalProjections);
+    if (needValProjection) {
+      if (emptyProjections) {
+        projections = new NamedExpression[2];
+      } else {
+        projections = new NamedExpression[2 + additionalProjections.length];
+      }
+    } else {
+      if (emptyProjections) {
+        projections = new NamedExpression[1];
+      } else {
+        projections = new NamedExpression[1 + additionalProjections.length];
+      }
+    }
+
     projections[0] = new NamedExpression(fr, fr);
-    fr = buildColumn(KEY_WORD_VALUE);
-    projections[1] = new NamedExpression(fr, fr);
-    if (!emptyProjections) {
-      for (int i = 0; i < additionalProjections.length; i++) {
-        fr = buildColumn(additionalProjections[i]);
-        projections[2 + i] = new NamedExpression(fr, fr);
+    if (needValProjection) {
+      fr = buildColumn(KEY_WORD_VALUE);
+      projections[1] = new NamedExpression(fr, fr);
+      if (!emptyProjections) {
+        for (int i = 0; i < additionalProjections.length; i++) {
+          fr = buildColumn(additionalProjections[i]);
+          projections[2 + i] = new NamedExpression(fr, fr);
+        }
+      }
+    } else {
+      if (!emptyProjections) {
+        for (int i = 0; i < additionalProjections.length; i++) {
+          fr = buildColumn(additionalProjections[i]);
+          projections[1 + i] = new NamedExpression(fr, fr);
+        }
       }
     }
 
