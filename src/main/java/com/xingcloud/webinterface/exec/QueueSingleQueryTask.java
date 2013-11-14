@@ -44,7 +44,9 @@ public class QueueSingleQueryTask extends AbstractQueueQueryTask {
       throw new PlanException("Null logical plan(" + descriptor + ")");
     }
     String planString = mapper.writeValueAsString(logicalPlan);
-    LOGGER.info("[LP-STRING]\n" + planString);
+    if(descriptor.hasSegment()){
+      LOGGER.info("[LP-STRING]\n" + planString);
+    }
 
     if (DS_LP) {
       if (submit.submit(descriptor.getKey(), planString, PLAN)) {

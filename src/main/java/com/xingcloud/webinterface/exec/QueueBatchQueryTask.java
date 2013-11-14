@@ -54,7 +54,9 @@ public class QueueBatchQueryTask extends AbstractQueueQueryTask {
         throw new PlanException("Null logical plan");
       }
       String planString = mapper.writeValueAsString(logicalPlan);
-      LOGGER.info("[LP-STRING]\n" + planString);
+      if(descriptor.hasSegment()){
+        LOGGER.info("[LP-STRING]\n" + planString);
+      }
       if (DS_LP) {
         batch.put(descriptor.getKey(), planString);
 //        writeLPString2LocalLog(planString);
