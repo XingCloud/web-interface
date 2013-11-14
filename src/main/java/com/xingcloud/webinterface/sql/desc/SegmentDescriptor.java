@@ -98,20 +98,20 @@ public class SegmentDescriptor {
   }
 
   private void addUserDescriptor(TableDescriptor td) {
-    Map<String, Operator> existFunctionalPropertiesMap = td.getFunctionalPropertiesMap();
     if (this.user == null) {
       this.user = td;
-      if (MapUtils.isEmpty(existFunctionalPropertiesMap)) {
+      Map<String, Operator> tdFunctionalPropertiesMap = td.getFunctionalPropertiesMap();
+      if (MapUtils.isEmpty(tdFunctionalPropertiesMap)) {
         return;
       }
       if (this.functionalPropertiesMap == null) {
         functionalPropertiesMap = new HashMap<>(1);
       }
-      functionalPropertiesMap.putAll(existFunctionalPropertiesMap);
+      functionalPropertiesMap.putAll(tdFunctionalPropertiesMap);
       return;
     }
-    String fieldName;
 
+    String fieldName;
     Map<String, Map<Operator, Object>> thisWhereClause = this.user.getWhereClauseMap();
     Map<String, Map<Operator, Object>> whereClause = td.getWhereClauseMap();
     Map<Operator, Object> map;
@@ -138,13 +138,14 @@ public class SegmentDescriptor {
       }
       units.addAll(entry.getValue());
     }
-    if (MapUtils.isEmpty(existFunctionalPropertiesMap)) {
+    Map<String, Operator> tdFunctionalPropertiesMap = td.getFunctionalPropertiesMap();
+    if (MapUtils.isEmpty(tdFunctionalPropertiesMap)) {
       return;
     }
     if (this.functionalPropertiesMap == null) {
       functionalPropertiesMap = new HashMap<>(1);
     }
-    functionalPropertiesMap.putAll(existFunctionalPropertiesMap);
+    functionalPropertiesMap.putAll(tdFunctionalPropertiesMap);
   }
 
   private void addEventDescriptor(TableDescriptor td) {
@@ -152,7 +153,7 @@ public class SegmentDescriptor {
       this.event = new ArrayList<>(3);
     }
     for (TableDescriptor tableDescriptor : this.event) {
-      if (tableDescriptor.compareTo(td)==0) {
+      if (tableDescriptor.compareTo(td) == 0) {
         return;
       }
     }
