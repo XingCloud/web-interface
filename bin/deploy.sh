@@ -4,6 +4,7 @@ line="############################################"
 code_home=/home/hadoop/git_project_home/web-interface
 # deploy bin home
 scripts_home=${code_home}/bin/
+aid=dd
 # tomcat port
 tport=8081
 if [ "" = "$2" ];then
