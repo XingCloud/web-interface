@@ -68,11 +68,11 @@ if [ "" != "$proc" ];then
 fi
 echo "Tomcat is shutdown."
 
-echo "[CHECK-POINT] - Clean application - ${aid}"
+echo "[CHECK-POINT] - Clean application"
 rm -rf ${tomcat_home}/webapps/${aid}
 rm -rf ${tomcat_home}/webapps/${aid}*.war
 
-echo "[CHECK-POINT] - Copy application - ${aid}"
+echo "[CHECK-POINT] - Copy application"
 cp ${code_home}/target/${aid}.war ${tomcat_home}/webapps
 echo "[CHECK-POINT] - Start web server."
 sh ${tomcat_home}/bin/startup.sh
