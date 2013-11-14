@@ -5,7 +5,7 @@ code_home=/home/hadoop/git_project_home/web-interface
 # deploy bin home
 scripts_home=${code_home}/bin/
 # tomcat port
-
+tport=8081
 if [ "" = "$2" ];then
   branch=master
 else
@@ -13,14 +13,16 @@ else
   branch=$2
 fi
 
-if [ "8081" = ${tport} ];then
+if [ "8081" = ${1} ];then
   xa_env="production"
   # Tomcat home
   tomcat_home=/home/hadoop/catalina/apache-tomcat-7.0.42.8081
+  tport=8081
 else
   xa_env="pre_production"
   # Tomcat home
   tomcat_home=/home/hadoop/catalina/apache-tomcat-7.0.42.8082
+  tport=8082
 fi
 
 echo "[CHECK-POINT] - Begin deploying data driller web interface."
