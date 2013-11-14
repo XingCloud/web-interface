@@ -81,7 +81,7 @@ public class QueryServlet extends AbstractServlet {
 
   protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException,
     IOException {
-    LOGGER.info("[SERVLET] - Enter(" + request.getRemoteUser() + ")");
+    LOGGER.info("[SERVLET] - Enter(" + request.getRemoteAddr() + ")");
     putMonitorInfo(MI_QUERY_ENTER);
     long t1 = System.currentTimeMillis();
     response.setCharacterEncoding("utf-8");
