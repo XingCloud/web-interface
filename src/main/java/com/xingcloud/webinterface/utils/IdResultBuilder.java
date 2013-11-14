@@ -475,7 +475,7 @@ public class IdResultBuilder {
     for (FormulaParameterItem item : items) {
       name = item.getName();
       event = item.getEvent();
-      segment = item.getSegment();
+      segment = item.getSqlSegment();
       filter = item.getFilter();
       function = item.getFunction();
       nd = item.getCoverRange();
