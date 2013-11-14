@@ -11,79 +11,6 @@
   query : [ {
     op : "scan",
     @id : 1,
-    memo : "deu_ram,2013-03-09,2013-03-10,buy.banana.*",
-    storageengine : "hbase",
-    selection : [ {
-      table : "deu_ram",
-      filter : {
-        expression : " ( ( (date)  == ('20130309') )  && ( (event0)  == ('buy') ) )  && ( (event1)  == ('banana') ) "
-      },
-      projections : [ {
-        ref : "uid",
-        expr : "uid"
-      }, {
-        ref : "value",
-        expr : "value"
-      } ]
-    }, {
-      table : "deu_ram",
-      filter : {
-        expression : " ( ( (date)  == ('20130310') )  && ( (event0)  == ('buy') ) )  && ( (event1)  == ('banana') ) "
-      },
-      projections : [ {
-        ref : "uid",
-        expr : "uid"
-      }, {
-        ref : "value",
-        expr : "value"
-      } ]
-    } ],
-    ref : "event"
-  }, {
-    op : "scan",
-    @id : 2,
-    memo : "deu_ram,2013-03-10,2013-03-11,buy.apple.*",
-    storageengine : "hbase",
-    selection : [ {
-      table : "deu_ram",
-      filter : {
-        expression : " ( ( (date)  == ('20130310') )  && ( (event0)  == ('buy') ) )  && ( (event1)  == ('apple') ) "
-      },
-      projections : [ {
-        ref : "uid",
-        expr : "uid"
-      }, {
-        ref : "value",
-        expr : "value"
-      } ]
-    }, {
-      table : "deu_ram",
-      filter : {
-        expression : " ( ( (date)  == ('20130311') )  && ( (event0)  == ('buy') ) )  && ( (event1)  == ('apple') ) "
-      },
-      projections : [ {
-        ref : "uid",
-        expr : "uid"
-      }, {
-        ref : "value",
-        expr : "value"
-      } ]
-    } ],
-    ref : "event"
-  }, {
-    op : "join",
-    @id : 3,
-    left : 1,
-    right : 2,
-    conditions : [ {
-      relationship : "==",
-      left : "uid",
-      right : "uid"
-    } ],
-    type : "ANTI"
-  }, {
-    op : "scan",
-    @id : 4,
     memo : "deu_ram,2013-11-01,2013-11-01,pay.*",
     storageengine : "hbase",
     selection : [ {
@@ -101,127 +28,8 @@
     } ],
     ref : "event"
   }, {
-    op : "join",
-    @id : 5,
-    left : 3,
-    right : 4,
-    conditions : [ {
-      relationship : "==",
-      left : "uid",
-      right : "uid"
-    } ],
-    type : "INNER"
-  }, {
     op : "scan",
-    @id : 6,
-    memo : "Scan(From ram.first_pay_time where val [>= 2013-03-10;]",
-    storageengine : "mysql",
-    selection : [ {
-      table : "ram.first_pay_time",
-      filter : {
-        expression : " (val)  >= (20130310000000) "
-      },
-      projections : [ {
-        ref : "uid",
-        expr : "uid"
-      } ]
-    } ],
-    ref : "user"
-  }, {
-    op : "scan",
-    @id : 7,
-    memo : "Scan(From ram.grade where val [> 100;]",
-    storageengine : "mysql",
-    selection : [ {
-      table : "ram.grade",
-      filter : {
-        expression : " (val)  > (100) "
-      },
-      projections : [ {
-        ref : "uid",
-        expr : "uid"
-      } ]
-    } ],
-    ref : "user"
-  }, {
-    op : "join",
-    @id : 8,
-    left : 6,
-    right : 7,
-    conditions : [ {
-      relationship : "==",
-      left : "uid",
-      right : "uid"
-    } ],
-    type : "INNER"
-  }, {
-    op : "scan",
-    @id : 9,
-    memo : "Scan(From ram.identifier where val [in [cxkvzn, nkj, reogn, zxcnv];]",
-    storageengine : "mysql",
-    selection : [ {
-      table : "ram.identifier",
-      filter : {
-        expression : " (val)  in ('cxkvzn','nkj','reogn','zxcnv') "
-      },
-      projections : [ {
-        ref : "uid",
-        expr : "uid"
-      } ]
-    } ],
-    ref : "user"
-  }, {
-    op : "join",
-    @id : 10,
-    left : 8,
-    right : 9,
-    conditions : [ {
-      relationship : "==",
-      left : "uid",
-      right : "uid"
-    } ],
-    type : "INNER"
-  }, {
-    op : "scan",
-    @id : 11,
-    memo : "Scan(From ram.register_time where val [<= 2013-11-02;>= 2013-11-01;]",
-    storageengine : "mysql",
-    selection : [ {
-      table : "ram.register_time",
-      filter : {
-        expression : " ( (val)  <= (20131102235959) )  && ( (val)  >= (20131101000000) ) "
-      },
-      projections : [ {
-        ref : "uid",
-        expr : "uid"
-      } ]
-    } ],
-    ref : "user"
-  }, {
-    op : "join",
-    @id : 12,
-    left : 10,
-    right : 11,
-    conditions : [ {
-      relationship : "==",
-      left : "uid",
-      right : "uid"
-    } ],
-    type : "INNER"
-  }, {
-    op : "join",
-    @id : 13,
-    left : 5,
-    right : 12,
-    conditions : [ {
-      relationship : "==",
-      left : "uid",
-      right : "uid"
-    } ],
-    type : "INNER"
-  }, {
-    op : "scan",
-    @id : 14,
+    @id : 2,
     memo : "deu_ram,2013-11-01,2013-11-02,visit.*",
     storageengine : "hbase",
     selection : [ {
@@ -252,9 +60,9 @@
     ref : "event"
   }, {
     op : "join",
-    @id : 15,
-    left : 13,
-    right : 14,
+    @id : 3,
+    left : 1,
+    right : 2,
     conditions : [ {
       relationship : "==",
       left : "uid",
@@ -263,8 +71,8 @@
     type : "INNER"
   }, {
     op : "collapsingaggregate",
-    @id : 16,
-    input : 15,
+    @id : 4,
+    input : 3,
     within : null,
     target : null,
     carryovers : null,
@@ -280,11 +88,11 @@
     } ]
   }, {
     op : "project",
-    @id : 17,
-    input : 16,
+    @id : 5,
+    input : 4,
     projections : [ {
       ref : "query_id",
-      expr : "'COMMON,ram,2013-11-01,2013-11-02,visit.*,s{{ANTI(e.date>=2013-03-09;e.date<=2013-03-10;e.event==buy.banana.*|e.date>=2013-03-10;e.date<=2013-03-11;e.event==buy.apple.*);e.date>=2013-11-01;e.date<=2013-11-01;e.event==pay.*;u.first_pay_time>=2013-03-10;u.grade>100;u.identifier in [cxkvzn,nkj,reogn,zxcnv];u.register_time>=2013-11-01;u.register_time<=2013-11-02}}s,VF-ALL-0-0,PERIOD'"
+      expr : "'COMMON,ram,2013-11-01,2013-11-02,visit.*,s{{e.date>=2013-11-01;e.date<=2013-11-01;e.event==pay.*}}s,VF-ALL-0-0,PERIOD'"
     }, {
       ref : "dimension",
       expr : "'2013-11-01 00:00'"
@@ -300,8 +108,8 @@
     } ]
   }, {
     op : "store",
-    @id : 18,
-    input : 17,
+    @id : 6,
+    input : 5,
     target : null,
     partition : null,
     storageEngine : "DEFAULT-STORE"

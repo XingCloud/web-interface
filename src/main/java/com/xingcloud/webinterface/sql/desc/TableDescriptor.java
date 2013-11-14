@@ -5,11 +5,15 @@ import com.google.gson.annotations.SerializedName;
 import com.xingcloud.webinterface.enums.Operator;
 import com.xingcloud.webinterface.enums.SegmentTableType;
 import com.xingcloud.webinterface.utils.WebInterfaceConstants;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -128,5 +132,15 @@ public class TableDescriptor implements Comparable<TableDescriptor> {
 
   public boolean isUserTable() {
     return !isEventTable();
+  }
+
+  public static void main(String[] args) {
+    Set<ConditionUnit> s1 = new HashSet<>();
+    Set<ConditionUnit> s2 = new HashSet<>();
+    s1.add(new ConditionUnit(Operator.EQ,"a"));
+    s2.add(new ConditionUnit(Operator.EQ,"a"));
+
+    System.out.println(CollectionUtils.isEqualCollection(s1,s2));
+
   }
 }

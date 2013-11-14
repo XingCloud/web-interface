@@ -77,8 +77,14 @@ public class SegmentDescriptor {
   }
 
   public void addDescriptor(JoinDescriptor join) {
+    Join.JoinType joinType = join.getJoinType();
+    if (Join.JoinType.INNER.equals(joinType)) {
+      addDescriptor(join.getLeft());
+      addDescriptor(join.getRight());
+      return;
+    }
     if (joins == null) {
-      joins = new TreeSet<JoinDescriptor>();
+      joins = new TreeSet<>();
     }
     joins.add(join);
   }
@@ -99,7 +105,7 @@ public class SegmentDescriptor {
         return;
       }
       if (this.functionalPropertiesMap == null) {
-        functionalPropertiesMap = new HashMap<String, Operator>(1);
+        functionalPropertiesMap = new HashMap<>(1);
       }
       functionalPropertiesMap.putAll(existFunctionalPropertiesMap);
       return;
@@ -113,7 +119,7 @@ public class SegmentDescriptor {
       fieldName = entry.getKey();
       map = thisWhereClause.get(fieldName);
       if (map == null) {
-        map = new TreeMap<Operator, Object>();
+        map = new TreeMap<>();
         thisWhereClause.put(fieldName, map);
       }
       map.putAll(entry.getValue());
@@ -136,14 +142,19 @@ public class SegmentDescriptor {
       return;
     }
     if (this.functionalPropertiesMap == null) {
-      functionalPropertiesMap = new HashMap<String, Operator>(1);
+      functionalPropertiesMap = new HashMap<>(1);
     }
     functionalPropertiesMap.putAll(existFunctionalPropertiesMap);
   }
 
   private void addEventDescriptor(TableDescriptor td) {
     if (this.event == null) {
-      this.event = new ArrayList<TableDescriptor>(3);
+      this.event = new ArrayList<>(3);
+    }
+    for (TableDescriptor tableDescriptor : this.event) {
+      if (tableDescriptor.compareTo(td)==0) {
+        return;
+      }
     }
     event.add(td);
   }
