@@ -24,9 +24,9 @@ import static com.xingcloud.webinterface.enums.Interval.PERIOD;
 import static com.xingcloud.webinterface.enums.QueryType.COMMON;
 import static com.xingcloud.webinterface.enums.QueryType.GROUP;
 import static com.xingcloud.webinterface.exec.QueryDescriptorTruncater.truncateDate;
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_DESCRIPTOR_BUILD;
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_STR_TIME_USE_BUILD_DESCRIPTOR;
 import static com.xingcloud.webinterface.monitor.SystemMonitor.putMonitorInfo;
+import static com.xingcloud.webinterface.monitor.WIEvent.WIE_STR_TIMEUSE_BUILD_DESCRIPTOR;
+import static com.xingcloud.webinterface.monitor.WIEvent.buildDescriptorBuild;
 import static com.xingcloud.webinterface.utils.DateSplitter.split2Pairs;
 import static com.xingcloud.webinterface.utils.ModelUtils.getDateTruncateLeve;
 import static com.xingcloud.webinterface.utils.ModelUtils.getRealBeginEndDatePair;
@@ -66,7 +66,7 @@ import com.xingcloud.webinterface.model.intermediate.CommonItemResultGroup;
 import com.xingcloud.webinterface.model.intermediate.GroupByIdResult;
 import com.xingcloud.webinterface.model.intermediate.GroupByItemResult;
 import com.xingcloud.webinterface.model.intermediate.GroupByItemResultGroup;
-import com.xingcloud.webinterface.monitor.MonitorInfo;
+import com.xingcloud.webinterface.monitor.WIEvent;
 import com.xingcloud.webinterface.segment.SegmentSeparator;
 import com.xingcloud.webinterface.sql.SqlSegmentParser;
 import org.apache.commons.collections.CollectionUtils;
@@ -240,7 +240,7 @@ public class IdResultBuilder {
           }
           fqd.addFunction(function);
           normalConnectors.add(fqd);
-          putMonitorInfo(MI_DESCRIPTOR_BUILD);
+          putMonitorInfo(buildDescriptorBuild(projectId));
         }
         truncateDate(normalConnectors, truncateTargetDate, dateTruncateLevel);
         // 处理Segment
@@ -252,7 +252,7 @@ public class IdResultBuilder {
                                                  TOTAL_USER, filter, PERIOD, TOTAL);
           fqd.addFunction(function);
           totalConnectors.add(fqd);
-          putMonitorInfo(MI_DESCRIPTOR_BUILD);
+          putMonitorInfo(buildDescriptorBuild(projectId));
         } else if (SAME_AS_QUERY_EXTEND.equals(tap) || ACCUMULATION_EXTEND.equals(tap)) {
           totalConnectors = new ArrayList<FormulaQueryDescriptor>(dataPairSize);
           for (BeginEndDatePair pair : datePairs) {
@@ -271,7 +271,7 @@ public class IdResultBuilder {
             }
             fqd.addFunction(function);
             totalConnectors.add(fqd);
-            putMonitorInfo(MI_DESCRIPTOR_BUILD);
+            putMonitorInfo(buildDescriptorBuild(projectId));
           }
         } else if (AVERAGE_EXTEND.equals(tap)) {
           totalConnectors = new ArrayList<FormulaQueryDescriptor>(datePairs.size());
@@ -290,7 +290,7 @@ public class IdResultBuilder {
             }
             fqd.addFunction(function);
             totalConnectors.add(fqd);
-            putMonitorInfo(MI_DESCRIPTOR_BUILD);
+            putMonitorInfo(buildDescriptorBuild(projectId));
           }
         } else {
           totalConnectors = null;
@@ -302,7 +302,7 @@ public class IdResultBuilder {
                                                  singleSplitSegment, filter, PERIOD, NATURAL);
           fqd.addFunction(function);
           naturalConnectors.add(fqd);
-          putMonitorInfo(MI_DESCRIPTOR_BUILD);
+          putMonitorInfo(buildDescriptorBuild(projectId));
         } else if (SAME_AS_QUERY_EXTEND.equals(nap)) {
           naturalConnectors = new ArrayList<FormulaQueryDescriptor>(dataPairSize);
           for (BeginEndDatePair pair : datePairs) {
@@ -320,7 +320,7 @@ public class IdResultBuilder {
             }
             fqd.addFunction(function);
             naturalConnectors.add(fqd);
-            putMonitorInfo(MI_DESCRIPTOR_BUILD);
+            putMonitorInfo(buildDescriptorBuild(projectId));
           }
         } else {
           naturalConnectors = null;
@@ -340,7 +340,7 @@ public class IdResultBuilder {
       itemResultMap.put(name, proxyCommonItemResult);
     }
     long t2 = System.currentTimeMillis();
-    putMonitorInfo(new MonitorInfo(MI_STR_TIME_USE_BUILD_DESCRIPTOR, t2 - t1));
+    putMonitorInfo(new WIEvent(WIE_STR_TIMEUSE_BUILD_DESCRIPTOR, t2 - t1));
     idr.init(itemResultMap.size());
     return idr;
   }
@@ -525,7 +525,7 @@ public class IdResultBuilder {
                                                            filter, groupBy, groupByType);
             descriptor.setDateTruncateType(KILL);
             descriptors.add(descriptor);
-            putMonitorInfo(MI_DESCRIPTOR_BUILD);
+            putMonitorInfo(buildDescriptorBuild(projectId));
           } else {
             // FIXME 重新做一下PAIR, 这里可优化, 可以使用上面的pair
             try {
@@ -552,7 +552,7 @@ public class IdResultBuilder {
               descriptors.add(descriptor);
               // 处理Segment
               SqlSegmentParser.getInstance().evaluate(descriptor);
-              putMonitorInfo(MI_DESCRIPTOR_BUILD);
+              putMonitorInfo(buildDescriptorBuild(projectId));
             }
           }
           // FIXME 2013-04-10
@@ -579,7 +579,7 @@ public class IdResultBuilder {
             descriptors.add(descriptor);
             // 处理Segment
             SqlSegmentParser.getInstance().evaluate(descriptor);
-            putMonitorInfo(MI_DESCRIPTOR_BUILD);
+            putMonitorInfo(buildDescriptorBuild(projectId));
           }
         } else {
           descriptors = new ArrayList<FormulaQueryDescriptor>(1);
@@ -591,7 +591,7 @@ public class IdResultBuilder {
           SqlSegmentParser.getInstance().evaluate(descriptor);
 
           descriptors.add(descriptor);
-          putMonitorInfo(MI_DESCRIPTOR_BUILD);
+          putMonitorInfo(buildDescriptorBuild(projectId));
         }
 
         groupByItemResult = new GroupByItemResult(name, descriptors, ap, killedFqdSet, missedFqdSet);
@@ -613,7 +613,7 @@ public class IdResultBuilder {
     idResult = new GroupByIdResult(id, formula, functionMap, slicePattern, sliceType, description, itemResultMap,
                                    killedFqdSet, missedFqdSet);
     long t2 = System.currentTimeMillis();
-    putMonitorInfo(new MonitorInfo(MI_STR_TIME_USE_BUILD_DESCRIPTOR, t2 - t1));
+    putMonitorInfo(new WIEvent(WIE_STR_TIMEUSE_BUILD_DESCRIPTOR, t2 - t1));
     return idResult;
   }
 

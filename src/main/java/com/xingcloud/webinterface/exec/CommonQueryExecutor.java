@@ -1,8 +1,8 @@
 package com.xingcloud.webinterface.exec;
 
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_STR_TIME_USE_CALCULATE;
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_STR_TIME_USE_UI_CHECK;
 import static com.xingcloud.webinterface.monitor.SystemMonitor.putMonitorInfo;
+import static com.xingcloud.webinterface.monitor.WIEvent.WIE_STR_TIMEUSE_CALCULATE;
+import static com.xingcloud.webinterface.monitor.WIEvent.WIE_STR_TIMEUSE_UI_CHECK;
 
 import com.xingcloud.maincache.InterruptQueryException;
 import com.xingcloud.webinterface.enums.AggregationPolicyDisplayed;
@@ -18,7 +18,7 @@ import com.xingcloud.webinterface.model.formula.FormulaParameterContainer;
 import com.xingcloud.webinterface.model.intermediate.CommonIdResult;
 import com.xingcloud.webinterface.model.result.CommonQueryResult;
 import com.xingcloud.webinterface.model.result.QueryResult;
-import com.xingcloud.webinterface.monitor.MonitorInfo;
+import com.xingcloud.webinterface.monitor.WIEvent;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.Logger;
 
@@ -43,7 +43,7 @@ public class CommonQueryExecutor extends AbstractQueryExecutor {
     long t1 = System.currentTimeMillis();
     checkUITableConcurrently(containers);
     long t2 = System.currentTimeMillis();
-    putMonitorInfo(new MonitorInfo(MI_STR_TIME_USE_UI_CHECK, t2 - t1));
+    putMonitorInfo(new WIEvent(WIE_STR_TIMEUSE_UI_CHECK, t2 - t1));
     LOGGER.info("[CHECK-POINT] - Check ui table using " + (t2 - t1) + " milliseconds.");
 
 //    t1 = System.currentTimeMillis();
@@ -81,7 +81,7 @@ public class CommonQueryExecutor extends AbstractQueryExecutor {
     }
     t2 = System.currentTimeMillis();
     LOGGER.info("[CHECK-POINT] Calculate - " + (t2 - t1) + " milliseconds");
-    putMonitorInfo(new MonitorInfo(MI_STR_TIME_USE_CALCULATE, t2 - t1));
+    putMonitorInfo(new WIEvent(WIE_STR_TIMEUSE_CALCULATE, t2 - t1));
     return new CommonQueryResult(calculatedResult, statusMap, summaryPolicyMap);
   }
 }

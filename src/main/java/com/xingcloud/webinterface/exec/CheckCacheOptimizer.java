@@ -1,15 +1,14 @@
 package com.xingcloud.webinterface.exec;
 
-import static com.xingcloud.basic.Constants.SEPARATOR_CHAR_EVENT;
 import static com.xingcloud.log.InaccurateCacheLogger.logCache;
 import static com.xingcloud.webinterface.enums.CacheReference.OFFLINE;
 import static com.xingcloud.webinterface.enums.CacheReference.ONLINE;
 import static com.xingcloud.webinterface.enums.CacheState.ACCURATE;
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_STR_CACHE_OFFLINE;
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_STR_CACHE_ONLINE;
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_STR_DESCRIPTOR_MERGE;
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_STR_TIME_USE_CHECK_CACHE;
 import static com.xingcloud.webinterface.monitor.SystemMonitor.putMonitorInfo;
+import static com.xingcloud.webinterface.monitor.WIEvent.WIE_STR_TIMEUSE_CHECK_CACHE;
+import static com.xingcloud.webinterface.monitor.WIEvent.buildDescriptorMerge;
+import static com.xingcloud.webinterface.monitor.WIEvent.buildOfflineCacheHit;
+import static com.xingcloud.webinterface.monitor.WIEvent.buildOnlineCacheHit;
 
 import com.xingcloud.maincache.InterruptQueryException;
 import com.xingcloud.webinterface.cache.StatefulCacheGetter;
@@ -20,7 +19,7 @@ import com.xingcloud.webinterface.exception.ParseIncrementalException;
 import com.xingcloud.webinterface.model.ResultTuple;
 import com.xingcloud.webinterface.model.StatefulCache;
 import com.xingcloud.webinterface.model.formula.FormulaQueryDescriptor;
-import com.xingcloud.webinterface.monitor.MonitorInfo;
+import com.xingcloud.webinterface.monitor.WIEvent;
 import com.xingcloud.webinterface.thread.XCacheGetExecutorServiceProvider;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.Logger;
@@ -61,7 +60,7 @@ public class CheckCacheOptimizer {
 
     TimeUseAccumulator accumulator = new TimeUseAccumulator();
     for (FormulaQueryDescriptor fqd : distinctDescriptors) {
-      putMonitorInfo(new MonitorInfo(MI_STR_DESCRIPTOR_MERGE + SEPARATOR_CHAR_EVENT + fqd.getProjectId()));
+      putMonitorInfo(buildDescriptorMerge(fqd.getProjectId()));
       cacheFuture = service.submit(new StatefulCacheGetter(fqd, accumulator));
       cacheFutureMap.put(fqd, cacheFuture);
     }
@@ -107,13 +106,13 @@ public class CheckCacheOptimizer {
 
       CacheReference cr = sc.getReference();
       if (ONLINE.equals(cr)) {
-        putMonitorInfo(new MonitorInfo(MI_STR_CACHE_ONLINE + SEPARATOR_CHAR_EVENT + key.getProjectId()));
+        putMonitorInfo(buildOnlineCacheHit(key.getProjectId()));
       } else if (OFFLINE.equals(cr)) {
-        putMonitorInfo(new MonitorInfo(MI_STR_CACHE_OFFLINE + SEPARATOR_CHAR_EVENT + key.getProjectId()));
+        putMonitorInfo(buildOfflineCacheHit(key.getProjectId()));
       }
     }
 
-    putMonitorInfo(new MonitorInfo(MI_STR_TIME_USE_CHECK_CACHE, accumulator.getRedisTotalTime()));
+    putMonitorInfo(new WIEvent(WIE_STR_TIMEUSE_CHECK_CACHE, accumulator.getRedisTotalTime()));
 
     LOGGER.info("[CHECK-POINT] Check cache - Redis used " + accumulator.getRedisTotalTime() + " milliseconds.");
     return descriptorTupleMap;

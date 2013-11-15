@@ -4,8 +4,8 @@ import static com.google.common.base.Strings.repeat;
 import static com.xingcloud.basic.Constants.SEPARATOR_STRING_LOG;
 import static com.xingcloud.log.ContentLogger.logDescriptor;
 import static com.xingcloud.webinterface.enums.GroupByType.EVENT;
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_STR_TIME_USE_INTERGRATE_RESULT;
 import static com.xingcloud.webinterface.monitor.SystemMonitor.putMonitorInfo;
+import static com.xingcloud.webinterface.monitor.WIEvent.WIE_STR_TIMEUSE_INTEGRATE_RESULT;
 import static com.xingcloud.webinterface.utils.IdResultBuilder.buildGroupByDescriptor;
 
 import com.xingcloud.maincache.InterruptQueryException;
@@ -25,7 +25,7 @@ import com.xingcloud.webinterface.model.formula.GroupByFormulaQueryDescriptor;
 import com.xingcloud.webinterface.model.intermediate.GroupByIdResult;
 import com.xingcloud.webinterface.model.intermediate.GroupByItemResult;
 import com.xingcloud.webinterface.model.intermediate.GroupByItemResultGroup;
-import com.xingcloud.webinterface.monitor.MonitorInfo;
+import com.xingcloud.webinterface.monitor.WIEvent;
 import com.xingcloud.webinterface.thread.XQueryExecutorServiceProvider;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -117,7 +117,7 @@ public class GroupByQueryOptimizer extends CheckCacheOptimizer {
     t2 = System.currentTimeMillis();
     LOGGER.info("[OPTIMIZER] - Integrate result using " + (t2 - t1) + " milliseconds");
 
-    putMonitorInfo(new MonitorInfo(MI_STR_TIME_USE_INTERGRATE_RESULT, (t2 - t1)));
+    putMonitorInfo(new WIEvent(WIE_STR_TIMEUSE_INTEGRATE_RESULT, (t2 - t1)));
     return idResultList;
   }
 

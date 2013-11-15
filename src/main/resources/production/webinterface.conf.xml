@@ -3,7 +3,6 @@
   <!-- Common configuration -->
   <common debug="false">
     <check-ui enabled="true" />
-    <new-segment enabled="true" />
   </common>
 
   <tfs>
@@ -13,27 +12,12 @@
   </tfs>
 
   <!-- System monitor -->
-  <system-monitor enabled="false" senders="40">
+  <system-monitor enabled="true" senders="40">
     <host>xa.xingcloud.com</host>
     <port>80</port>
     <path>/v4/xaa/random</path>
     <events>
       <query-enter>tomcat.query_enter</query-enter>
-      <time-use>
-        <ui-check>tomcat.time_use.ui_check</ui-check>
-        <build-descriptor>tomcat.time_use.build_descriptor</build-descriptor>
-        <check-cache>tomcat.time_use.check_cache</check-cache>
-        <intergrate-result>tomcat.time_use.intergrate_result</intergrate-result>
-        <calculate>tomcat.time_use.calculate</calculate>
-        <whole-query>tomcat.time_use.whole_query</whole-query>
-      </time-use>
-      <report>
-        <min5>tomcat.report.min5</min5>
-        <hour>tomcat.report.hour</hour>
-        <day>tomcat.report.day</day>
-        <week>tomcat.report.week</week>
-        <month>tomcat.report.month</month>
-      </report>
       <descriptor>
         <build>tomcat.descriptor.build</build>
         <merge>tomcat.descriptor.merge</merge>
@@ -42,20 +26,14 @@
         <offline>tomcat.cache.offline</offline>
         <online>tomcat.cache.online</online>
       </cache>
-      <exception>
-        <XParameterException>tomcat.exception.XParameterException</XParameterException>
-        <ParseJsonException>tomcat.exception.ParseJsonException</ParseJsonException>
-        <InterruptQueryException>tomcat.exception.InterruptQueryException</InterruptQueryException>
-        <ParseIncrementalException>tomcat.exception.ParseIncrementalException</ParseIncrementalException>
-        <NumberOfDayException>tomcat.exception.NumberOfDayException</NumberOfDayException>
-        <XQueryException>tomcat.exception.XQueryException</XQueryException>
-        <SegmentException>tomcat.exception.SegmentException</SegmentException>
-        <ParseException>tomcat.exception.ParseException</ParseException>
-        <RangingException>tomcat.exception.RangingException</RangingException>
-        <DataFillException>tomcat.exception.DataFillException</DataFillException>
-        <UICheckException>tomcat.exception.UICheckException</UICheckException>
-        <Exception>tomcat.exception.OtherException</Exception>
-      </exception>
+      <time-use>
+        <ui-check>tomcat.time_use.ui_check</ui-check>
+        <build-descriptor>tomcat.time_use.build_descriptor</build-descriptor>
+        <check-cache>tomcat.time_use.check_cache</check-cache>
+        <integrate-result>tomcat.time_use.integrate_result</integrate-result>
+        <calculate>tomcat.time_use.calculate</calculate>
+        <whole-query>tomcat.time_use.whole_query</whole-query>
+      </time-use>
     </events>
   </system-monitor>
 

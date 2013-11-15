@@ -1,7 +1,7 @@
 package com.xingcloud.webinterface.utils;
 
 import com.xingcloud.webinterface.conf.WebInterfaceConfig;
-import com.xingcloud.webinterface.monitor.MonitorInfo;
+import com.xingcloud.webinterface.monitor.WIEvent;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.http.HttpResponse;
@@ -31,7 +31,7 @@ public class HttpUtils {
     SYSTEM_MONITOR_PATH = configuration.getString("system-monitor.path");
   }
 
-  public static StatusLine sendMonitorInfo(MonitorInfo... mis) throws Exception {
+  public static StatusLine sendMonitorInfo(WIEvent... mis) throws Exception {
     if (ArrayUtils.isEmpty(mis)) {
       return null;
     }

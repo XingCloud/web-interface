@@ -8,9 +8,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class SystemMonitor {
   private static final Logger LOGGER = Logger.getLogger(SystemMonitor.class);
 
-  private static BlockingQueue<MonitorInfo> tasks = new LinkedBlockingQueue<MonitorInfo>();
+  private static BlockingQueue<WIEvent> tasks = new LinkedBlockingQueue<WIEvent>();
 
-  public static void putMonitorInfo(MonitorInfo mi) {
+  public static void putMonitorInfo(WIEvent mi) {
     // long t1 = System.currentTimeMillis();
     try {
       tasks.put(mi);
@@ -22,7 +22,7 @@ public class SystemMonitor {
     // + " milliseconds");
   }
 
-  public static MonitorInfo take() {
+  public static WIEvent take() {
     try {
       return tasks.take();
     } catch (InterruptedException e) {
@@ -33,7 +33,7 @@ public class SystemMonitor {
 
   public static synchronized void list() {
     int cnt = 0;
-    for (MonitorInfo mi : tasks) {
+    for (WIEvent mi : tasks) {
       cnt++;
       LOGGER.info("Content in monitor info tasks queue - " + cnt + ".\t" + mi);
     }

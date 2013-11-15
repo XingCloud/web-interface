@@ -1,7 +1,7 @@
 package com.xingcloud.webinterface.exec;
 
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_STR_TIME_USE_CALCULATE;
 import static com.xingcloud.webinterface.monitor.SystemMonitor.putMonitorInfo;
+import static com.xingcloud.webinterface.monitor.WIEvent.WIE_STR_TIMEUSE_CALCULATE;
 
 import com.xingcloud.maincache.InterruptQueryException;
 import com.xingcloud.webinterface.enums.GroupByType;
@@ -21,7 +21,7 @@ import com.xingcloud.webinterface.model.formula.GroupByFormulaParameterItem;
 import com.xingcloud.webinterface.model.intermediate.GroupByIdResult;
 import com.xingcloud.webinterface.model.result.GroupByQueryResult;
 import com.xingcloud.webinterface.model.result.QueryResult;
-import com.xingcloud.webinterface.monitor.MonitorInfo;
+import com.xingcloud.webinterface.monitor.WIEvent;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.Logger;
 
@@ -101,7 +101,7 @@ public class GroupByQueryExecutor extends AbstractQueryExecutor {
     }
     t2 = System.currentTimeMillis();
     LOGGER.info("[CHECK-POINT] Calculate - " + (t2 - t1) + " milliseconds");
-    putMonitorInfo(new MonitorInfo(MI_STR_TIME_USE_CALCULATE, t2 - t1));
+    putMonitorInfo(new WIEvent(WIE_STR_TIMEUSE_CALCULATE, t2 - t1));
 
     GroupByType groupByType;
     List<FormulaParameterItem> items = containers.get(0).getItems();

@@ -7,33 +7,31 @@ import org.apache.log4j.Logger;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class MonitorInfoSender implements Runnable {
-  private static final Logger LOGGER = Logger.getLogger(MonitorInfoSender.class);
+public class WIEventSender implements Runnable {
+  private static final Logger LOGGER = Logger.getLogger(WIEventSender.class);
 
   private String id;
 
   private boolean enabled;
 
-  public MonitorInfoSender(String id, boolean enabled) {
+  public WIEventSender(String id, boolean enabled) {
     this.id = id;
     this.enabled = enabled;
-    LOGGER.info("MonitorSender." + id + " has been created.");
+    LOGGER.info("WebInterfaceEventSender." + id + " has been created.");
   }
 
   public void run() {
     while (!Thread.interrupted()) {
       try {
-        MonitorInfo mi = SystemMonitor.take();
+        WIEvent mi = SystemMonitor.take();
         if (mi == null) {
           continue;
         }
 
         if (enabled) {
           sendMonitorInfo(mi);
-        } else {
-          // LOGGER.info("[MONITOR-INFO-SENDER] - Monitor info (" + mi
-          // + ") sended.");
         }
+//        LOGGER.info("[WIE-SENDER] - Monitor info (" + mi + ") send.");
       } catch (Exception e) {
         e.printStackTrace();
       }
@@ -42,19 +40,19 @@ public class MonitorInfoSender implements Runnable {
 
   @Override
   public String toString() {
-    return "MonitorInfoSender." + id;
+    return "WIEventSender." + id;
   }
 
   public static void main(String[] args) throws InterruptedException {
     ExecutorService service = Executors.newCachedThreadPool();
     int threadCount = 10;
     for (int i = 0; i < threadCount; i++) {
-      service.execute(new MonitorInfoSender("Sender." + i, true));
+      service.execute(new WIEventSender("Sender." + i, true));
     }
     service.shutdown();
 
     for (int i = 0; i < 20; i++) {
-      SystemMonitor.putMonitorInfo(new MonitorInfo("event-" + i));
+      SystemMonitor.putMonitorInfo(new WIEvent("event-" + i));
     }
   }
 }

@@ -4,7 +4,7 @@ import static com.xingcloud.webinterface.utils.HttpUtils.ENABLE_SYSTEM_MONITOR;
 
 import com.xingcloud.webinterface.cache.UITableChecker;
 import com.xingcloud.webinterface.conf.WebInterfaceConfig;
-import com.xingcloud.webinterface.monitor.MonitorInfoSender;
+import com.xingcloud.webinterface.monitor.WIEventSender;
 import com.xingcloud.webinterface.remote.WebServiceProvider;
 import com.xingcloud.webinterface.thread.XMonitorExecutorServiceProvider;
 import org.apache.commons.configuration.Configuration;
@@ -28,7 +28,7 @@ public class StartUpListener implements ServletContextListener {
     if (ENABLE_SYSTEM_MONITOR) {
       ExecutorService service = XMonitorExecutorServiceProvider.getService();
       for (int i = 0; i < configuration.getInt("system-monitor[@senders]"); i++) {
-        service.execute(new MonitorInfoSender(new Integer(1 + i).toString(), ENABLE_SYSTEM_MONITOR));
+        service.execute(new WIEventSender(new Integer(1 + i).toString(), ENABLE_SYSTEM_MONITOR));
       }
       service.shutdown();
     } else {

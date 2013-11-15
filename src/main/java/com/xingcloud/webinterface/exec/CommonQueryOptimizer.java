@@ -6,8 +6,8 @@ import static com.xingcloud.log.ContentLogger.logDescriptor;
 import static com.xingcloud.webinterface.enums.CommonQueryType.NATURAL;
 import static com.xingcloud.webinterface.enums.CommonQueryType.NORMAL;
 import static com.xingcloud.webinterface.enums.CommonQueryType.TOTAL;
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_STR_TIME_USE_INTERGRATE_RESULT;
 import static com.xingcloud.webinterface.monitor.SystemMonitor.putMonitorInfo;
+import static com.xingcloud.webinterface.monitor.WIEvent.WIE_STR_TIMEUSE_INTEGRATE_RESULT;
 import static com.xingcloud.webinterface.utils.IdResultBuilder.buildCommonDescriptor;
 
 import com.xingcloud.maincache.InterruptQueryException;
@@ -26,7 +26,7 @@ import com.xingcloud.webinterface.model.formula.FormulaQueryDescriptor;
 import com.xingcloud.webinterface.model.intermediate.CommonIdResult;
 import com.xingcloud.webinterface.model.intermediate.CommonItemResult;
 import com.xingcloud.webinterface.model.intermediate.CommonItemResultGroup;
-import com.xingcloud.webinterface.monitor.MonitorInfo;
+import com.xingcloud.webinterface.monitor.WIEvent;
 import com.xingcloud.webinterface.thread.XQueryExecutorServiceProvider;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -118,7 +118,7 @@ public class CommonQueryOptimizer extends CheckCacheOptimizer {
     }
     t2 = System.currentTimeMillis();
     LOGGER.info("[OPTIMIZER] - Integrate result using " + (t2 - t1) + " milliseconds");
-    putMonitorInfo(new MonitorInfo(MI_STR_TIME_USE_INTERGRATE_RESULT, (t2 - t1)));
+    putMonitorInfo(new WIEvent(WIE_STR_TIMEUSE_INTEGRATE_RESULT, (t2 - t1)));
     return idResultList;
   }
 

@@ -1,6 +1,5 @@
 package com.xingcloud.webinterface.web.servlet;
 
-import static com.xingcloud.basic.Constants.SEPARATOR_CHAR_EVENT;
 import static com.xingcloud.basic.mail.XMail.sendNewWebExceptionMail;
 import static com.xingcloud.webinterface.enums.ErrorCode.ERR_1;
 import static com.xingcloud.webinterface.enums.ErrorCode.ERR_11;
@@ -17,22 +16,9 @@ import static com.xingcloud.webinterface.enums.ErrorCode.ERR_37;
 import static com.xingcloud.webinterface.enums.ErrorCode.ERR_39;
 import static com.xingcloud.webinterface.enums.QueryType.COMMON;
 import static com.xingcloud.webinterface.model.formula.FormulaParameterContainer.json2Containers;
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_EXCEPTION_DATA_FILL_EXCEPTION;
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_EXCEPTION_INTERRUPT_QUERY_EXCEPTION;
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_EXCEPTION_NUMBER_OF_DAY_EXCEPTION;
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_EXCEPTION_PARSE_EXCEPTION;
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_EXCEPTION_PARSE_INCREMENTAL_EXCEPTION;
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_EXCEPTION_PARSE_JSON_EXCEPTION;
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_EXCEPTION_PREFIX;
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_EXCEPTION_RANGING_EXCEPTION;
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_EXCEPTION_SEGMENT_EXCEPTION;
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_EXCEPTION_UI_CHECK_EXCEPTION;
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_EXCEPTION_XPARAMETER_EXCEPTION;
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_EXCEPTION_XQUERY_EXCEPTION;
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_QUERY_ENTER;
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_STR_TIME_USE_WHOLE_QUERY;
 import static com.xingcloud.webinterface.monitor.SystemMonitor.putMonitorInfo;
-import static com.xingcloud.webinterface.utils.ExceptionUtils.getExceptionName;
+import static com.xingcloud.webinterface.monitor.WIEvent.WIE_QUERY_ENTER;
+import static com.xingcloud.webinterface.monitor.WIEvent.WIE_STR_TIMEUSE_WHOLE_QUERY;
 
 import com.google.common.base.Strings;
 import com.xingcloud.maincache.InterruptQueryException;
@@ -57,7 +43,7 @@ import com.xingcloud.webinterface.model.formula.FormulaParameterContainer;
 import com.xingcloud.webinterface.model.result.EmptyQueryResult;
 import com.xingcloud.webinterface.model.result.ErrorQueryResult;
 import com.xingcloud.webinterface.model.result.QueryResult;
-import com.xingcloud.webinterface.monitor.MonitorInfo;
+import com.xingcloud.webinterface.monitor.WIEvent;
 import com.xingcloud.webinterface.utils.RequestGetter;
 import com.xingcloud.webinterface.utils.WebInterfaceConstants;
 import org.apache.commons.collections.CollectionUtils;
@@ -83,7 +69,7 @@ public class QueryServlet extends AbstractServlet {
     IOException {
     LOGGER.info(
       "[SERVLET] - Enter(RemoteHost=" + request.getRemoteHost() + ", RemoteAddr=" + request.getRemoteAddr() + ")");
-    putMonitorInfo(MI_QUERY_ENTER);
+    putMonitorInfo(WIE_QUERY_ENTER);
     long t1 = System.currentTimeMillis();
     response.setCharacterEncoding("utf-8");
     response.setContentType(contentType);
@@ -149,52 +135,40 @@ public class QueryServlet extends AbstractServlet {
       }
     } catch (XQueryException e) {
       rqr = new ErrorQueryResult(ERR_37.name(), e.getMessage());
-      putMonitorInfo(MI_EXCEPTION_XQUERY_EXCEPTION);
       sendMail(request, e, parameterJson);
       e.printStackTrace();
     } catch (XParameterException e) {
       e.printStackTrace();
       rqr = new ErrorQueryResult(expectedError.name(), e.getMessage());
-      putMonitorInfo(MI_EXCEPTION_XPARAMETER_EXCEPTION);
     } catch (SegmentException e) {
       e.printStackTrace();
       rqr = new ErrorQueryResult(ERR_22.name(), e.getMessage());
-      putMonitorInfo(MI_EXCEPTION_SEGMENT_EXCEPTION);
     } catch (ParseException e) {
       e.printStackTrace();
       rqr = new ErrorQueryResult(ERR_20.name(), e.getMessage());
-      putMonitorInfo(MI_EXCEPTION_PARSE_EXCEPTION);
     } catch (ParseJsonException e) {
       e.printStackTrace();
       rqr = new ErrorQueryResult(ERR_12.name(), e.getMessage());
-      putMonitorInfo(MI_EXCEPTION_PARSE_JSON_EXCEPTION);
     } catch (InterruptQueryException e) {
       e.printStackTrace();
       rqr = new ErrorQueryResult(ERR_33.name(), e.getMessage());
-      putMonitorInfo(MI_EXCEPTION_INTERRUPT_QUERY_EXCEPTION);
     } catch (ParseIncrementalException e) {
       e.printStackTrace();
       rqr = new ErrorQueryResult(ERR_34.name(), e.getMessage());
-      putMonitorInfo(MI_EXCEPTION_PARSE_INCREMENTAL_EXCEPTION);
     } catch (NumberOfDayException e) {
       e.printStackTrace();
       rqr = new ErrorQueryResult(ERR_12751.name(), e.getMessage());
-      putMonitorInfo(MI_EXCEPTION_NUMBER_OF_DAY_EXCEPTION);
     } catch (DataFillingException e) {
       e.printStackTrace();
       rqr = new ErrorQueryResult(ERR_39.name(), e.getMessage());
-      putMonitorInfo(MI_EXCEPTION_DATA_FILL_EXCEPTION);
     } catch (RangingException e) {
       e.printStackTrace();
       rqr = new ErrorQueryResult(ERR_35.name(), e.getMessage());
-      putMonitorInfo(MI_EXCEPTION_RANGING_EXCEPTION);
     } catch (UICheckException e) {
       e.printStackTrace();
       rqr = new ErrorQueryResult(ERR_36.name(), e.getMessage());
-      putMonitorInfo(MI_EXCEPTION_UI_CHECK_EXCEPTION);
     } catch (Exception e) {
       rqr = new ErrorQueryResult(ERR_1.name(), e.toString() + " - " + e.getMessage());
-      putMonitorInfo(new MonitorInfo(MI_EXCEPTION_PREFIX + SEPARATOR_CHAR_EVENT + getExceptionName(e)));
       sendMail(request, e, parameterJson);
       e.printStackTrace();
     } finally {
@@ -210,7 +184,7 @@ public class QueryServlet extends AbstractServlet {
     writer.flush();
     long t2 = System.currentTimeMillis();
 
-    putMonitorInfo(new MonitorInfo(MI_STR_TIME_USE_WHOLE_QUERY, t2 - t1));
+    putMonitorInfo(new WIEvent(WIE_STR_TIMEUSE_WHOLE_QUERY, t2 - t1));
     LOGGER.info("[SERVLET] - Servlet finished in " + (t2 - t1) + " milliseconds");
   }
 

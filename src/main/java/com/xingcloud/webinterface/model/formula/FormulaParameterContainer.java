@@ -1,12 +1,6 @@
 package com.xingcloud.webinterface.model.formula;
 
 import static com.xingcloud.basic.utils.DateUtils.short2Date;
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_REPORT_DAY;
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_REPORT_HOUR;
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_REPORT_MIN5;
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_REPORT_MONTH;
-import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_REPORT_WEEK;
-import static com.xingcloud.webinterface.monitor.SystemMonitor.putMonitorInfo;
 
 import com.google.common.base.Strings;
 import com.google.gson.annotations.Expose;
@@ -151,19 +145,14 @@ public class FormulaParameterContainer implements Serializable {
     Interval interval = getInterval();
     switch (interval) {
       case MIN5:
-        putMonitorInfo(MI_REPORT_MIN5);
         break;
       case HOUR:
-        putMonitorInfo(MI_REPORT_HOUR);
         break;
       case DAY:
-        putMonitorInfo(MI_REPORT_DAY);
         break;
       case WEEK:
-        putMonitorInfo(MI_REPORT_WEEK);
         break;
       case MONTH:
-        putMonitorInfo(MI_REPORT_MONTH);
         break;
       default:
         break;
