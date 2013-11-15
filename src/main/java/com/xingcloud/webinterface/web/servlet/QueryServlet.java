@@ -65,10 +65,19 @@ public class QueryServlet extends AbstractServlet {
 
   private static final Logger LOGGER = Logger.getLogger(QueryServlet.class);
 
+  private void logRequestHeader(HttpServletRequest request) {
+    LOGGER.info("[SERVLET] - Header - Host - " + request.getHeader("Host"));
+    LOGGER.info("[SERVLET] - Header - Origin - " + request.getHeader("Origin"));
+    LOGGER.info("[SERVLET] - Header - Referer - " + request.getHeader("Referer"));
+    LOGGER.info("[SERVLET] - Header - User-Agent - " + request.getHeader("User-Agent"));
+    LOGGER.info("[SERVLET] - Header - RemoteHost - " + request.getRemoteHost());
+    LOGGER.info("[SERVLET] - Header - RemoteAddr - " + request.getRemoteAddr());
+    LOGGER.info("[SERVLET] - Header - URI - " + request.getRequestURI());
+  }
+
   protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException,
     IOException {
-    LOGGER.info(
-      "[SERVLET] - Enter(RemoteHost=" + request.getRemoteHost() + ", RemoteAddr=" + request.getRemoteAddr() + ")");
+    logRequestHeader(request);
     putMonitorInfo(WIE_QUERY_ENTER);
     long t1 = System.currentTimeMillis();
     response.setCharacterEncoding("utf-8");
