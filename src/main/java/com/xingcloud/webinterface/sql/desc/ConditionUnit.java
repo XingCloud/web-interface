@@ -63,20 +63,20 @@ public class ConditionUnit implements Comparable<ConditionUnit> {
 
   @Override
   public int compareTo(ConditionUnit o) {
-    if (this.getOperator().equals(o.getOperator())) {
-      Object vo1 = this.getValueObject(), vo2 = o.getValueObject();
-      boolean b1 = vo1 instanceof Number, b2 = vo2 instanceof Number;
-      if (b1 && b2) {
-        return (int) (((Number) vo1).doubleValue() - ((Number) vo2).doubleValue());
-      } else if (b1 && !b2) {
-        return -1;
-      } else if (!b1 && b2) {
-        return 1;
-      } else {
-        return vo1.toString().compareTo(vo2.toString());
-      }
+    int v = this.getOperator().compareTo(o.getOperator());
+    if (v != 0) {
+      return v;
+    }
+    Object vo1 = this.getValueObject(), vo2 = o.getValueObject();
+    boolean b1 = vo1 instanceof Number, b2 = vo2 instanceof Number;
+    if (b1 && b2) {
+      return (int) (((Number) vo1).doubleValue() - ((Number) vo2).doubleValue());
+    } else if (b1 && !b2) {
+      return -1;
+    } else if (!b1 && b2) {
+      return 1;
     } else {
-      return this.operator.compareTo(o.getOperator());
+      return vo1.toString().compareTo(vo2.toString());
     }
   }
 }

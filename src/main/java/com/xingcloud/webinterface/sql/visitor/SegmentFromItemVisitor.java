@@ -87,8 +87,14 @@ public class SegmentFromItemVisitor extends LogicalOperatorVisitor implements Fr
       this.exception = new SegmentException("Unsupported join type - " + rightJoin);
       return;
     }
-    this.joinDescriptor = new JoinDescriptor(joinType, leftVisitor.getTableDescriptor(),
-                                             rightVisitor.getTableDescriptor());
+    // 在右侧出现左侧不出现
+    if (ANTI.equals(joinType)) {
+      this.joinDescriptor = new JoinDescriptor(joinType, rightVisitor.getTableDescriptor(),
+                                               leftVisitor.getTableDescriptor());
+    } else {
+      this.joinDescriptor = new JoinDescriptor(joinType, leftVisitor.getTableDescriptor(),
+                                               rightVisitor.getTableDescriptor());
+    }
   }
 
   public Join.JoinType getJoinType(net.sf.jsqlparser.statement.select.Join join) {
