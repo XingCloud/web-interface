@@ -198,7 +198,7 @@ public class SegmentDescriptor {
     }
 
     if (this.user != null) {
-      if (hasEvent) {
+      if (hasEvent || hasJoin) {
         sb.append(SQL_CONDITION_SEPARATOR);
       }
       lo2 = appendAllUsers(sb);

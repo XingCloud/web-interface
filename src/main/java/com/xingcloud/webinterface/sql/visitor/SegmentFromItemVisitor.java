@@ -1,10 +1,7 @@
 package com.xingcloud.webinterface.sql.visitor;
 
-import static com.xingcloud.webinterface.enums.Operator.EQ;
-import static com.xingcloud.webinterface.plan.Plans.KEY_WORD_UID;
 import static org.apache.drill.common.logical.data.Join.JoinType.ANTI;
 import static org.apache.drill.common.logical.data.Join.JoinType.INNER;
-import static org.apache.drill.common.util.FieldReferenceBuilder.buildColumn;
 
 import com.xingcloud.webinterface.exception.SegmentException;
 import com.xingcloud.webinterface.model.formula.FormulaQueryDescriptor;
@@ -16,9 +13,7 @@ import net.sf.jsqlparser.statement.select.FromItem;
 import net.sf.jsqlparser.statement.select.FromItemVisitor;
 import net.sf.jsqlparser.statement.select.SubJoin;
 import net.sf.jsqlparser.statement.select.SubSelect;
-import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.Join;
-import org.apache.drill.common.logical.data.JoinCondition;
 
 /**
  * User: Z J Wu Date: 13-10-29 Time: 上午11:51 Package: com.xingcloud.webinterface.sql.visitor
@@ -64,7 +59,6 @@ public class SegmentFromItemVisitor extends LogicalOperatorVisitor implements Fr
       this.exception = segmentSelectVisitor.getException();
       return;
     }
-//    this.logicalOperator = segmentSelectVisitor.getLogicalOperator();
     this.tableDescriptor = segmentSelectVisitor.getTableDescriptor();
   }
 
@@ -78,7 +72,6 @@ public class SegmentFromItemVisitor extends LogicalOperatorVisitor implements Fr
       this.exception = leftVisitor.getException();
       return;
     }
-//    LogicalOperator leftLO = leftVisitor.getLogicalOperator();
     // Build right
     net.sf.jsqlparser.statement.select.Join rightJoin = join.getJoin();
     FromItem rightItem = rightJoin.getRightItem();
@@ -88,20 +81,12 @@ public class SegmentFromItemVisitor extends LogicalOperatorVisitor implements Fr
       this.exception = rightVisitor.getException();
       return;
     }
-//    LogicalOperator rightLO = rightVisitor.getLogicalOperator();
-
     // Build join conditions
-    LogicalExpression left = buildColumn(leftItem.getAlias(), KEY_WORD_UID);
-    LogicalExpression right = buildColumn(rightItem.getAlias(), KEY_WORD_UID);
     Join.JoinType joinType = getJoinType(rightJoin);
     if (joinType == null) {
       this.exception = new SegmentException("Unsupported join type - " + rightJoin);
       return;
     }
-    JoinCondition[] joinConditions = new JoinCondition[]{new JoinCondition(EQ.getSqlOperator(), left, right)
-    };
-//    logicalOperator = new Join(leftLO, rightLO, joinConditions, getJoinType(rightJoin));
-//    operators.add(logicalOperator);
     this.joinDescriptor = new JoinDescriptor(joinType, leftVisitor.getTableDescriptor(),
                                              rightVisitor.getTableDescriptor());
   }

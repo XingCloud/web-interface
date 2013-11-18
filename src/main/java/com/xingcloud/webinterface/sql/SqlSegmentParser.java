@@ -1,6 +1,10 @@
 package com.xingcloud.webinterface.sql;
 
+import com.xingcloud.webinterface.enums.CommonQueryType;
+import com.xingcloud.webinterface.enums.Interval;
 import com.xingcloud.webinterface.exception.SegmentException;
+import com.xingcloud.webinterface.model.Filter;
+import com.xingcloud.webinterface.model.formula.CommonFormulaQueryDescriptor;
 import com.xingcloud.webinterface.model.formula.FormulaQueryDescriptor;
 import com.xingcloud.webinterface.segment.XSegment;
 import com.xingcloud.webinterface.sql.desc.JoinDescriptor;
@@ -96,7 +100,11 @@ public class SqlSegmentParser {
       ssv = new SegmentSelectVisitor(descriptor);
       selectBody.accept(ssv);
       if (ssv.isWrong()) {
-        throw new SegmentException(ssv.getException());
+        Exception exception = ssv.getException();
+        if (exception instanceof SegmentException) {
+          throw (SegmentException) exception;
+        }
+        throw new SegmentException(exception);
       }
       jd = ssv.getJoinDescriptor();
       if (jd == null) {
@@ -113,5 +121,15 @@ public class SqlSegmentParser {
     String segmentIdentifier = sd.toSegment();
     return new XSegment(segmentIdentifier, sd.getRootSegmentLogicalOperator(), sd.getLogicalOperators(),
                         sd.getFunctionalPropertiesMap(), sd);
+  }
+
+  public static void main(String[] args) throws SegmentException, JSQLParserException {
+    String sqlSegment = "select ";
+    FormulaQueryDescriptor fqd = new CommonFormulaQueryDescriptor("ram", "2013-11-15", "2013-11-15", "visit.*",
+                                                                  sqlSegment, Filter.ALL, "2013-03-10", "2013-03-10",
+                                                                  Interval.PERIOD, CommonQueryType.NORMAL);
+    XSegment xSegment = SqlSegmentParser.getInstance().parseSegment(fqd);
+    System.out.println(xSegment.getIdentifier());
+
   }
 }

@@ -11,25 +11,202 @@
   query : [ {
     op : "scan",
     @id : 1,
-    memo : "deu_ram,2013-11-01,2013-11-01,pay.*",
+    memo : "deu_ram,2013-02-24,2013-03-03,visit.*",
     storageengine : "hbase",
     selection : [ {
       table : "deu_ram",
       filter : {
-        expression : " ( (date)  == ('20131101') )  && ( (event0)  == ('pay') ) "
+        expression : " ( (date)  == ('20130224') )  && ( (event0)  == ('visit') ) "
       },
       projections : [ {
         ref : "uid",
         expr : "uid"
-      }, {
-        ref : "value",
-        expr : "value"
+      } ]
+    }, {
+      table : "deu_ram",
+      filter : {
+        expression : " ( (date)  == ('20130225') )  && ( (event0)  == ('visit') ) "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      } ]
+    }, {
+      table : "deu_ram",
+      filter : {
+        expression : " ( (date)  == ('20130226') )  && ( (event0)  == ('visit') ) "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      } ]
+    }, {
+      table : "deu_ram",
+      filter : {
+        expression : " ( (date)  == ('20130227') )  && ( (event0)  == ('visit') ) "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      } ]
+    }, {
+      table : "deu_ram",
+      filter : {
+        expression : " ( (date)  == ('20130228') )  && ( (event0)  == ('visit') ) "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      } ]
+    }, {
+      table : "deu_ram",
+      filter : {
+        expression : " ( (date)  == ('20130301') )  && ( (event0)  == ('visit') ) "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      } ]
+    }, {
+      table : "deu_ram",
+      filter : {
+        expression : " ( (date)  == ('20130302') )  && ( (event0)  == ('visit') ) "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      } ]
+    }, {
+      table : "deu_ram",
+      filter : {
+        expression : " ( (date)  == ('20130303') )  && ( (event0)  == ('visit') ) "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
       } ]
     } ],
     ref : "event"
   }, {
     op : "scan",
     @id : 2,
+    memo : "deu_ram,2013-03-03,2013-03-10,visit.*",
+    storageengine : "hbase",
+    selection : [ {
+      table : "deu_ram",
+      filter : {
+        expression : " ( (date)  == ('20130303') )  && ( (event0)  == ('visit') ) "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      } ]
+    }, {
+      table : "deu_ram",
+      filter : {
+        expression : " ( (date)  == ('20130304') )  && ( (event0)  == ('visit') ) "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      } ]
+    }, {
+      table : "deu_ram",
+      filter : {
+        expression : " ( (date)  == ('20130305') )  && ( (event0)  == ('visit') ) "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      } ]
+    }, {
+      table : "deu_ram",
+      filter : {
+        expression : " ( (date)  == ('20130306') )  && ( (event0)  == ('visit') ) "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      } ]
+    }, {
+      table : "deu_ram",
+      filter : {
+        expression : " ( (date)  == ('20130307') )  && ( (event0)  == ('visit') ) "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      } ]
+    }, {
+      table : "deu_ram",
+      filter : {
+        expression : " ( (date)  == ('20130308') )  && ( (event0)  == ('visit') ) "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      } ]
+    }, {
+      table : "deu_ram",
+      filter : {
+        expression : " ( (date)  == ('20130309') )  && ( (event0)  == ('visit') ) "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      } ]
+    }, {
+      table : "deu_ram",
+      filter : {
+        expression : " ( (date)  == ('20130310') )  && ( (event0)  == ('visit') ) "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      } ]
+    } ],
+    ref : "event"
+  }, {
+    op : "join",
+    @id : 3,
+    left : 1,
+    right : 2,
+    conditions : [ {
+      relationship : "==",
+      left : "uid",
+      right : "uid"
+    } ],
+    type : "ANTI"
+  }, {
+    op : "scan",
+    @id : 4,
+    memo : "Scan(From ram.first_pay_time where val [> 2000-01-01;]",
+    storageengine : "mysql",
+    selection : [ {
+      table : "ram.first_pay_time",
+      filter : {
+        expression : " (val)  > (20000101000000) "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      } ]
+    } ],
+    ref : "user"
+  }, {
+    op : "join",
+    @id : 5,
+    left : 3,
+    right : 4,
+    conditions : [ {
+      relationship : "==",
+      left : "uid",
+      right : "uid"
+    } ],
+    type : "INNER"
+  }, {
+    op : "scan",
+    @id : 6,
     memo : "deu_ram,2013-11-01,2013-11-02,visit.*",
     storageengine : "hbase",
     selection : [ {
@@ -60,9 +237,9 @@
     ref : "event"
   }, {
     op : "join",
-    @id : 3,
-    left : 1,
-    right : 2,
+    @id : 7,
+    left : 5,
+    right : 6,
     conditions : [ {
       relationship : "==",
       left : "uid",
@@ -71,8 +248,8 @@
     type : "INNER"
   }, {
     op : "collapsingaggregate",
-    @id : 4,
-    input : 3,
+    @id : 8,
+    input : 7,
     within : null,
     target : null,
     carryovers : null,
@@ -88,11 +265,11 @@
     } ]
   }, {
     op : "project",
-    @id : 5,
-    input : 4,
+    @id : 9,
+    input : 8,
     projections : [ {
       ref : "query_id",
-      expr : "'COMMON,ram,2013-11-01,2013-11-02,visit.*,s{{e.date>=2013-11-01;e.date<=2013-11-01;e.event==pay.*}}s,VF-ALL-0-0,PERIOD'"
+      expr : "'COMMON,ram,2013-11-01,2013-11-02,visit.*,s{{ANTI(e.date<2013-03-03;e.date>=2013-02-24;e.event==visit.*|e.date<2013-03-10;e.date>=2013-03-03;e.event==visit.*);u.first_pay_time>2000-01-01}}s,VF-ALL-0-0,PERIOD'"
     }, {
       ref : "dimension",
       expr : "'2013-11-01 00:00'"
@@ -108,8 +285,8 @@
     } ]
   }, {
     op : "store",
-    @id : 6,
-    input : 5,
+    @id : 10,
+    input : 9,
     target : null,
     partition : null,
     storageEngine : "DEFAULT-STORE"

@@ -99,6 +99,10 @@ public class SegmentSelectVisitor extends LogicalOperatorVisitor implements Sele
     if (segmentFromItemVisitor.isSingleTable()) {
       boolean isEventTable = segmentFromItemVisitor.isEventTable();
       Expression whereClause = plainSelect.getWhere();
+      if(whereClause==null){
+        this.exception=new SegmentException("One query must has at least one where clause.");
+        return;
+      }
 
       Map<String, Map<Operator, Object>> whereClausesMap = new TreeMap<String, Map<Operator, Object>>();
       SegmentTableType segmentTableType = isEventTable ? E : U;
