@@ -7,7 +7,6 @@ import com.xingcloud.webinterface.annotation.JsonName;
 import com.xingcloud.webinterface.enums.Operator;
 import org.apache.hadoop.io.WritableUtils;
 
-import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
@@ -83,50 +82,10 @@ public class Filter implements Serializable {
     return "VF-" + operator + "-" + value + "-" + extraValue;
   }
 
-  public void readFields(DataInput in) throws IOException {
-    Operator operator = WritableUtils.readEnum(in, Operator.class);
-    this.operator = operator;
-    this.value = WritableUtils.readVLong(in);
-    this.extraValue = WritableUtils.readVLong(in);
-  }
-
   public void write(DataOutput out) throws IOException {
     WritableUtils.writeEnum(out, operator);
     WritableUtils.writeVLong(out, this.value);
     WritableUtils.writeVLong(out, this.extraValue);
-  }
-
-  public static void printBytes(byte[] bytes) {
-    for (byte b : bytes) {
-      System.out.print(b);
-    }
-    System.out.println();
-  }
-
-  public boolean checkVal(long val) {
-    Operator operator = getOperator();
-    if (getOperator() == Operator.ALL) {
-      return true;
-    }
-    long filterVal = getValue();
-    switch (operator) {
-      case LT:
-        return val < filterVal;
-      case LE:
-        return val <= filterVal;
-      case GT:
-        return val > filterVal;
-      case GE:
-        return val >= filterVal;
-      case EQ:
-        return val == filterVal;
-      case NE:
-        return val != filterVal;
-      case BETWEEN:
-        long filterExtraVal = getExtraValue();
-        return val >= filterVal && val <= filterExtraVal;
-    }
-    return false;
   }
 
   @Override

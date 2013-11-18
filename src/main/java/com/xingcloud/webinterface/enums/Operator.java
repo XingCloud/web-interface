@@ -16,21 +16,19 @@ public enum Operator {
   SGMT3600("sgmt3600", "sgmt3600", true, true),
   // Do not filter anything.
   ALL(),
-  // >
-  GT("gt", ">", false, false),
-  // <
-  LT("lt", "<", false, false),
-  // >=
-  GE("ge", ">=", false, false),
-  // <=
-  LE("le", "<=", false, false),
   // ==
   EQ("eq", "==", false, false),
-  // !=
-  NE("ne", "<>", false, false),
+  // >
+  GT("gt", ">", false, false),
+  // >=
+  GE("ge", ">=", false, false),
+  // <
+  LT("lt", "<", false, false),
+  // <=
+  LE("le", "<=", false, false),
   IN("in", "in", false, true),
-  // between ... and ...[x, y]
-  BETWEEN;
+  // !=
+  NE("ne", "<>", false, false);
 
   private static final Set<Operator> SET = EnumSet.allOf(Operator.class);
   public static final BiMap<Operator, String> OPERATOR_COMMON_KEYWORDS_BIMAP = HashBiMap.create();

@@ -98,7 +98,7 @@
     input : 4,
     projections : [ {
       ref : "query_id",
-      expr : "'COMMON,ram,2013-11-01,2013-11-02,visit.*,s{{e.date<2013-10-03;e.date>=2013-10-01;e.event==pay.*}}s,VF-ALL-0-0,PERIOD'"
+      expr : "'COMMON,ram,2013-11-01,2013-11-02,visit.*,s{{e.date>=2013-10-01;e.date<2013-10-03;e.event==pay.*}}s,VF-ALL-0-0,PERIOD'"
     }, {
       ref : "dimension",
       expr : "'2013-11-01 00:00'"
