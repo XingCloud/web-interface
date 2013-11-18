@@ -34,7 +34,7 @@ public class TestCommonQueryLogicalPlanSeg extends TestLogicalPlanBase {
 
     // deu segment
 //    sqlSegment = "select uid from user where grade > 100;select uid from deu where date = '2013-11-01' and event='pay.*';select uid from deu where event='pay.*' and date = '2013-11-01'";
-//    sqlSegment = "select uid from deu where event='pay.*' and date >= '2013-10-01' and date <= '2013-10-02'";
+    sqlSegment = "select uid from deu where event='pay.*' and date >= '2013-10-01' and date < '2013-10-03'";
 //    sqlSegment = "select uid from deu where event='pay.*' and date = '2013-10-01';select uid from deu where event='buy.*' and date = '2013-10-03'";
 //    sqlSegment = "select uid from ((select uid from deu_age where event='buy.banana.*' and date>=date_add('s',2) and date<=date_add('e',0)) as deu1 anti join (select uid from deu_age where event='buy.apple.*' and date>=date_add('s',0) and date<= date_add('e',-2)) as deu2 on deu1.uid=deu2.uid)";
 
@@ -46,7 +46,7 @@ public class TestCommonQueryLogicalPlanSeg extends TestLogicalPlanBase {
 //      "select uid from deu where event='pay.*' and date = '2013-11-01';" +
 //      "select uid from ((select uid from deu_age where event='buy.banana.*' and date>=date_add('s',1) and date<=date_add('e',0)) as deu1 anti join (select uid from deu_age where event='buy.apple.*' and date>=date_add('s',0) and date<= date_add('e',-1)) as deu2 on deu1.uid=deu2.uid);";
 
-    sqlSegment="select uid from ((select uid from event where event='visit.*' and date>=date_add('s',14) and date<date_add('e',7)) as deu1 anti join (select uid from event where event='visit.*' and date>=date_add('s',7) and date<date_add('e',0)) as deu2 on deu1.uid=deu2.uid); select uid from user where first_pay_time>'2000-01-01'";
+//    sqlSegment="select uid from ((select uid from event where event='visit.*' and date>=date_add('s',14) and date<date_add('e',7)) as deu1 anti join (select uid from event where event='visit.*' and date>=date_add('s',7) and date<date_add('e',0)) as deu2 on deu1.uid=deu2.uid); select uid from user where first_pay_time>'2000-01-01'";
     FormulaQueryDescriptor fqd = new CommonFormulaQueryDescriptor("ram", TEST_REAL_BEGIN_DATE, TEST_REAL_END_DATE,
                                                                   TEST_EVENT_VISIT, sqlSegment, Filter.ALL,
                                                                   "2013-03-10", "2013-03-10", Interval.PERIOD,

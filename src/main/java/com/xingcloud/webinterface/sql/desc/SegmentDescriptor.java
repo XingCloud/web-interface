@@ -1,5 +1,7 @@
 package com.xingcloud.webinterface.sql.desc;
 
+import static com.xingcloud.basic.utils.DateUtils.dateAdd;
+import static com.xingcloud.basic.utils.DateUtils.dateSubtraction;
 import static com.xingcloud.webinterface.enums.Operator.EQ;
 import static com.xingcloud.webinterface.enums.Operator.GE;
 import static com.xingcloud.webinterface.enums.Operator.GT;
@@ -29,6 +31,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.drill.common.logical.data.Join;
 import org.apache.drill.common.logical.data.LogicalOperator;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -214,7 +217,8 @@ public class SegmentDescriptor {
     return sb.toString();
   }
 
-  private LogicalOperator makeOneEventTableLO(Map<String, Map<Operator, Object>> whereClauseMap) throws PlanException {
+  private LogicalOperator makeOneEventTableLO(Map<String, Map<Operator, Object>> whereClauseMap) throws PlanException,
+    ParseException {
     // 额外的投影
     String[] additionalProjections;
     if (descriptor.isCommon()) {
@@ -234,6 +238,8 @@ public class SegmentDescriptor {
         val1 = conditionMap.get(GT);
         if (val1 == null) {
           throw new PlanException("Cannot parse lower bound in event table.");
+        } else {
+          val1 = dateAdd(val1.toString(), 1);
         }
       }
       val2 = conditionMap.get(LE);
@@ -241,6 +247,8 @@ public class SegmentDescriptor {
         val2 = conditionMap.get(LT);
         if (val2 == null) {
           throw new PlanException("Cannot parse upper bound in event table.");
+        } else {
+          val2 = dateSubtraction(val2.toString(), 1);
         }
       }
       endDate = val2.toString();
@@ -269,7 +277,7 @@ public class SegmentDescriptor {
     return getChainedMysqlSegmentScan2(this.descriptor.getProjectId(), this.logicalOperators, whereClauseMap);
   }
 
-  private LogicalOperator makeOneJoinLO(JoinDescriptor jd) throws PlanException {
+  private LogicalOperator makeOneJoinLO(JoinDescriptor jd) throws PlanException, ParseException {
     LogicalOperator lo;
     Join.JoinType joinType = jd.getJoinType();
     TableDescriptor leftTD = jd.getLeft(), rightTD = jd.getRight();
@@ -293,7 +301,7 @@ public class SegmentDescriptor {
     return lo;
   }
 
-  private LogicalOperator appendAllJoins(StringBuilder sb) throws PlanException {
+  private LogicalOperator appendAllJoins(StringBuilder sb) throws PlanException, ParseException {
     int s1 = joins.size(), i = 0;
     LogicalOperator lo1 = null, lo2;
     for (JoinDescriptor jd : joins) {
@@ -319,7 +327,7 @@ public class SegmentDescriptor {
     return makeOneUserTableLO(this.user.getWhereClauseMap());
   }
 
-  private LogicalOperator appendAllEvents(StringBuilder sb) throws PlanException {
+  private LogicalOperator appendAllEvents(StringBuilder sb) throws PlanException, ParseException {
     Collections.sort(this.event);
     int s1 = event.size(), i = 0;
     LogicalOperator lo1 = null, lo2;
