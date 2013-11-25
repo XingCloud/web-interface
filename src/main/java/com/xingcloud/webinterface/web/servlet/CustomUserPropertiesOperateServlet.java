@@ -19,6 +19,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.lang.reflect.Type;
 import java.net.URLDecoder;
@@ -57,7 +58,7 @@ public class CustomUserPropertiesOperateServlet extends AbstractServlet {
       result.put("milli", usingTime);
     }
 
-    Writer writer = response.getWriter();
+    Writer writer = new OutputStreamWriter(response.getOutputStream(), "utf-8");
     writer.write(GSON.toJson(result));
     writer.flush();
     LOGGER.info("[SERVLET-EXIT] in " + usingTime + " milliseconds");
