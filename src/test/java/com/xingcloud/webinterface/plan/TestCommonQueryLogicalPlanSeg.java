@@ -23,14 +23,14 @@ public class TestCommonQueryLogicalPlanSeg extends TestLogicalPlanBase {
       "\"language\":[{\"op\":\"eq\",\"expr\":\"zh_cn\",\"type\":\"CONST\"}]" +
       "}";
 
-    segment = "{\"register_time\":[{\"op\":\"eq\",\"expr\":\"2013-09-12\",\"type\":\"CONST\"}]}";
+    segment = "{\"register_time\":[{\"op\":\"gte\",\"expr\":\"$date_add(0)\",\"type\":\"VAR\"},{\"op\":\"lte\",\"expr\":\"$date_add(0)\",\"type\":\"VAR\"}]}";
 //    segment = "{\"identifier\":[{\"op\":\"eq\",\"expr\":\"\\\\\"null\\\\\"\",\"type\":\"CONST\"}]}";
 
     System.out.println(segment);
 
-    FormulaQueryDescriptor fqd = new CommonFormulaQueryDescriptor("ram", TEST_REAL_BEGIN_DATE, TEST_REAL_END_DATE,
-                                                                  TEST_EVENT_VISIT, segment, Filter.ALL, 1d,
-                                                                  "2013-03-10", "2013-03-12", Interval.PERIOD,
+    FormulaQueryDescriptor fqd = new CommonFormulaQueryDescriptor("sof-qqsplayer", "2013-11-28", "2013-12-09",
+                                                                  "install.*", segment, Filter.ALL, 1d,
+                                                                  "2013-11-28", "2013-12-08", Interval.PERIOD,
                                                                   CommonQueryType.NORMAL);
     SegmentEvaluator.evaluate(fqd);
 

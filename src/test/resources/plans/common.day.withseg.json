@@ -4,19 +4,19 @@
     version : 1,
     generator : {
       type : "AUTO",
-      info : "ram"
+      info : "sof-qqsplayer"
     }
   },
   storage : { },
   query : [ {
     op : "scan",
     @id : 1,
-    memo : "Scan(Table=ram.register_time, Prop=register_time, Val={GTE=2013-09-12, LTE=2013-09-12})",
+    memo : "Scan(Table=sof-qqsplayer.register_time, Prop=register_time, Val={LTE=2013-12-09, GTE=2013-11-28})",
     storageengine : "mysql",
     selection : [ {
-      table : "ram.register_time",
+      table : "sof-qqsplayer.register_time",
       filter : {
-        expression : " ( (val)  >= (20130912000000) )  && ( (val)  <= (20130912235959) ) "
+        expression : " ( (val)  <= (20131209235959) )  && ( (val)  >= (20131128000000) ) "
       },
       projections : [ {
         ref : "uid",
@@ -27,12 +27,12 @@
   }, {
     op : "scan",
     @id : 2,
-    memo : "deu_ram,2013-10-01,2013-10-02,visit.*",
+    memo : "deu_sof-qqsplayer,2013-11-28,2013-12-09,install.*",
     storageengine : "hbase",
     selection : [ {
-      table : "deu_ram",
+      table : "deu_sof-qqsplayer",
       filter : {
-        expression : " ( (date)  == ('20131001') )  && ( (event0)  == ('visit') ) "
+        expression : " ( (date)  == ('20131128') )  && ( (event0)  == ('install') ) "
       },
       projections : [ {
         ref : "uid",
@@ -42,9 +42,129 @@
         expr : "value"
       } ]
     }, {
-      table : "deu_ram",
+      table : "deu_sof-qqsplayer",
       filter : {
-        expression : " ( (date)  == ('20131002') )  && ( (event0)  == ('visit') ) "
+        expression : " ( (date)  == ('20131129') )  && ( (event0)  == ('install') ) "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      }, {
+        ref : "value",
+        expr : "value"
+      } ]
+    }, {
+      table : "deu_sof-qqsplayer",
+      filter : {
+        expression : " ( (date)  == ('20131130') )  && ( (event0)  == ('install') ) "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      }, {
+        ref : "value",
+        expr : "value"
+      } ]
+    }, {
+      table : "deu_sof-qqsplayer",
+      filter : {
+        expression : " ( (date)  == ('20131201') )  && ( (event0)  == ('install') ) "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      }, {
+        ref : "value",
+        expr : "value"
+      } ]
+    }, {
+      table : "deu_sof-qqsplayer",
+      filter : {
+        expression : " ( (date)  == ('20131202') )  && ( (event0)  == ('install') ) "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      }, {
+        ref : "value",
+        expr : "value"
+      } ]
+    }, {
+      table : "deu_sof-qqsplayer",
+      filter : {
+        expression : " ( (date)  == ('20131203') )  && ( (event0)  == ('install') ) "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      }, {
+        ref : "value",
+        expr : "value"
+      } ]
+    }, {
+      table : "deu_sof-qqsplayer",
+      filter : {
+        expression : " ( (date)  == ('20131204') )  && ( (event0)  == ('install') ) "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      }, {
+        ref : "value",
+        expr : "value"
+      } ]
+    }, {
+      table : "deu_sof-qqsplayer",
+      filter : {
+        expression : " ( (date)  == ('20131205') )  && ( (event0)  == ('install') ) "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      }, {
+        ref : "value",
+        expr : "value"
+      } ]
+    }, {
+      table : "deu_sof-qqsplayer",
+      filter : {
+        expression : " ( (date)  == ('20131206') )  && ( (event0)  == ('install') ) "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      }, {
+        ref : "value",
+        expr : "value"
+      } ]
+    }, {
+      table : "deu_sof-qqsplayer",
+      filter : {
+        expression : " ( (date)  == ('20131207') )  && ( (event0)  == ('install') ) "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      }, {
+        ref : "value",
+        expr : "value"
+      } ]
+    }, {
+      table : "deu_sof-qqsplayer",
+      filter : {
+        expression : " ( (date)  == ('20131208') )  && ( (event0)  == ('install') ) "
+      },
+      projections : [ {
+        ref : "uid",
+        expr : "uid"
+      }, {
+        ref : "value",
+        expr : "value"
+      } ]
+    }, {
+      table : "deu_sof-qqsplayer",
+      filter : {
+        expression : " ( (date)  == ('20131209') )  && ( (event0)  == ('install') ) "
       },
       projections : [ {
         ref : "uid",
@@ -89,7 +209,10 @@
     input : 4,
     projections : [ {
       ref : "query_id",
-      expr : "'COMMON,ram,2013-10-01,2013-10-02,visit.*,{\"register_time\":\"2013-09-12\"},VF-ALL-0-0,PERIOD'"
+      expr : "'COMMON,sof-qqsplayer,2013-11-28,2013-12-09,install.*,{\"register_time\":{\"$gte\":\"2013-11-28\",\"$lte\":\"2013-12-09\"}},VF-ALL-0-0,PERIOD'"
+    }, {
+      ref : "dimension",
+      expr : "'2013-11-28 00:00'"
     }, {
       ref : "count",
       expr : "count"
