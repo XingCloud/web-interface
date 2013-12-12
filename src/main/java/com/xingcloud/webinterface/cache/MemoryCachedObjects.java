@@ -23,6 +23,7 @@ public class MemoryCachedObjects {
 
   public static String MCO_META_TABLE;
   public static String MCO_USER_PROPERTIES;
+  public static String MCO_FORMULA;
 
   private XMemCacheManager cacheManager = new XMemCacheManager();
 
@@ -52,5 +53,12 @@ public class MemoryCachedObjects {
     cacheManager.addCache(MCO_USER_PROPERTIES, cacheNum, cacheOverflowToDisk, cacheEternal, cacheTimeToIdleSeconds,
                           cacheTimeToLiveSeconds);
     LOGGER.info("[MEM-CACHE] - Cache(" + MCO_USER_PROPERTIES + ") is added to cache manager and standby.");
+
+    MCO_FORMULA = config.getString("formula.cache.name");
+    cacheNum = config.getInt("formula.cache.num", 50000);
+    cacheOverflowToDisk = config.getBoolean("formula.cache.overflowToDisk", false);
+    cacheEternal = config.getBoolean("formula.cache.eternal", true);
+    cacheManager.addCache(MCO_FORMULA, cacheNum, cacheOverflowToDisk, cacheEternal, 0, 0);
+    LOGGER.info("[MEM-CACHE] - Cache(" + MCO_FORMULA + ") is added to cache manager and standby.");
   }
 }

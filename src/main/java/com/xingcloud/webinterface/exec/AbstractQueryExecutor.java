@@ -62,7 +62,7 @@ public abstract class AbstractQueryExecutor implements QueryExecutor {
     } catch (UICheckException e) {
       throw e;
     } catch (Exception e) {
-      throw new UICheckException("Cannot check UI-TABLE because some exception occured - " + e.toString(), e);
+      throw new UICheckException("Cannot check UI-TABLE because some exception occurred - " + e.toString(), e);
     }
   }
 }

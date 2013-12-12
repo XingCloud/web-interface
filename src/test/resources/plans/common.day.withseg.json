@@ -4,7 +4,7 @@
     version : 1,
     generator : {
       type : "AUTO",
-      info : "ram"
+      info : "sof-qqsplayer"
     }
   },
   storage : { },
@@ -39,7 +39,7 @@
     memo : "deu_ram,2013-11-01,2013-11-02,visit.*",
     storageengine : "hbase",
     selection : [ {
-      table : "deu_ram",
+      table : "deu_sof-qqsplayer",
       filter : {
         expression : " ( (date)  == ('20131101') )  && ( (event0)  == ('visit') ) "
       },
@@ -51,7 +51,7 @@
         expr : "value"
       } ]
     }, {
-      table : "deu_ram",
+      table : "deu_sof-qqsplayer",
       filter : {
         expression : " ( (date)  == ('20131102') )  && ( (event0)  == ('visit') ) "
       },

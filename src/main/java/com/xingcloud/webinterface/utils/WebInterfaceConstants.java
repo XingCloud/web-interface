@@ -15,13 +15,8 @@ import com.google.gson.GsonBuilder;
 import com.xingcloud.webinterface.enums.AggregationPolicy;
 
 public class WebInterfaceConstants {
+  public static final char FORMULA_PART_SPLITTOR = ':';
   public static final char V9_SPLITTOR = '|';
-  public static final int MAX_DESCRIPTORS_IN_QUEUE = 80;
-  public static final int MAX_BATCH_DESCRIPTORS_IN_QUEUE = 100;
-
-  public static final String DEFAULT_SEGMENT_HANDLER_NAME = "Sorting";
-  public static final String HANDLER_KEYWORD = "$handler";
-  public static final String HANDLER_SUFFIX = "SegmentHandler";
 
   public static final String SEGMENT_IN_SEPARATOR = "[\\s]*\\|[\\s]*";
   public static final char SEGMENT_FUNCTION_BEGIN_CHAR = '$';
@@ -165,9 +160,6 @@ public class WebInterfaceConstants {
   public static final String CACHE_PREFIX_UIC = "ui.check.";
 
   public static final String THREAD_NAME_PREFIX_XQUERY = "XqueryThread";
-
-  public static final int TIME_UNIT_HOUR = 60;
-  public static final int TIME_UNIT_MIN5 = 5;
 
   public static final String HTTP = "HTTP";
 
