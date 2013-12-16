@@ -16,8 +16,6 @@ public class TestFormula {
     formula = "x*1|2013-10-01:x*2";
     FormulaGroup fg = FormulaGroup.buildFormulaGroup(formula);
     String f = fg.getFormula("2013-09-30");
-    fg = FormulaGroup.buildFormulaGroup(formula);
-    f = fg.getFormula("2013-10-30");
     System.out.println(f);
   }
 }
