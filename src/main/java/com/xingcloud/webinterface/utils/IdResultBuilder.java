@@ -17,12 +17,8 @@ import static com.xingcloud.webinterface.enums.CommonQueryType.TOTAL;
 import static com.xingcloud.webinterface.enums.DateTruncateLevel.STRICTLY;
 import static com.xingcloud.webinterface.enums.DateTruncateType.KILL;
 import static com.xingcloud.webinterface.enums.DateTruncateType.PASS;
-import static com.xingcloud.webinterface.enums.Function.USER_NUM;
-import static com.xingcloud.webinterface.enums.GroupByType.USER_PROPERTIES;
 import static com.xingcloud.webinterface.enums.Interval.DAY;
 import static com.xingcloud.webinterface.enums.Interval.PERIOD;
-import static com.xingcloud.webinterface.enums.QueryType.COMMON;
-import static com.xingcloud.webinterface.enums.QueryType.GROUP;
 import static com.xingcloud.webinterface.exec.QueryDescriptorTruncater.truncateDate;
 import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_DESCRIPTOR_BUILD;
 import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_STR_TIME_USE_BUILD_DESCRIPTOR;
@@ -43,15 +39,18 @@ import static com.xingcloud.webinterface.utils.WebInterfaceConstants.PERIOD_SUMM
 import static com.xingcloud.webinterface.utils.WebInterfaceConstants.TOTAL_USER;
 
 import com.google.common.base.Strings;
+import com.xingcloud.memcache.MemCacheException;
+import com.xingcloud.webinterface.calculate.ScaleGroup;
 import com.xingcloud.webinterface.enums.AggregationPolicy;
 import com.xingcloud.webinterface.enums.DateTruncateLevel;
 import com.xingcloud.webinterface.enums.DateTruncateType;
 import com.xingcloud.webinterface.enums.Function;
 import com.xingcloud.webinterface.enums.GroupByType;
 import com.xingcloud.webinterface.enums.Interval;
+import com.xingcloud.webinterface.enums.MathOperation;
 import com.xingcloud.webinterface.enums.SliceType;
+import com.xingcloud.webinterface.exception.FormulaException;
 import com.xingcloud.webinterface.exception.SegmentException;
-import com.xingcloud.webinterface.exception.UserPropertyException;
 import com.xingcloud.webinterface.exception.XParameterException;
 import com.xingcloud.webinterface.model.BeginEndDatePair;
 import com.xingcloud.webinterface.model.Filter;
@@ -125,8 +124,29 @@ public class IdResultBuilder {
     return functionMap;
   }
 
+  private static Map<String, ScaleGroup> extractScaleMap(FormulaParameterContainer container) throws MemCacheException,
+    FormulaException {
+    if (container == null) {
+      return null;
+    }
+    List<FormulaParameterItem> items = container.getItems();
+    if (CollectionUtils.isEmpty(items)) {
+      return null;
+    }
+    Map<String, ScaleGroup> scaleMap = new HashMap<String, ScaleGroup>(items.size());
+    ScaleGroup sg;
+    for (FormulaParameterItem item : items) {
+      if (item instanceof CommonFormulaParameterItem) {
+        sg = ScaleGroup.buildScaleGroup(((CommonFormulaParameterItem) item).getScale());
+        scaleMap.put(item.getName(), sg);
+      }
+
+    }
+    return scaleMap;
+  }
+
   public static CommonIdResult buildCommonDescriptor(FormulaParameterContainer container) throws XParameterException,
-    SegmentException {
+    SegmentException, MemCacheException, FormulaException {
     long t1 = System.currentTimeMillis();
 
     List<FormulaParameterItem> items = container.getItems();
@@ -138,10 +158,12 @@ public class IdResultBuilder {
     String beginDate = container.getBeginDate();
     String endDate = container.getEndDate();
     String formula = container.getFormula();
+    MathOperation mathOperation = container.getMathOperation();
     Map<String, Function> functionMap = extractFunctionMap(container);
+    Map<String, ScaleGroup> scaleMap = extractScaleMap(container);
 
     Map<String, CommonItemResult> itemResultMap = new HashMap<String, CommonItemResult>(items.size());
-    CommonIdResult idr = new CommonIdResult(id, formula, functionMap, itemResultMap);
+    CommonIdResult idr = new CommonIdResult(id, mathOperation, functionMap, scaleMap, itemResultMap);
     CommonItemResult cir;
 
     String name, event, realBeginDate, realEndDate, segment;
@@ -374,6 +396,7 @@ public class IdResultBuilder {
     Interval interval = container.getInterval();
     String endDate = container.getEndDate();
     String formula = container.getFormula();
+    MathOperation mathOperation = container.getMathOperation();
     String slicePattern = container.getSlicePattern();
     SliceType sliceType = container.getSliceType();
 
@@ -617,39 +640,11 @@ public class IdResultBuilder {
     } else {
       description = beginDate + " - " + latestAvailableGroupByDate;
     }
-    idResult = new GroupByIdResult(id, formula, functionMap, slicePattern, sliceType, description, itemResultMap,
+    idResult = new GroupByIdResult(id, mathOperation, functionMap, slicePattern, sliceType, description, itemResultMap,
                                    killedFqdSet, missedFqdSet);
     long t2 = System.currentTimeMillis();
     putMonitorInfo(new MonitorInfo(MI_STR_TIME_USE_BUILD_DESCRIPTOR, t2 - t1));
     return idResult;
-  }
-
-  public static void main(String[] args) throws XParameterException, SegmentException, UserPropertyException {
-    String id = "abc001";
-    String f = "x";
-    String e = "visit.*";
-    String projectId = "tencent-18894";
-    String beginDate = "2012-12-05";
-    String endDate = "2012-12-09";
-    String s = "{\"grade\":10}";
-    Interval i = Interval.DAY;
-
-    FormulaParameterContainer c01 = new FormulaParameterContainer(id, projectId, beginDate, endDate, i, f,
-                                                                  new ArrayList<FormulaParameterItem>(), null, COMMON);
-    c01.getItems().add(new CommonFormulaParameterItem("x", e, s, null, USER_NUM, -5, -5));
-    // c01.getItems().add(
-    // new CommonFormulaParameterItem("y", e, s, null, COUNT, null,
-    // null));
-    c01.init();
-
-    System.out.println(buildCommonDescriptor(c01));
-    System.out.println("===================================");
-    FormulaParameterContainer c02 = new FormulaParameterContainer(id, projectId, beginDate, endDate, i, f,
-                                                                  new ArrayList<FormulaParameterItem>(), null, GROUP);
-    c02.getItems().add(new GroupByFormulaParameterItem("x", e, s, null, USER_NUM, -3, -3, "grade", USER_PROPERTIES));
-    c02.getItems().add(new GroupByFormulaParameterItem("y", e, s, null, USER_NUM, -4, -4, "grade", USER_PROPERTIES));
-    c02.init();
-    System.out.println(buildGroupByDescriptor(c02));
   }
 
 }

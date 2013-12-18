@@ -5,8 +5,10 @@ import static com.xingcloud.webinterface.monitor.MonitorInfo.MI_STR_TIME_USE_UI_
 import static com.xingcloud.webinterface.monitor.SystemMonitor.putMonitorInfo;
 
 import com.xingcloud.maincache.InterruptQueryException;
+import com.xingcloud.memcache.MemCacheException;
 import com.xingcloud.webinterface.enums.AggregationPolicyDisplayed;
 import com.xingcloud.webinterface.exception.DataFillingException;
+import com.xingcloud.webinterface.exception.FormulaException;
 import com.xingcloud.webinterface.exception.NecessaryCollectionEmptyException;
 import com.xingcloud.webinterface.exception.ParseIncrementalException;
 import com.xingcloud.webinterface.exception.SegmentException;
@@ -38,7 +40,7 @@ public class CommonQueryExecutor extends AbstractQueryExecutor {
 
   public QueryResult getResult() throws XQueryException, SegmentException, XParameterException, ParseException,
     UICheckException, DataFillingException, ParseIncrementalException, InterruptQueryException,
-    NecessaryCollectionEmptyException, UICheckTimeoutException {
+    NecessaryCollectionEmptyException, UICheckTimeoutException, FormulaException, MemCacheException {
     int containerCount = containers.size();
     long t1 = System.currentTimeMillis();
     checkUITableConcurrently(containers);

@@ -63,11 +63,11 @@
   <data-sources>
     <adhoc enabled="false" />
     <lp enabled="false" />
-    <mock enabled="false" />
+    <mock enabled="true" />
   </data-sources>
 
   <cache>
-    <redis-cache enabled="true" />
+    <redis-cache enabled="false" />
   </cache>
 
   <web-services>

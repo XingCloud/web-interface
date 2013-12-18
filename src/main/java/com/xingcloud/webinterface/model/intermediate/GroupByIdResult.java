@@ -21,8 +21,10 @@ import com.xingcloud.webinterface.calculate.Arity;
 import com.xingcloud.webinterface.calculate.Evaluator;
 import com.xingcloud.webinterface.enums.CacheState;
 import com.xingcloud.webinterface.enums.Function;
+import com.xingcloud.webinterface.enums.MathOperation;
 import com.xingcloud.webinterface.enums.SliceType;
 import com.xingcloud.webinterface.exception.DataFillingException;
+import com.xingcloud.webinterface.exception.FormulaException;
 import com.xingcloud.webinterface.exception.NecessaryCollectionEmptyException;
 import com.xingcloud.webinterface.exception.NumberOfDayException;
 import com.xingcloud.webinterface.exception.RangingException;
@@ -90,6 +92,18 @@ public class GroupByIdResult extends IdResult {
                          SliceType sliceType, String description, Map<String, GroupByItemResult> itemResultMap,
                          Set<Object> killedFqdSet, Set<Object> missedFqdSet) {
     super(id, formula, functionMap);
+    this.slicePattern = slicePattern;
+    this.sliceType = sliceType;
+    this.description = description;
+    this.itemResultMap = itemResultMap;
+    this.killedFqdSet = killedFqdSet;
+    this.missedFqdSet = missedFqdSet;
+  }
+
+  public GroupByIdResult(String id, MathOperation mathOperation, Map<String, Function> functionMap, String slicePattern,
+                         SliceType sliceType, String description, Map<String, GroupByItemResult> itemResultMap,
+                         Set<Object> killedFqdSet, Set<Object> missedFqdSet) {
+    super(id, mathOperation, functionMap);
     this.slicePattern = slicePattern;
     this.sliceType = sliceType;
     this.description = description;
@@ -295,7 +309,7 @@ public class GroupByIdResult extends IdResult {
   }
 
   @Override
-  public Map<Object, Number> calculate() {
+  public Map<Object, Number> calculate() throws FormulaException {
     if (!check()) {
       return null;
     }
@@ -354,9 +368,10 @@ public class GroupByIdResult extends IdResult {
       inputData.remove(Pending.INSTANCE);
     }
 
-    String[] formulaInfo = parseFormula();
-    String formula = formulaInfo[0];
-
+//    String[] formulaInfo = parseFormula();
+//    String formula = formulaInfo[0];
+    boolean oneArity = (mathOperation == null);
+    String formula = parseFormula(mathOperation, oneArity);
     LOGGER.info("[CALCULATION] - GROUP, Formula(" + this.id + ") - " + formula);
 
     boolean hasNAResult, hasPendingResult;
@@ -414,6 +429,7 @@ public class GroupByIdResult extends IdResult {
         value = PendingNumber.INSTANCE;
       } else {
         try {
+//          LOGGER.info("[CALCULATE] " + key + "Arity - " + arity);
           value = Evaluator.evaluateNumber(formula, arity);
         } catch (Exception e) {
 //          LOGGER.error(e);
@@ -430,7 +446,8 @@ public class GroupByIdResult extends IdResult {
     return distinctFromItemResultMap(itemResultMap);
   }
 
-  public static void main(String[] args) throws XParameterException, NumberOfDayException, SegmentException {
+  public static void main(String[] args) throws XParameterException, NumberOfDayException, SegmentException,
+    FormulaException {
     IdResult idr;
     String formula = "x/y";
     Map<String, Function> functionMap = new HashMap<String, Function>();

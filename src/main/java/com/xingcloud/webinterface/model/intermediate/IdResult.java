@@ -2,12 +2,16 @@ package com.xingcloud.webinterface.model.intermediate;
 
 import static com.xingcloud.webinterface.model.NotAvailable.isNotAvailablePlaceholder;
 import static com.xingcloud.webinterface.model.Pending.isPendingPlaceholder;
+import static com.xingcloud.webinterface.utils.WebInterfaceConstants.FORMULA_ARITY_X;
+import static com.xingcloud.webinterface.utils.WebInterfaceConstants.FORMULA_ARITY_Y;
 import static com.xingcloud.webinterface.utils.WebInterfaceConstants.V9_SPLITTOR;
 
-import com.google.common.base.Strings;
+import com.xingcloud.webinterface.calculate.ScaleGroup;
 import com.xingcloud.webinterface.enums.CacheState;
 import com.xingcloud.webinterface.enums.Function;
+import com.xingcloud.webinterface.enums.MathOperation;
 import com.xingcloud.webinterface.exception.DataFillingException;
+import com.xingcloud.webinterface.exception.FormulaException;
 import com.xingcloud.webinterface.exception.NecessaryCollectionEmptyException;
 import com.xingcloud.webinterface.exception.RangingException;
 import com.xingcloud.webinterface.model.ResultTuple;
@@ -27,7 +31,11 @@ public abstract class IdResult extends DescriptorDistinctor {
 
   protected String formula;
 
+  protected MathOperation mathOperation;
+
   protected Map<String, Function> functionMap;
+
+  protected Map<String, ScaleGroup> scaleMap;
 
   protected Map<Object, Map<String, ResultTuple>> inputData;
 
@@ -37,6 +45,13 @@ public abstract class IdResult extends DescriptorDistinctor {
     super();
     this.id = id;
     this.formula = formula;
+    this.functionMap = functionMap;
+  }
+
+  public IdResult(String id, MathOperation mathOperation, Map<String, Function> functionMap) {
+    super();
+    this.id = id;
+    this.mathOperation = mathOperation;
     this.functionMap = functionMap;
   }
 
@@ -64,17 +79,17 @@ public abstract class IdResult extends DescriptorDistinctor {
     this.status = status;
   }
 
-  public abstract Map<Object, Number> calculate();
+  public abstract Map<Object, Number> calculate() throws FormulaException;
 
   public abstract void integrateResult(Map<FormulaQueryDescriptor, Map<Object, ResultTuple>> descriptorTupleMap,
                                        Map<FormulaQueryDescriptor, CacheState> descriptorStateMap) throws
     DataFillingException, RangingException, NecessaryCollectionEmptyException;
 
   public boolean check() {
-    if (Strings.isNullOrEmpty(formula)) {
-      LOGGER.warn("[ID-RESULT] - There is no formula for [" + id + "] to calculate.");
-      return false;
-    }
+//    if (Strings.isNullOrEmpty(formula)) {
+//      LOGGER.warn("[ID-RESULT] - There is no formula for [" + id + "] to calculate.");
+//      return false;
+//    }
     if (MapUtils.isEmpty(functionMap)) {
       LOGGER.warn("[ID-RESULT] - There is no function map for [" + id + "] to calculate.");
       return false;
@@ -102,6 +117,38 @@ public abstract class IdResult extends DescriptorDistinctor {
         vm.put(n, ResultTuple.createNewEmptyResultTuple());
       }
     }
+  }
+
+  protected String parseFormula(ScaleGroup sg1, ScaleGroup sg2, MathOperation operation, String d,
+                                boolean oneArity) throws FormulaException {
+    StringBuilder sb = new StringBuilder();
+    if (oneArity) {
+      sb.append(FORMULA_ARITY_X);
+      sb.append('*');
+      sb.append(sg1.getScale(d));
+      return sb.toString();
+    }
+    String expr = operation.getExpr();
+    sb.append("(x*");
+    sb.append(sg1.getScale(d));
+    sb.append(')');
+    sb.append(expr);
+    sb.append("(y*");
+    sb.append(sg2.getScale(d));
+    sb.append(')');
+    return sb.toString();
+  }
+
+  protected String parseFormula(MathOperation operation, boolean oneArity) throws FormulaException {
+    if (oneArity) {
+      return FORMULA_ARITY_X;
+    }
+    StringBuilder sb = new StringBuilder();
+    String expr = operation.getExpr();
+    sb.append(FORMULA_ARITY_X);
+    sb.append(expr);
+    sb.append(FORMULA_ARITY_Y);
+    return sb.toString();
   }
 
   protected String[] parseFormula() {

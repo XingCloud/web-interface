@@ -35,12 +35,14 @@ public class CommonFormulaParameterItem extends FormulaParameterItem {
 
   private AggregationPolicy naturalSummaryPolicy;
 
+  private String scale;
+
   public CommonFormulaParameterItem() {
     super();
   }
 
   public CommonFormulaParameterItem(String name, String event, String segment, Filter filter, Function function,
-                                    Integer coverRangeOrigin, Integer coverRange) {
+                                    Integer coverRangeOrigin, Integer coverRange, String scale) {
     super(name, event, segment, filter, function, coverRangeOrigin, coverRange);
   }
 
@@ -50,6 +52,10 @@ public class CommonFormulaParameterItem extends FormulaParameterItem {
 
   public AggregationPolicy getNaturalSummaryPolicy() {
     return naturalSummaryPolicy;
+  }
+
+  public String getScale() {
+    return scale;
   }
 
   public void parseSummaryPolicy(Interval interval) {
@@ -158,10 +164,7 @@ public class CommonFormulaParameterItem extends FormulaParameterItem {
   @Override
   public boolean canAccumulateTotalAndNatural() {
     Function function = getFunction();
-    if (COUNT.equals(function) || SUM.equals(function)) {
-      return true;
-    }
-    return false;
+    return COUNT.equals(function) || SUM.equals(function);
   }
 
   @Override
