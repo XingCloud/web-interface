@@ -163,6 +163,8 @@ public class CommonFormulaParameterItem extends FormulaParameterItem {
     sb.append(this.coverRange);
     sb.append(".NDO.");
     sb.append(this.coverRangeOrigin);
+    sb.append('.');
+    sb.append(this.scale);
     sb.append(")");
     return sb.toString();
   }
