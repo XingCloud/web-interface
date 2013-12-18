@@ -22,10 +22,12 @@ import static com.xingcloud.webinterface.monitor.WIEvent.WIE_STR_TIMEUSE_WHOLE_Q
 
 import com.google.common.base.Strings;
 import com.xingcloud.maincache.InterruptQueryException;
+import com.xingcloud.memcache.MemCacheException;
 import com.xingcloud.webinterface.enums.ErrorCode;
 import com.xingcloud.webinterface.enums.Order;
 import com.xingcloud.webinterface.enums.QueryType;
 import com.xingcloud.webinterface.exception.DataFillingException;
+import com.xingcloud.webinterface.exception.FormulaException;
 import com.xingcloud.webinterface.exception.NecessaryCollectionEmptyException;
 import com.xingcloud.webinterface.exception.NumberOfDayException;
 import com.xingcloud.webinterface.exception.ParseIncrementalException;
@@ -199,7 +201,8 @@ public class QueryServlet extends AbstractServlet {
 
   private QueryResult queryCommon(List<FormulaParameterContainer> containers) throws XQueryException, SegmentException,
     XParameterException, ParseException, UICheckException, DataFillingException, RangingException,
-    ParseIncrementalException, NecessaryCollectionEmptyException, InterruptQueryException, UICheckTimeoutException {
+    ParseIncrementalException, NecessaryCollectionEmptyException, InterruptQueryException, UICheckTimeoutException,
+    FormulaException, MemCacheException {
     QueryExecutor executor = new CommonQueryExecutor(containers);
     return executor.getResult();
   }
@@ -207,7 +210,8 @@ public class QueryServlet extends AbstractServlet {
   private QueryResult queryGroupBy(List<FormulaParameterContainer> containers, String filterString, String orderBy,
                                    Order order, int index, int pageSize) throws XQueryException, XParameterException,
     SegmentException, ParseException, UICheckException, DataFillingException, NecessaryCollectionEmptyException,
-    RangingException, ParseIncrementalException, InterruptQueryException, UICheckTimeoutException {
+    RangingException, ParseIncrementalException, InterruptQueryException, UICheckTimeoutException, FormulaException,
+    MemCacheException {
     QueryExecutor executor = new GroupByQueryExecutor(containers, filterString, orderBy, order, index, pageSize);
     return executor.getResult();
   }

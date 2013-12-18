@@ -8,6 +8,7 @@ import com.google.gson.annotations.SerializedName;
 import com.xingcloud.webinterface.annotation.Ignore;
 import com.xingcloud.webinterface.annotation.JsonName;
 import com.xingcloud.webinterface.enums.Interval;
+import com.xingcloud.webinterface.enums.MathOperation;
 import com.xingcloud.webinterface.enums.QueryType;
 import com.xingcloud.webinterface.enums.SliceType;
 import com.xingcloud.webinterface.exception.NumberOfDayException;
@@ -15,7 +16,6 @@ import com.xingcloud.webinterface.exception.ParseJsonException;
 import com.xingcloud.webinterface.exception.UnsupportedFormulaQueryItemException;
 import com.xingcloud.webinterface.exception.XParameterException;
 import com.xingcloud.webinterface.model.Filter;
-import com.xingcloud.webinterface.utils.DateSplitter;
 import com.xingcloud.webinterface.utils.WebInterfaceConstants;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONNull;
@@ -64,6 +64,11 @@ public class FormulaParameterContainer implements Serializable {
   private String formula;
 
   @Expose
+  @SerializedName("op")
+  @JsonName("op")
+  private MathOperation mathOperation;
+
+  @Expose
   @SerializedName("items")
   @JsonName("items")
   private List<FormulaParameterItem> items;
@@ -99,6 +104,21 @@ public class FormulaParameterContainer implements Serializable {
     this.queryType = queryType;
   }
 
+  public FormulaParameterContainer(String id, String projectId, String beginDate, String endDate, Interval interval,
+                                   MathOperation mathOperation, List<FormulaParameterItem> items, String slicePattern,
+                                   QueryType queryType) {
+    super();
+    this.id = id;
+    this.projectId = projectId;
+    this.beginDate = beginDate;
+    this.endDate = endDate;
+    this.interval = interval;
+    this.mathOperation = mathOperation;
+    this.items = items;
+    this.slicePattern = slicePattern;
+    this.queryType = queryType;
+  }
+
   public boolean validate() throws XParameterException, NumberOfDayException {
     return validate(false);
   }
@@ -126,9 +146,9 @@ public class FormulaParameterContainer implements Serializable {
         throw new XParameterException("Cannot parse begin & end date.", e);
       }
 
-      if (Strings.isNullOrEmpty(formula)) {
-        throw new XParameterException("Formula cannot be null.");
-      }
+//      if (Strings.isNullOrEmpty(formula)) {
+//        throw new XParameterException("Formula cannot be null.");
+//      }
     }
 
     if (CollectionUtils.isEmpty(items)) {
@@ -161,73 +181,68 @@ public class FormulaParameterContainer implements Serializable {
     return true;
   }
 
-  public boolean needCalculate() {
-    return !CollectionUtils.isEmpty(items) && items.size() > 1;
-  }
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof FormulaParameterContainer)) {
+      return false;
+    }
 
-  public List<String> getQueryDateSlice() throws ParseException {
-    return DateSplitter.split(getBeginDate(), getEndDate(), getInterval());
+    FormulaParameterContainer that = (FormulaParameterContainer) o;
+
+    if (beginDate != null ? !beginDate.equals(that.beginDate) : that.beginDate != null) {
+      return false;
+    }
+    if (endDate != null ? !endDate.equals(that.endDate) : that.endDate != null) {
+      return false;
+    }
+    if (formula != null ? !formula.equals(that.formula) : that.formula != null) {
+      return false;
+    }
+    if (id != null ? !id.equals(that.id) : that.id != null) {
+      return false;
+    }
+    if (interval != that.interval) {
+      return false;
+    }
+    if (items != null ? !items.equals(that.items) : that.items != null) {
+      return false;
+    }
+    if (mathOperation != that.mathOperation) {
+      return false;
+    }
+    if (projectId != null ? !projectId.equals(that.projectId) : that.projectId != null) {
+      return false;
+    }
+    if (queryType != that.queryType) {
+      return false;
+    }
+    if (slicePattern != null ? !slicePattern.equals(that.slicePattern) : that.slicePattern != null) {
+      return false;
+    }
+    if (sliceType != that.sliceType) {
+      return false;
+    }
+
+    return true;
   }
 
   @Override
   public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((beginDate == null) ? 0 : beginDate.hashCode());
-    result = prime * result + ((endDate == null) ? 0 : endDate.hashCode());
-    result = prime * result + ((formula == null) ? 0 : formula.hashCode());
-    result = prime * result + ((id == null) ? 0 : id.hashCode());
-    result = prime * result + ((interval == null) ? 0 : interval.hashCode());
-    result = prime * result + ((items == null) ? 0 : items.hashCode());
-    result = prime * result + ((projectId == null) ? 0 : projectId.hashCode());
-    result = prime * result + ((queryType == null) ? 0 : queryType.hashCode());
+    int result = id != null ? id.hashCode() : 0;
+    result = 31 * result + (projectId != null ? projectId.hashCode() : 0);
+    result = 31 * result + (beginDate != null ? beginDate.hashCode() : 0);
+    result = 31 * result + (endDate != null ? endDate.hashCode() : 0);
+    result = 31 * result + (interval != null ? interval.hashCode() : 0);
+    result = 31 * result + (formula != null ? formula.hashCode() : 0);
+    result = 31 * result + (mathOperation != null ? mathOperation.hashCode() : 0);
+    result = 31 * result + (items != null ? items.hashCode() : 0);
+    result = 31 * result + (slicePattern != null ? slicePattern.hashCode() : 0);
+    result = 31 * result + (sliceType != null ? sliceType.hashCode() : 0);
+    result = 31 * result + (queryType != null ? queryType.hashCode() : 0);
     return result;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
-    FormulaParameterContainer other = (FormulaParameterContainer) obj;
-    if (beginDate == null) {
-      if (other.beginDate != null)
-        return false;
-    } else if (!beginDate.equals(other.beginDate))
-      return false;
-    if (endDate == null) {
-      if (other.endDate != null)
-        return false;
-    } else if (!endDate.equals(other.endDate))
-      return false;
-    if (formula == null) {
-      if (other.formula != null)
-        return false;
-    } else if (!formula.equals(other.formula))
-      return false;
-    if (id == null) {
-      if (other.id != null)
-        return false;
-    } else if (!id.equals(other.id))
-      return false;
-    if (interval != other.interval)
-      return false;
-    if (items == null) {
-      if (other.items != null)
-        return false;
-    } else if (!items.equals(other.items))
-      return false;
-    if (projectId == null) {
-      if (other.projectId != null)
-        return false;
-    } else if (!projectId.equals(other.projectId))
-      return false;
-    if (queryType != other.queryType)
-      return false;
-    return true;
   }
 
   public String getId() {
@@ -308,6 +323,10 @@ public class FormulaParameterContainer implements Serializable {
 
   public void setSliceType(SliceType sliceType) {
     this.sliceType = sliceType;
+  }
+
+  public MathOperation getMathOperation() {
+    return mathOperation;
   }
 
   @Override

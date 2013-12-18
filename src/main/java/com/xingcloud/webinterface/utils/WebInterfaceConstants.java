@@ -15,6 +15,8 @@ import com.google.gson.GsonBuilder;
 import com.xingcloud.webinterface.enums.AggregationPolicy;
 
 public class WebInterfaceConstants {
+  public static final String FORMULA_ARITY_X = "x";
+  public static final String FORMULA_ARITY_Y = "y";
   public static final char FORMULA_PART_SPLITTOR = ':';
   public static final char V9_SPLITTOR = '|';
 

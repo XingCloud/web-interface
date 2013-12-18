@@ -11,9 +11,11 @@ import static com.xingcloud.webinterface.monitor.WIEvent.WIE_STR_TIMEUSE_INTEGRA
 import static com.xingcloud.webinterface.utils.IdResultBuilder.buildCommonDescriptor;
 
 import com.xingcloud.maincache.InterruptQueryException;
+import com.xingcloud.memcache.MemCacheException;
 import com.xingcloud.webinterface.enums.CacheState;
 import com.xingcloud.webinterface.enums.Interval;
 import com.xingcloud.webinterface.exception.DataFillingException;
+import com.xingcloud.webinterface.exception.FormulaException;
 import com.xingcloud.webinterface.exception.NecessaryCollectionEmptyException;
 import com.xingcloud.webinterface.exception.ParseIncrementalException;
 import com.xingcloud.webinterface.exception.SegmentException;
@@ -55,7 +57,8 @@ public class CommonQueryOptimizer extends CheckCacheOptimizer {
   }
 
   public List<CommonIdResult> doWork() throws XParameterException, SegmentException, XQueryException, ParseException,
-    DataFillingException, ParseIncrementalException, InterruptQueryException, NecessaryCollectionEmptyException {
+    DataFillingException, ParseIncrementalException, InterruptQueryException, NecessaryCollectionEmptyException,
+    MemCacheException, FormulaException {
     // 计时用
     long t1, t2;
     FormulaQueryDescriptor existsDescriptor;

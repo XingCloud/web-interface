@@ -59,14 +59,14 @@ public class RandomCacheMaker {
           break;
         default:
           tupleMap = new HashMap<Object, ResultTuple>(1);
-          tupleMap.put(PERIOD.name(), randomTuple());
+          tupleMap.put(PERIOD.name(), new ResultTuple(100, 100, 100));
           break;
       }
     } else {
       int cnt = 3;
       tupleMap = new HashMap<Object, ResultTuple>(cnt);
       for (int i = 0; i < cnt; i++) {
-        tupleMap.put(date2Short(randomDate(today(), 5)), new ResultTuple(100, 100, 100));
+        tupleMap.put(date2Short(randomDate(today(), 5)), randomTuple());
       }
     }
     StatefulCache sc = new StatefulCache(CacheReference.OFFLINE, CacheState.ACCURATE, tupleMap, 0);

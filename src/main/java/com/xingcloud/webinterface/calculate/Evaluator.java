@@ -26,7 +26,7 @@ public class Evaluator {
 
   public static Number evaluateNumber(String formula, List<Arity> arity) throws ExpressionEvaluationException {
     try {
-      return (Number) evaluate(formula, arity);
+      return ((Number) evaluate(formula, arity));
     } catch (ExpressionEvaluationException e) {
       throw e;
     } catch (Exception e) {

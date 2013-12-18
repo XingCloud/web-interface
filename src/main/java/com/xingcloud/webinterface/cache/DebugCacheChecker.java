@@ -29,7 +29,7 @@ public class DebugCacheChecker implements CacheChecker {
       return null;
     }
 
-    boolean returnDirectly = ProbabilityGenerator.doWithProbability(0.5);
+    boolean returnDirectly = ProbabilityGenerator.doWithProbability(0);
 
     String key = descriptor.getKey();
     if (returnDirectly) {

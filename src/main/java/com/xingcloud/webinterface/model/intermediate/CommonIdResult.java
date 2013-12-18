@@ -3,14 +3,18 @@ package com.xingcloud.webinterface.model.intermediate;
 import static com.xingcloud.webinterface.enums.CommonQueryType.NATURAL;
 import static com.xingcloud.webinterface.enums.CommonQueryType.TOTAL;
 import static com.xingcloud.webinterface.utils.IntermediateResultUtils.spreadStatus;
+import static com.xingcloud.webinterface.utils.WebInterfaceConstants.FORMULA_ARITY_X;
+import static com.xingcloud.webinterface.utils.WebInterfaceConstants.FORMULA_ARITY_Y;
 
-import com.xingcloud.basic.utils.DateUtils;
 import com.xingcloud.webinterface.calculate.Arity;
 import com.xingcloud.webinterface.calculate.Evaluator;
+import com.xingcloud.webinterface.calculate.ScaleGroup;
 import com.xingcloud.webinterface.enums.AggregationPolicyDisplayed;
 import com.xingcloud.webinterface.enums.CacheState;
 import com.xingcloud.webinterface.enums.Function;
+import com.xingcloud.webinterface.enums.MathOperation;
 import com.xingcloud.webinterface.exception.DataFillingException;
+import com.xingcloud.webinterface.exception.FormulaException;
 import com.xingcloud.webinterface.exception.NecessaryCollectionEmptyException;
 import com.xingcloud.webinterface.model.NotAvailable;
 import com.xingcloud.webinterface.model.NotAvailableNumber;
@@ -41,14 +45,18 @@ public class CommonIdResult extends IdResult {
 
   private Map<String, AggregationPolicyDisplayed> summaryPolicyTypeMap;
 
-  public CommonIdResult(String id, String formula, Map<String, Function> functionMap) {
-    super(id, formula, functionMap);
-  }
-
   public CommonIdResult(String id, String formula, Map<String, Function> functionMap,
                         Map<String, CommonItemResult> itemResultMap) {
     super(id, formula, functionMap);
     this.itemResultMap = itemResultMap;
+    init(itemResultMap.size());
+  }
+
+  public CommonIdResult(String id, MathOperation mathOperation, Map<String, Function> functionMap,
+                        Map<String, ScaleGroup> scaleMap, Map<String, CommonItemResult> itemResultMap) {
+    super(id, mathOperation, functionMap);
+    this.itemResultMap = itemResultMap;
+    this.scaleMap = scaleMap;
     init(itemResultMap.size());
   }
 
@@ -162,7 +170,7 @@ public class CommonIdResult extends IdResult {
         thisStatus = status;
       }
 
-      String totalString , naturalString ;
+      String totalString, naturalString;
       if (cir.getTotalAggregation() != null) {
         ResultTuple totalRT = cir.getTotalAggregation().getResultTuple();
         if (totalRT.isNAPlaceholder()) {
@@ -200,7 +208,7 @@ public class CommonIdResult extends IdResult {
   }
 
   @Override
-  public Map<Object, Number> calculate() {
+  public Map<Object, Number> calculate() throws FormulaException {
     if (!check()) {
       return null;
     }
@@ -214,17 +222,15 @@ public class CommonIdResult extends IdResult {
 
     boolean hasNAResult, hasPendingResult;
 
-    String[] formulaInfo = parseFormula();
-    String formula = formulaInfo[0], unbendingFormula = formulaInfo[1], d = formulaInfo[2];
-    boolean useUnbendingFormula = false;
-    if (StringUtils.isNotBlank(unbendingFormula)) {
-      useUnbendingFormula = true;
-    }
-//    LOGGER
-//        .info("[CALCULATION] - COMMON, Formula(" + this.id + ") - " + formula);
-//    LOGGER.info(
-//        "[CALCULATION] - COMMON, Unbending formula(" + this.id + ") - " + unbendingFormula);
-//    LOGGER.info("[CALCULATION] - COMMON, From date(" + this.id + ") - " + d);
+//    String[] formulaInfo = parseFormula();
+//    String formula = formulaInfo[0], unbendingFormula = formulaInfo[1], d = formulaInfo[2];
+//    boolean useUnbendingFormula = false;
+//    if (StringUtils.isNotBlank(unbendingFormula)) {
+//      useUnbendingFormula = true;
+//    }
+    ScaleGroup sg1 = scaleMap.get(FORMULA_ARITY_X), sg2 = scaleMap.get(FORMULA_ARITY_Y);
+    boolean oneArity = (mathOperation == null);
+    String scaledFormula, defaultFormula = parseFormula(mathOperation, oneArity);
 
     for (Entry<Object, Map<String, ResultTuple>> outerEntry : inputData.entrySet()) {
       key = outerEntry.getKey();
@@ -263,20 +269,32 @@ public class CommonIdResult extends IdResult {
           arity.add(new Arity(variable, value.doubleValue()));
         }
       }
+      if (TOTAL.equals(key) || NATURAL.equals(key)) {
+        scaledFormula = defaultFormula;
+      } else {
+        try {
+          scaledFormula = parseFormula(sg1, sg2, mathOperation, key.toString(), oneArity);
+        } catch (FormulaException e) {
+          throw e;
+        }
+      }
+
+      // 计算
       if (hasNAResult) {
         value = NotAvailableNumber.INSTANCE;
       } else if (hasPendingResult) {
         value = PendingNumber.INSTANCE;
       } else {
         try {
-          if (!(TOTAL.equals(key) || NATURAL.equals(key)
-          ) && useUnbendingFormula && DateUtils.before(key.toString(), d)) {
-            value = Evaluator.evaluateNumber(unbendingFormula, arity);
-          } else {
-            value = Evaluator.evaluateNumber(formula, arity);
-          }
+//          if (!(TOTAL.equals(key) || NATURAL.equals(key)
+//          ) && useUnbendingFormula && DateUtils.before(key.toString(), d)) {
+//            value = Evaluator.evaluateNumber(unbendingFormula, arity);
+//          } else {
+//            value = Evaluator.evaluateNumber(formula, arity);
+//          }
+          LOGGER.info("[CALCULATION] - Key[" + key + "], current formula - " + scaledFormula);
+          value = Evaluator.evaluateNumber(scaledFormula, arity);
         } catch (Exception e) {
-//          LOGGER.error(e);
           value = NotAvailableNumber.INSTANCE;
         }
       }
