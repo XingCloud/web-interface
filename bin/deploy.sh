@@ -22,8 +22,8 @@ if [ "8081" = ${1} ];then
 else
   xa_env="pre_production"
   # Tomcat home
-  tomcat_home=/home/hadoop/catalina/apache-tomcat-7.0.42.8082
-  tport=8082
+  tomcat_home=/home/hadoop/catalina/apache-tomcat-7.0.42.18080
+  tport=18080
 fi
 
 echo "[CHECK-POINT] - Begin deploying data driller web interface."
