@@ -137,7 +137,11 @@ public class IdResultBuilder {
     ScaleGroup sg;
     for (FormulaParameterItem item : items) {
       if (item instanceof CommonFormulaParameterItem) {
-        sg = ScaleGroup.buildScaleGroup(((CommonFormulaParameterItem) item).getScale());
+        try {
+          sg = ScaleGroup.buildScaleGroup(((CommonFormulaParameterItem) item).getScale());
+        } catch (FormulaException e) {
+          throw new FormulaException(container.getId() + " - " + e.getMessage(), e);
+        }
         scaleMap.put(item.getName(), sg);
       }
 

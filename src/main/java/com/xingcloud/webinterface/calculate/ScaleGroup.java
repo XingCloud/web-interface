@@ -26,10 +26,12 @@ public class ScaleGroup {
   private List<Scale> scaleList;
 
   public static ScaleGroup buildScaleGroup(String rawScale) throws FormulaException, MemCacheException {
+    if (StringUtils.isBlank(rawScale)) {
+      throw new FormulaException("Raw scale is null.");
+    }
     XMemCacheManager xMemCacheManager = MemoryCachedObjects.getInstance().getCacheManager();
     ScaleGroup scaleGroup = xMemCacheManager.getCacheElement(MCO_FORMULA, rawScale, ScaleGroup.class);
     if (scaleGroup != null) {
-      System.out.println("Cache loaded");
       return scaleGroup;
     }
     String[] rawScaleArr = StringUtils.split(rawScale, V9_SPLITTOR);
