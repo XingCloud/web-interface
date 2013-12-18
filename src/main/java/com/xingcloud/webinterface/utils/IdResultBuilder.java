@@ -140,7 +140,7 @@ public class IdResultBuilder {
         try {
           sg = ScaleGroup.buildScaleGroup(((CommonFormulaParameterItem) item).getScale());
         } catch (FormulaException e) {
-          throw new FormulaException(container.getId() + " - " + e.getMessage(), e);
+          throw new FormulaException(container.toString() + " - " + e.getMessage(), e);
         }
         scaleMap.put(item.getName(), sg);
       }
