@@ -299,9 +299,17 @@ public class ResultTuple implements Serializable {
     if (isNAPlaceholder() || isPendingPlaceholder()) {
       return;
     }
-    this.tuple[0] = (long) (this.tuple[0].longValue() * rate);
-    this.tuple[1] = (long) (this.tuple[1].longValue() * rate);
-    this.tuple[2] = (long) (this.tuple[2].longValue() * rate);
+    if (this.tuple == null) {
+      return;
+    }
+    if (this.tuple[0] != null) {
+      this.tuple[0] = (long) (this.tuple[0].longValue() * rate);
+    }
+    if (this.tuple[1] != null) {
+      this.tuple[1] = (long) (this.tuple[1].longValue() * rate);
+    }
+    if (this.tuple[2] != null) {
+      this.tuple[2] = (long) (this.tuple[2].longValue() * rate);
+    }
   }
-
 }
