@@ -3,6 +3,7 @@ package com.xingcloud.webinterface.model.intermediate;
 import static com.xingcloud.webinterface.model.aggregation.Accumulator.accumulateLoosely;
 import static com.xingcloud.webinterface.utils.IntermediateResultUtils.spreadStatus;
 
+import com.xingcloud.webinterface.calculate.ScaleGroup;
 import com.xingcloud.webinterface.enums.CacheState;
 import com.xingcloud.webinterface.exception.DataFillingException;
 import com.xingcloud.webinterface.exception.NecessaryCollectionEmptyException;
@@ -31,13 +32,9 @@ public class GroupByItemResultGroup extends GroupByItemResult {
 
   private Collection<GroupByItemResult> groupByItemResults;
 
-  public GroupByItemResultGroup(String name, Collection<GroupByItemResult> groupByItemResults) {
-    super(name);
+  public GroupByItemResultGroup(String name, ScaleGroup scaleGroup, Collection<GroupByItemResult> groupByItemResults) {
+    super(name, scaleGroup);
     this.groupByItemResults = groupByItemResults;
-  }
-
-  public GroupByItemResultGroup(String name) {
-    super(name);
   }
 
   public Collection<GroupByItemResult> getGroupByItemResults() {

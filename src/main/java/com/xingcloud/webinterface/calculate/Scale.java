@@ -9,7 +9,7 @@ import java.text.ParseException;
  * User: Z J Wu Date: 13-12-16 Time: 下午2:49 Package: com.xingcloud.webinterface.calculate.func
  */
 public class Scale {
-  public static final double DEFAULT_SCALE = -1d;
+  public static final double DEFAULT_SCALE = 1d;
   public static final long DEFAULT_TIMESTAMP = -28800001;
   private long lowerDate = DEFAULT_TIMESTAMP;
   private String lowerDateString;
@@ -60,7 +60,7 @@ public class Scale {
     return scale;
   }
 
-  public double accept(String date) throws FormulaException {
+  public Double accept(String date) throws FormulaException {
     long d;
     try {
       d = DateUtils.short2Date(date).getTime();
@@ -68,15 +68,15 @@ public class Scale {
       throw new FormulaException(e);
     }
     if (this.lowerDate > DEFAULT_TIMESTAMP && this.upperDate > DEFAULT_TIMESTAMP) {
-      return d >= this.lowerDate && d < this.upperDate ? this.scaleValue : DEFAULT_SCALE;
+      return d >= this.lowerDate && d < this.upperDate ? this.scaleValue : null;
     }
     if (this.lowerDate > DEFAULT_TIMESTAMP && this.upperDate == DEFAULT_TIMESTAMP) {
-      return d >= this.lowerDate ? this.scaleValue : DEFAULT_SCALE;
+      return d >= this.lowerDate ? this.scaleValue : null;
     }
     if (this.upperDate > DEFAULT_TIMESTAMP && this.lowerDate == DEFAULT_TIMESTAMP) {
-      return d < this.upperDate ? this.scaleValue : DEFAULT_SCALE;
+      return d < this.upperDate ? this.scaleValue : null;
     }
-    return DEFAULT_SCALE;
+    return null;
   }
 
   @Override public String toString() {

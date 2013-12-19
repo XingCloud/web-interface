@@ -35,15 +35,13 @@ public class CommonFormulaParameterItem extends FormulaParameterItem {
 
   private AggregationPolicy naturalSummaryPolicy;
 
-  private String scale;
-
   public CommonFormulaParameterItem() {
     super();
   }
 
   public CommonFormulaParameterItem(String name, String event, String segment, Filter filter, Function function,
                                     Integer coverRangeOrigin, Integer coverRange, String scale) {
-    super(name, event, segment, filter, function, coverRangeOrigin, coverRange);
+    super(name, event, segment, filter, function, coverRangeOrigin, coverRange, scale);
   }
 
   public AggregationPolicy getTotalSummaryPolicy() {
@@ -52,10 +50,6 @@ public class CommonFormulaParameterItem extends FormulaParameterItem {
 
   public AggregationPolicy getNaturalSummaryPolicy() {
     return naturalSummaryPolicy;
-  }
-
-  public String getScale() {
-    return scale;
   }
 
   public void parseSummaryPolicy(Interval interval) {
@@ -157,6 +151,8 @@ public class CommonFormulaParameterItem extends FormulaParameterItem {
     sb.append(this.coverRange);
     sb.append(".NDO.");
     sb.append(this.coverRangeOrigin);
+    sb.append('.');
+    sb.append(this.scale);
     sb.append(")");
     return sb.toString();
   }

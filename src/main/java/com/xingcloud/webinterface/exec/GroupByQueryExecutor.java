@@ -4,6 +4,7 @@ import static com.xingcloud.webinterface.monitor.SystemMonitor.putMonitorInfo;
 import static com.xingcloud.webinterface.monitor.WIEvent.WIE_STR_TIMEUSE_CALCULATE;
 
 import com.xingcloud.maincache.InterruptQueryException;
+import com.xingcloud.memcache.MemCacheException;
 import com.xingcloud.webinterface.enums.GroupByType;
 import com.xingcloud.webinterface.enums.Order;
 import com.xingcloud.webinterface.exception.DataFillingException;
@@ -59,7 +60,7 @@ public class GroupByQueryExecutor extends AbstractQueryExecutor {
 
   public QueryResult getResult() throws XQueryException, SegmentException, XParameterException, ParseException,
     UICheckException, DataFillingException, RangingException, ParseIncrementalException, InterruptQueryException,
-    NecessaryCollectionEmptyException, UICheckTimeoutException, FormulaException {
+    NecessaryCollectionEmptyException, UICheckTimeoutException, FormulaException, MemCacheException {
     int containerCount = containers.size();
     long t1 = System.currentTimeMillis();
     checkUITableConcurrently(containers);
