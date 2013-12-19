@@ -226,7 +226,7 @@ public class GroupByItemResult extends ItemResult {
       dataList.add(tupleMapDuplicated);
     }
 
-    tupleMap = doAggregation(dataList, this.groupByAggregationPolicy);
+    tupleMapDuplicated = doAggregation(dataList, this.groupByAggregationPolicy);
 
     Set<KeyTuple> ktList;
     KeyTuple kt;
@@ -236,8 +236,8 @@ public class GroupByItemResult extends ItemResult {
                      : new KeyTuple(Pending.INSTANCE, PENDING_RESULT_TUPLE);
       ktList.add(kt);
     } else {
-      ktList = new HashSet<KeyTuple>(tupleMap.size());
-      for (Entry<Object, ResultTuple> entry : tupleMap.entrySet()) {
+      ktList = new HashSet<KeyTuple>(tupleMapDuplicated.size());
+      for (Entry<Object, ResultTuple> entry : tupleMapDuplicated.entrySet()) {
         ktList.add(new KeyTuple(entry.getKey(), entry.getValue()));
       }
     }
