@@ -67,13 +67,13 @@ public class ScaleGroup {
     if (CollectionUtils.isEmpty(this.scaleList)) {
       throw new FormulaException("Cannot parse any scale.");
     }
-    double scale;
+    Double scale;
     for (Scale s : scaleList) {
       scale = s.accept(date);
-      if (scale > DEFAULT_SCALE) {
+      if (scale != null) {
         return scale;
       }
     }
-    throw new FormulaException("Cannot find any scale.");
+    return DEFAULT_SCALE;
   }
 }

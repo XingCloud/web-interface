@@ -8,6 +8,7 @@ import static com.xingcloud.webinterface.enums.AggregationPolicy.ACCUMULATION;
 import static com.xingcloud.webinterface.enums.AggregationPolicy.ACCUMULATION_EXTEND;
 import static com.xingcloud.webinterface.enums.AggregationPolicy.AVERAGE;
 import static com.xingcloud.webinterface.enums.AggregationPolicy.AVERAGE_EXTEND;
+import static com.xingcloud.webinterface.enums.AggregationPolicy.QUERY;
 import static com.xingcloud.webinterface.enums.AggregationPolicy.SAME_AS_QUERY;
 import static com.xingcloud.webinterface.enums.AggregationPolicy.SAME_AS_TOTAL;
 import static com.xingcloud.webinterface.enums.CommonQueryType.NATURAL;
@@ -22,10 +23,12 @@ import static com.xingcloud.webinterface.model.ResultTuple.createNewNullResultTu
 import static com.xingcloud.webinterface.utils.IntermediateResultUtils.getStatusFromCacheState;
 import static com.xingcloud.webinterface.utils.WebInterfaceCommonUtils.safeGet;
 
+import com.xingcloud.webinterface.calculate.ScaleGroup;
 import com.xingcloud.webinterface.enums.AggregationPolicy;
 import com.xingcloud.webinterface.enums.CacheState;
 import com.xingcloud.webinterface.enums.Interval;
 import com.xingcloud.webinterface.exception.DataFillingException;
+import com.xingcloud.webinterface.exception.FormulaException;
 import com.xingcloud.webinterface.exception.NecessaryCollectionEmptyException;
 import com.xingcloud.webinterface.model.NotAvailable;
 import com.xingcloud.webinterface.model.Pending;
@@ -70,22 +73,22 @@ public class CommonItemResult extends ItemResult {
   // 所有item共同维护的NATURAL汇总需要的key的交集, 需要在id级别指定
   protected Set<Object> naturalKeyIntersection;
 
-  public CommonItemResult(String name) {
-    super(name);
+  public CommonItemResult(String name, ScaleGroup scaleGroup) {
+    super(name, scaleGroup);
   }
 
-  public CommonItemResult(String name, AggregationPolicy totalAggregationPolicy,
+  public CommonItemResult(String name, ScaleGroup scaleGroup, AggregationPolicy totalAggregationPolicy,
                           AggregationPolicy naturalAggregationPolicy) {
-    super(name);
+    super(name, scaleGroup);
     this.totalAggregationPolicy = totalAggregationPolicy;
     this.naturalAggregationPolicy = naturalAggregationPolicy;
   }
 
-  public CommonItemResult(String name, List<FormulaQueryDescriptor> normalConnectors,
+  public CommonItemResult(String name, ScaleGroup scaleGroup, List<FormulaQueryDescriptor> normalConnectors,
                           List<FormulaQueryDescriptor> totalConnectors, List<FormulaQueryDescriptor> naturalConnectors,
                           AggregationPolicy totalAggregationPolicy, AggregationPolicy naturalAggregationPolicy,
                           Set<Object> totalKeyIntersection, Set<Object> naturalKeyIntersection) {
-    super(name);
+    super(name, scaleGroup);
     this.normalConnectors = normalConnectors;
     this.totalConnectors = totalConnectors;
     this.naturalConnectors = naturalConnectors;
@@ -180,11 +183,16 @@ public class CommonItemResult extends ItemResult {
     Set<KeyTuple> ktList = new HashSet<KeyTuple>();
 
     KeyTuple kt;
+    double scaleRate;
     // 填充Normal查询结果阶段
     for (FormulaQueryDescriptor fqd : this.normalConnectors) {
       tupleMap = safeGet(descriptorTupleMap, fqd);
       displayDate = fqd.getInputBeginDate();
-
+      try {
+        scaleRate = scaleGroup.getScale(fqd.getRealBeginDate());
+      } catch (FormulaException e) {
+        throw new DataFillingException(e);
+      }
       cfqd = (CommonFormulaQueryDescriptor) fqd;
       interval = cfqd.getInterval();
 
@@ -217,7 +225,7 @@ public class CommonItemResult extends ItemResult {
         cacheState = descriptorStateMap.get(fqd);
         status = getStatusFromCacheState(cacheState);
         if (interval.getDays() < 1) {
-          String s = null;
+          String s;
           // 如果Cache里面的数不足288或24个, 适当补零
           if (MIN5.equals(interval)) {
             for (int i = 0; i < 288; i++) {
@@ -226,6 +234,8 @@ public class CommonItemResult extends ItemResult {
               if (rt == null) {
                 rt = createNewEmptyResultTuple();
               }
+              // 根据RealBeginDate做伸缩
+              rt.expandOrContract(scaleRate);
               ktList.add(new KeyTuple(s, rt, status));
               if (checkTotalNormal || checkNaturalNormal) {
                 tupleKeySetOfThisItem.add(s);
@@ -239,6 +249,8 @@ public class CommonItemResult extends ItemResult {
               if (rt == null) {
                 rt = createNewEmptyResultTuple();
               }
+              // 根据RealBeginDate做伸缩
+              rt.expandOrContract(scaleRate);
               ktList.add(new KeyTuple(s, rt, status));
               if (checkTotalNormal || checkNaturalNormal) {
                 tupleKeySetOfThisItem.add(s);
@@ -247,7 +259,10 @@ public class CommonItemResult extends ItemResult {
             }
           } else {
             for (Entry<Object, ResultTuple> entry : tupleMap.entrySet()) {
-              ktList.add(new KeyTuple(entry.getKey(), entry.getValue(), status));
+              rt = entry.getValue();
+              // 根据RealBeginDate做伸缩
+              rt.expandOrContract(scaleRate);
+              ktList.add(new KeyTuple(entry.getKey(), rt, status));
               if (checkTotalNormal || checkNaturalNormal) {
                 tupleKeySetOfThisItem.add(entry.getKey());
               }
@@ -259,7 +274,10 @@ public class CommonItemResult extends ItemResult {
             tupleKeySetOfThisItem.add(displayString);
           }
           for (Entry<Object, ResultTuple> entry : tupleMap.entrySet()) {
-            kt = new KeyTuple(displayString, displayString, entry.getValue(), status);
+            rt = entry.getValue();
+            // 根据RealBeginDate做伸缩
+            rt.expandOrContract(scaleRate);
+            kt = new KeyTuple(displayString, displayString, rt, status);
             ktList.add(kt);
           }
         }
@@ -336,11 +354,14 @@ public class CommonItemResult extends ItemResult {
   }
 
   public void fillTotalAggregation(Map<FormulaQueryDescriptor, Map<Object, ResultTuple>> descriptorTupleMap,
-                                   Map<FormulaQueryDescriptor, CacheState> descriptorStateMap) {
+                                   Map<FormulaQueryDescriptor, CacheState> descriptorStateMap) throws
+    DataFillingException {
     Object totalStatus = null;
     Object status;
     CacheState cacheState;
     AggregationPolicy sp = getTotalAggregationPolicy();
+    ResultTuple rt;
+    double scaleRate = 1d;
     if (totalAggregationPolicy.needCheckIntersection()) {
       Set<KeyTuple> keyTupleList;
       if (sp.isNotExtendAggregationPolicy()) {
@@ -363,6 +384,7 @@ public class CommonItemResult extends ItemResult {
           if (KILL.equals(fqd.getDateTruncateType())) {
             continue;
           }
+
           m = safeGet(descriptorTupleMap, fqd);
           cfqd = (CommonFormulaQueryDescriptor) fqd;
 
@@ -376,12 +398,19 @@ public class CommonItemResult extends ItemResult {
           cacheState = descriptorStateMap.get(fqd);
           status = getStatusFromCacheState(cacheState);
 
+          try {
+            scaleRate = scaleGroup.getScale(fqd.getRealBeginDate());
+          } catch (FormulaException e) {
+            throw new DataFillingException(e);
+          }
           for (Entry<Object, ResultTuple> entry : m.entrySet()) {
             entryKey = entry.getKey();
+            rt = entry.getValue();
+            rt.expandOrContract(scaleRate);
             if (interval.getDays() < 1) {
-              keyTuple = new KeyTuple(entryKey, entryKey, entry.getValue(), status);
+              keyTuple = new KeyTuple(entryKey, entryKey, rt, status);
             } else {
-              keyTuple = new KeyTuple(displayString, displayString, entry.getValue(), status);
+              keyTuple = new KeyTuple(displayString, displayString, rt, status);
             }
             keyTupleList.add(keyTuple);
           }
@@ -392,7 +421,6 @@ public class CommonItemResult extends ItemResult {
       ResultTuple accumulativeRT = null;
       int counterPending = 0;
       int counterNormal = 0;
-      ResultTuple rt;
       for (KeyTuple kt : keyTupleList) {
         if (kt == null) {
           continue;
@@ -452,8 +480,19 @@ public class CommonItemResult extends ItemResult {
         }
         cacheState = descriptorStateMap.get(totalDescriptor);
         totalStatus = getStatusFromCacheState(cacheState);
+
+        // 2013-12-19 Total汇总只有直接查询的情况需要根据scale规则的第一个规则进行缩放
+        if (QUERY.equals(sp)) {
+          try {
+            scaleRate = scaleGroup.getScale(totalDescriptor.getRealBeginDate());
+          } catch (FormulaException e) {
+            throw new DataFillingException(e);
+          }
+        }
         for (Entry<Object, ResultTuple> entry : map.entrySet()) {
-          setTotalAggregation(new KeyTuple(TOTAL, entry.getValue(), totalStatus));
+          rt = entry.getValue();
+          rt.expandOrContract(scaleRate);
+          setTotalAggregation(new KeyTuple(TOTAL, rt, totalStatus));
         }
       }
     }
@@ -530,6 +569,13 @@ public class CommonItemResult extends ItemResult {
         }
         FormulaQueryDescriptor naturalDescriptor = naturalList.get(0);
 
+        ResultTuple rt;
+        double scaleRate;
+        try {
+          scaleRate = scaleGroup.getScale(naturalDescriptor.getRealBeginDate());
+        } catch (FormulaException e) {
+          throw new DataFillingException(e);
+        }
         if (KILL.equals(naturalDescriptor.getDateTruncateType())) {
           setNaturalAggregation(new KeyTuple(NATURAL, NA_RESULT_TUPLE, NotAvailable.INSTANCE));
           return;
@@ -542,7 +588,9 @@ public class CommonItemResult extends ItemResult {
         cacheState = descriptorStateMap.get(naturalDescriptor);
         naturalStatus = getStatusFromCacheState(cacheState);
         for (Entry<Object, ResultTuple> entry : map.entrySet()) {
-          setNaturalAggregation(new KeyTuple(NATURAL, entry.getValue(), naturalStatus));
+          rt = entry.getValue();
+          rt.expandOrContract(scaleRate);
+          setNaturalAggregation(new KeyTuple(NATURAL, rt, naturalStatus));
           break;
         }
       }

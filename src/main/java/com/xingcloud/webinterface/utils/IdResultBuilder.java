@@ -164,13 +164,14 @@ public class IdResultBuilder {
     String formula = container.getFormula();
     MathOperation mathOperation = container.getMathOperation();
     Map<String, Function> functionMap = extractFunctionMap(container);
-    Map<String, ScaleGroup> scaleMap = extractScaleMap(container);
+//    Map<String, ScaleGroup> scaleMap = extractScaleMap(container);
 
     Map<String, CommonItemResult> itemResultMap = new HashMap<String, CommonItemResult>(items.size());
-    CommonIdResult idr = new CommonIdResult(id, mathOperation, functionMap, scaleMap, itemResultMap);
+    CommonIdResult idr = new CommonIdResult(id, mathOperation, functionMap, itemResultMap);
     CommonItemResult cir;
 
-    String name, event, realBeginDate, realEndDate, segment;
+    String name, event, realBeginDate, realEndDate, segment, scale;
+    ScaleGroup scaleGroup;
     Filter filter;
     Integer nd, ndo;
     Function function;
@@ -179,8 +180,6 @@ public class IdResultBuilder {
     float intervalFloat = interval.getDays();
     double samplingRate;
     Date truncateTargetDate = (intervalFloat < 1 ? today() : yesterday());
-
-    boolean ignoreHandlers = intervalFloat < 1;
 
     List<BeginEndDatePair> datePairs;
     BeginEndDatePair tmpPair;
@@ -227,7 +226,8 @@ public class IdResultBuilder {
       ndo = item.getCoverRangeOrigin();
       function = item.getFunction();
       samplingRate = resolveSamplingRateByEvent(event, function);
-
+      scale = item.getScale();
+      scaleGroup = ScaleGroup.buildScaleGroup(scale);
       hasSegment = !(Strings.isNullOrEmpty(segment) || TOTAL_USER.equals(segment)
       );
       averageMetric = isAverage(nd, ndo);
@@ -360,13 +360,13 @@ public class IdResultBuilder {
         // 处理Segment
         evaluate(naturalConnectors);
 
-        cir = new CommonItemResult(name, normalConnectors, totalConnectors, naturalConnectors, tap, nap,
+        cir = new CommonItemResult(name, scaleGroup, normalConnectors, totalConnectors, naturalConnectors, tap, nap,
                                    totalKeyIntersection, naturalKeyIntersection);
 
         commonItemResults.add(cir);
       }
 
-      proxyCommonItemResult = new CommonItemResultGroup(name, tap, nap, commonItemResults);
+      proxyCommonItemResult = new CommonItemResultGroup(name, scaleGroup, tap, nap, commonItemResults);
 
       itemResultMap.put(name, proxyCommonItemResult);
     }
@@ -388,7 +388,7 @@ public class IdResultBuilder {
    * @throws SegmentException
    */
   public static GroupByIdResult buildGroupByDescriptor(FormulaParameterContainer container) throws XParameterException,
-    SegmentException {
+    SegmentException, MemCacheException, FormulaException {
     long t1 = System.currentTimeMillis();
 
     List<FormulaParameterItem> items = container.getItems();
@@ -406,7 +406,8 @@ public class IdResultBuilder {
 
     Map<String, Function> functionMap = extractFunctionMap(container);
     String event = null;
-    String name, segment, groupBy;
+    String name, segment, groupBy, scale;
+    ScaleGroup scaleGroup;
     Filter filter;
     Integer nd, ndo;
     Function function = null;
@@ -517,7 +518,8 @@ public class IdResultBuilder {
       gbfpi = (GroupByFormulaParameterItem) item;
       groupBy = gbfpi.getGroupBy();
       groupByType = gbfpi.getGroupByType();
-
+      scale = item.getScale();
+      scaleGroup = ScaleGroup.buildScaleGroup(scale);
       splitSegments = SegmentSeparator.generateNewSegments(segment);
       groupByItemResults = new ArrayList<GroupByItemResult>(splitSegments.length);
 
@@ -628,11 +630,11 @@ public class IdResultBuilder {
           putMonitorInfo(MI_DESCRIPTOR_BUILD);
         }
 
-        groupByItemResult = new GroupByItemResult(name, descriptors, ap, killedFqdSet, missedFqdSet);
+        groupByItemResult = new GroupByItemResult(name, scaleGroup, descriptors, ap, killedFqdSet, missedFqdSet);
         groupByItemResults.add(groupByItemResult);
       }
 
-      groupByItemResultProxy = new GroupByItemResultGroup(name, groupByItemResults);
+      groupByItemResultProxy = new GroupByItemResultGroup(name, scaleGroup, groupByItemResults);
       itemResultMap.put(name, groupByItemResultProxy);
     }
     GroupByIdResult idResult;

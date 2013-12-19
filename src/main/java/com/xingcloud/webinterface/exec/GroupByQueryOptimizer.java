@@ -9,9 +9,11 @@ import static com.xingcloud.webinterface.monitor.SystemMonitor.putMonitorInfo;
 import static com.xingcloud.webinterface.utils.IdResultBuilder.buildGroupByDescriptor;
 
 import com.xingcloud.maincache.InterruptQueryException;
+import com.xingcloud.memcache.MemCacheException;
 import com.xingcloud.webinterface.enums.AggregationPolicy;
 import com.xingcloud.webinterface.enums.GroupByType;
 import com.xingcloud.webinterface.exception.DataFillingException;
+import com.xingcloud.webinterface.exception.FormulaException;
 import com.xingcloud.webinterface.exception.NecessaryCollectionEmptyException;
 import com.xingcloud.webinterface.exception.ParseIncrementalException;
 import com.xingcloud.webinterface.exception.RangingException;
@@ -55,7 +57,7 @@ public class GroupByQueryOptimizer extends CheckCacheOptimizer {
 
   public List<GroupByIdResult> doWork() throws XParameterException, SegmentException, XQueryException, ParseException,
     DataFillingException, RangingException, ParseIncrementalException, InterruptQueryException,
-    NecessaryCollectionEmptyException {
+    NecessaryCollectionEmptyException, MemCacheException, FormulaException {
     // 计时用
     long t1, t2;
     FormulaQueryDescriptor existsDescriptor;

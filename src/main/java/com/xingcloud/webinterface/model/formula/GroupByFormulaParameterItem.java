@@ -6,18 +6,11 @@ import com.google.gson.annotations.SerializedName;
 import com.xingcloud.webinterface.annotation.JsonName;
 import com.xingcloud.webinterface.enums.Function;
 import com.xingcloud.webinterface.enums.GroupByType;
-import com.xingcloud.webinterface.enums.Interval;
-import com.xingcloud.webinterface.enums.QueryType;
 import com.xingcloud.webinterface.exception.NumberOfDayException;
 import com.xingcloud.webinterface.exception.XParameterException;
 import com.xingcloud.webinterface.model.Filter;
 import com.xingcloud.webinterface.syncmetric.model.AbstractSync;
 import com.xingcloud.webinterface.syncmetric.model.GroupBySync;
-import com.xingcloud.webinterface.utils.WebInterfaceConstants;
-
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class GroupByFormulaParameterItem extends FormulaParameterItem {
 
@@ -43,16 +36,16 @@ public class GroupByFormulaParameterItem extends FormulaParameterItem {
 
   public GroupByFormulaParameterItem(String name, String event, String segment, Filter filter, Function function,
                                      Integer coverRangeOrigin, Integer coverRange, String groupBy,
-                                     GroupByType groupByType) {
-    super(name, event, segment, filter, function, coverRangeOrigin, coverRange);
+                                     GroupByType groupByType, String scale) {
+    super(name, event, segment, filter, function, coverRangeOrigin, coverRange, scale);
     this.groupBy = groupBy;
     this.groupByType = groupByType;
   }
 
   public GroupByFormulaParameterItem(String name, String event, String segment, Filter filter, Function function,
                                      Integer coverRangeOrigin, Integer coverRange, String groupBy,
-                                     GroupByType groupByType, Integer length, String groupByJson) {
-    super(name, event, segment, filter, function, coverRangeOrigin, coverRange);
+                                     GroupByType groupByType, Integer length, String groupByJson, String scale) {
+    super(name, event, segment, filter, function, coverRangeOrigin, coverRange, scale);
     this.groupBy = groupBy;
     this.groupByType = groupByType;
     this.length = length;
@@ -194,22 +187,4 @@ public class GroupByFormulaParameterItem extends FormulaParameterItem {
     return true;
   }
 
-  public static void main(String[] args) throws ParseException {
-    FormulaParameterContainer container = new FormulaParameterContainer();
-    container.setId("001");
-    container.setProjectId("happy");
-    container.setBeginDate("2012-08-02");
-    container.setEndDate("2012-08-02");
-    container.setInterval(Interval.PERIOD);
-    container.setQueryType(QueryType.GROUP);
-    container.setFormula("x");
-
-    GroupByFormulaParameterItem item = new GroupByFormulaParameterItem("x", "visit.*", WebInterfaceConstants.TOTAL_USER,
-                                                                       Filter.ALL, Function.USER_NUM, 7, 0,
-                                                                       "register_time", GroupByType.USER_PROPERTIES);
-
-    List<FormulaParameterItem> items = new ArrayList<FormulaParameterItem>();
-    items.add(item);
-    container.setItems(items);
-  }
 }

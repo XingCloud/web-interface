@@ -3,12 +3,9 @@ package com.xingcloud.webinterface.model.intermediate;
 import static com.xingcloud.webinterface.enums.CommonQueryType.NATURAL;
 import static com.xingcloud.webinterface.enums.CommonQueryType.TOTAL;
 import static com.xingcloud.webinterface.utils.IntermediateResultUtils.spreadStatus;
-import static com.xingcloud.webinterface.utils.WebInterfaceConstants.FORMULA_ARITY_X;
-import static com.xingcloud.webinterface.utils.WebInterfaceConstants.FORMULA_ARITY_Y;
 
 import com.xingcloud.webinterface.calculate.Arity;
 import com.xingcloud.webinterface.calculate.Evaluator;
-import com.xingcloud.webinterface.calculate.ScaleGroup;
 import com.xingcloud.webinterface.enums.AggregationPolicyDisplayed;
 import com.xingcloud.webinterface.enums.CacheState;
 import com.xingcloud.webinterface.enums.Function;
@@ -53,10 +50,9 @@ public class CommonIdResult extends IdResult {
   }
 
   public CommonIdResult(String id, MathOperation mathOperation, Map<String, Function> functionMap,
-                        Map<String, ScaleGroup> scaleMap, Map<String, CommonItemResult> itemResultMap) {
+                        Map<String, CommonItemResult> itemResultMap) {
     super(id, mathOperation, functionMap);
     this.itemResultMap = itemResultMap;
-    this.scaleMap = scaleMap;
     init(itemResultMap.size());
   }
 
@@ -228,9 +224,8 @@ public class CommonIdResult extends IdResult {
 //    if (StringUtils.isNotBlank(unbendingFormula)) {
 //      useUnbendingFormula = true;
 //    }
-    ScaleGroup sg1 = scaleMap.get(FORMULA_ARITY_X), sg2 = scaleMap.get(FORMULA_ARITY_Y);
     boolean oneArity = (mathOperation == null);
-    String scaledFormula, defaultFormula = parseFormula(mathOperation, oneArity);
+    String formula = parseFormula(mathOperation, oneArity);
 
     for (Entry<Object, Map<String, ResultTuple>> outerEntry : inputData.entrySet()) {
       key = outerEntry.getKey();
@@ -269,15 +264,6 @@ public class CommonIdResult extends IdResult {
           arity.add(new Arity(variable, value.doubleValue()));
         }
       }
-      if (TOTAL.equals(key) || NATURAL.equals(key)) {
-        scaledFormula = defaultFormula;
-      } else {
-        try {
-          scaledFormula = parseFormula(sg1, sg2, mathOperation, key.toString(), oneArity);
-        } catch (FormulaException e) {
-          throw e;
-        }
-      }
 
       // 计算
       if (hasNAResult) {
@@ -292,8 +278,8 @@ public class CommonIdResult extends IdResult {
 //          } else {
 //            value = Evaluator.evaluateNumber(formula, arity);
 //          }
-          LOGGER.info("[CALCULATION] - Key[" + key + "], current formula - " + scaledFormula);
-          value = Evaluator.evaluateNumber(scaledFormula, arity);
+          LOGGER.info("[CALCULATION] - Key[" + key + "], current formula - " + formula + ", arity - " + arity);
+          value = Evaluator.evaluateNumber(formula, arity);
         } catch (Exception e) {
           value = NotAvailableNumber.INSTANCE;
         }

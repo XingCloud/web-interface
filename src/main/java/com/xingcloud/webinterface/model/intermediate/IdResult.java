@@ -35,8 +35,6 @@ public abstract class IdResult extends DescriptorDistinctor {
 
   protected Map<String, Function> functionMap;
 
-  protected Map<String, ScaleGroup> scaleMap;
-
   protected Map<Object, Map<String, ResultTuple>> inputData;
 
   protected Object status;

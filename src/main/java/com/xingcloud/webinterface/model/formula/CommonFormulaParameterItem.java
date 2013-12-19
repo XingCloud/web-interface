@@ -12,9 +12,6 @@ import static com.xingcloud.webinterface.utils.WebInterfaceConstants.PERIOD_SUMM
 import static com.xingcloud.webinterface.utils.WebInterfaceConstants.TOTAL_USER;
 
 import com.google.common.base.Strings;
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
-import com.xingcloud.webinterface.annotation.JsonName;
 import com.xingcloud.webinterface.enums.AggregationPolicy;
 import com.xingcloud.webinterface.enums.Function;
 import com.xingcloud.webinterface.enums.Interval;
@@ -38,18 +35,13 @@ public class CommonFormulaParameterItem extends FormulaParameterItem {
 
   private AggregationPolicy naturalSummaryPolicy;
 
-  @JsonName("scale")
-  @SerializedName("scale")
-  @Expose
-  private String scale;
-
   public CommonFormulaParameterItem() {
     super();
   }
 
   public CommonFormulaParameterItem(String name, String event, String segment, Filter filter, Function function,
-                                    Integer coverRangeOrigin, Integer coverRange) {
-    super(name, event, segment, filter, function, coverRangeOrigin, coverRange);
+                                    Integer coverRangeOrigin, Integer coverRange, String scale) {
+    super(name, event, segment, filter, function, coverRangeOrigin, coverRange, scale);
   }
 
   public AggregationPolicy getTotalSummaryPolicy() {
@@ -58,10 +50,6 @@ public class CommonFormulaParameterItem extends FormulaParameterItem {
 
   public AggregationPolicy getNaturalSummaryPolicy() {
     return naturalSummaryPolicy;
-  }
-
-  public String getScale() {
-    return scale;
   }
 
   public void parseSummaryPolicy(Interval interval) {

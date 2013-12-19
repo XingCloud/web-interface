@@ -5,9 +5,11 @@ import static com.xingcloud.webinterface.model.Pending.isPendingPlaceholder;
 import static com.xingcloud.webinterface.model.ResultTuple.NA_RESULT_TUPLE;
 import static com.xingcloud.webinterface.model.ResultTuple.PENDING_RESULT_TUPLE;
 
+import com.xingcloud.webinterface.calculate.ScaleGroup;
 import com.xingcloud.webinterface.enums.AggregationPolicy;
 import com.xingcloud.webinterface.enums.CacheState;
 import com.xingcloud.webinterface.exception.DataFillingException;
+import com.xingcloud.webinterface.exception.FormulaException;
 import com.xingcloud.webinterface.exception.NecessaryCollectionEmptyException;
 import com.xingcloud.webinterface.model.NotAvailable;
 import com.xingcloud.webinterface.model.Pending;
@@ -62,14 +64,14 @@ public class GroupByItemResult extends ItemResult {
   // 聚合计算-统一化聚合口径-passed的fqd检查
   private Set<Object> missedFqdSet;
 
-  public GroupByItemResult(String name) {
-    super(name);
+  public GroupByItemResult(String name, ScaleGroup scaleGroup) {
+    super(name, scaleGroup);
   }
 
-  public GroupByItemResult(String name, List<FormulaQueryDescriptor> connector,
+  public GroupByItemResult(String name, ScaleGroup scaleGroup, List<FormulaQueryDescriptor> connector,
                            AggregationPolicy groupByAggregationPolicy, Set<Object> killedFqdSet,
                            Set<Object> missedFqdSet) {
-    super(name);
+    super(name, scaleGroup);
     this.connector = connector;
     this.groupByAggregationPolicy = groupByAggregationPolicy;
     this.killedFqdSet = killedFqdSet;
@@ -151,6 +153,7 @@ public class GroupByItemResult extends ItemResult {
     String inputDate;
     boolean needCheckIntersection = this.groupByAggregationPolicy.needCheckIntersection();
     Object genericStatus = null;
+    double scaleRate;
     for (FormulaQueryDescriptor fqd : connector) {
       if (fqd.isKilled()) {
         LOGGER.info("[GROUP-BY-ITEM-RESULT] - " + fqd.getKey() + " ignored, killed.");
@@ -187,6 +190,11 @@ public class GroupByItemResult extends ItemResult {
 
       allKilled = false;
       tupleMap = descriptorTupleMap.get(fqd);
+      try {
+        scaleRate = scaleGroup.getScale(fqd.getRealBeginDate());
+      } catch (FormulaException e) {
+        throw new DataFillingException(e);
+      }
       if (tupleMap == null) {
         if (isPendingPlaceholder(genericStatus)) {
           if (LOGGER.isDebugEnabled()) {
@@ -201,6 +209,10 @@ public class GroupByItemResult extends ItemResult {
           }
         }
         continue;
+      }
+
+      for (Entry<Object, ResultTuple> entry : tupleMap.entrySet()) {
+        entry.getValue().expandOrContract(scaleRate);
       }
       if (LOGGER.isDebugEnabled()) {
         LOGGER.debug("[GROUP-BY-ITEM-RESULT] - " + fqd.getKey() + " added to AG-LIST.");

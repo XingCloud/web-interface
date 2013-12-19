@@ -1,7 +1,9 @@
 package com.xingcloud.webinterface.model.intermediate;
 
+import com.xingcloud.webinterface.calculate.ScaleGroup;
 import com.xingcloud.webinterface.enums.CacheState;
 import com.xingcloud.webinterface.exception.DataFillingException;
+import com.xingcloud.webinterface.exception.FormulaException;
 import com.xingcloud.webinterface.exception.NecessaryCollectionEmptyException;
 import com.xingcloud.webinterface.model.ResultTuple;
 import com.xingcloud.webinterface.model.formula.FormulaQueryDescriptor;
@@ -17,14 +19,16 @@ public abstract class ItemResult extends DescriptorDistinctor {
 
   protected Object status;
 
-  public ItemResult(String name) {
-    super();
+  protected ScaleGroup scaleGroup;
+
+  protected ItemResult(String name, ScaleGroup scaleGroup) {
     this.name = name;
+    this.scaleGroup = scaleGroup;
   }
 
   abstract void fillNormalResult(Map<FormulaQueryDescriptor, Map<Object, ResultTuple>> descriptorTupleMap,
                                  Map<FormulaQueryDescriptor, CacheState> descriptorStateMap) throws
-    DataFillingException, NecessaryCollectionEmptyException;
+    DataFillingException, NecessaryCollectionEmptyException, FormulaException;
 
   public Object getStatus() {
     return status;

@@ -295,29 +295,13 @@ public class ResultTuple implements Serializable {
     this.resultTupleState = resultTupleState;
   }
 
-  public static void main(String[] args) {
-    ResultTuple rt1 = new ResultTuple(1, 2, 3, 1d);
-    ResultTuple rt2 = rt1.duplicate();
-
-    rt2.setCount(10);
-    System.out.println("ResultTuple1 - " + rt1 + " - " + rt1.getResultTupleState());
-    System.out.println("ResultTuple2 - " + rt2 + " - " + rt2.getResultTupleState());
-
-    rt2.setSum(20);
-    System.out.println("ResultTuple1 - " + rt1 + " - " + rt1.getResultTupleState());
-    System.out.println("ResultTuple2 - " + rt2 + " - " + rt2.getResultTupleState());
-
-    rt2.setUsernum(30);
-    System.out.println("ResultTuple1 - " + rt1 + " - " + rt1.getResultTupleState());
-    System.out.println("ResultTuple2 - " + rt2 + " - " + rt2.getResultTupleState());
-
-    rt2.setSamplingRate(0.5d);
-    System.out.println("ResultTuple1 - " + rt1 + " - " + rt1.getResultTupleState());
-    System.out.println("ResultTuple2 - " + rt2 + " - " + rt2.getResultTupleState());
-
-    rt2.setResultTupleState(ResultTupleState.NA);
-    System.out.println("ResultTuple1 - " + rt1 + " - " + rt1.getResultTupleState());
-    System.out.println("ResultTuple2 - " + rt2 + " - " + rt2.getResultTupleState());
-
+  public void expandOrContract(double rate) {
+    if (isNAPlaceholder() || isPendingPlaceholder()) {
+      return;
+    }
+    this.tuple[0] = (long) (this.tuple[0].longValue() * rate);
+    this.tuple[1] = (long) (this.tuple[1].longValue() * rate);
+    this.tuple[2] = (long) (this.tuple[2].longValue() * rate);
   }
+
 }

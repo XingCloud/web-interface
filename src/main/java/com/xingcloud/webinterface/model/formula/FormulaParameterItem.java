@@ -15,6 +15,7 @@ import com.xingcloud.webinterface.exception.NumberOfDayException;
 import com.xingcloud.webinterface.exception.XParameterException;
 import com.xingcloud.webinterface.model.Filter;
 import com.xingcloud.webinterface.syncmetric.model.AbstractSync;
+import org.apache.commons.lang3.StringUtils;
 
 public abstract class FormulaParameterItem {
 
@@ -50,11 +51,16 @@ public abstract class FormulaParameterItem {
   @Expose
   protected Integer coverRange;
 
+  @JsonName("scale")
+  @SerializedName("scale")
+  @Expose
+  protected String scale;
+
   public FormulaParameterItem() {
   }
 
   public FormulaParameterItem(String name, String event, String segment, Filter filter, Function function,
-                              Integer coverRangeOrigin, Integer coverRange) {
+                              Integer coverRangeOrigin, Integer coverRange, String scale) {
     this.name = name;
     this.event = event;
     this.segment = segment;
@@ -62,6 +68,7 @@ public abstract class FormulaParameterItem {
     this.function = function;
     this.coverRangeOrigin = coverRangeOrigin;
     this.coverRange = coverRange;
+    this.scale = scale;
   }
 
   public abstract boolean canAccumulateTotalAndNatural();
@@ -86,6 +93,10 @@ public abstract class FormulaParameterItem {
     Filter filter = getFilter();
     setFilter(filter == null ? Filter.ALL : filter);
     // setFilter(null);
+  }
+
+  public String getScale() {
+    return scale;
   }
 
   public String getName() {
@@ -210,6 +221,9 @@ public abstract class FormulaParameterItem {
     }
     if (getFunction() == null) {
       throw new XParameterException();
+    }
+    if (StringUtils.isBlank(scale)) {
+      throw new XParameterException("Scale is null");
     }
   }
 

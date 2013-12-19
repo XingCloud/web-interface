@@ -2,6 +2,7 @@ package com.xingcloud.webinterface.model.intermediate;
 
 import static com.xingcloud.webinterface.model.aggregation.Accumulator.accumulateStrictly;
 
+import com.xingcloud.webinterface.calculate.ScaleGroup;
 import com.xingcloud.webinterface.enums.AggregationPolicy;
 import com.xingcloud.webinterface.enums.CacheState;
 import com.xingcloud.webinterface.exception.DataFillingException;
@@ -31,14 +32,10 @@ public class CommonItemResultGroup extends CommonItemResult {
 
   private Collection<CommonItemResult> commonItemResults;
 
-  public CommonItemResultGroup(String name) {
-    super(name);
-  }
-
-  public CommonItemResultGroup(String name, AggregationPolicy totalAggregationPolicy,
+  public CommonItemResultGroup(String name, ScaleGroup scaleGroup, AggregationPolicy totalAggregationPolicy,
                                AggregationPolicy naturalAggregationPolicy,
                                Collection<CommonItemResult> commonItemResults) {
-    super(name, totalAggregationPolicy, naturalAggregationPolicy);
+    super(name, scaleGroup, totalAggregationPolicy, naturalAggregationPolicy);
     this.commonItemResults = commonItemResults;
   }
 
@@ -76,14 +73,15 @@ public class CommonItemResultGroup extends CommonItemResult {
     if (CollectionUtils.isNotEmpty(thisKeyTupleSet)) {
       thisKeyTupleSet.clear();
     }
-    if(MapUtils.isNotEmpty(keyTupleMap)){
+    if (MapUtils.isNotEmpty(keyTupleMap)) {
       thisKeyTupleSet.addAll(keyTupleMap.values());
     }
   }
 
   @Override
   public void fillTotalAggregation(Map<FormulaQueryDescriptor, Map<Object, ResultTuple>> descriptorTupleMap,
-                                   Map<FormulaQueryDescriptor, CacheState> descriptorStateMap) {
+                                   Map<FormulaQueryDescriptor, CacheState> descriptorStateMap) throws
+    DataFillingException {
 
     KeyTuple totalKT = null;
     for (CommonItemResult cir : commonItemResults) {
