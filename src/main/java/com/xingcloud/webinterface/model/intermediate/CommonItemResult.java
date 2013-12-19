@@ -235,6 +235,7 @@ public class CommonItemResult extends ItemResult {
                 rt = createNewEmptyResultTuple();
               }
               // 根据RealBeginDate做伸缩
+              rt = rt.duplicate();
               rt.expandOrContract(scaleRate);
               ktList.add(new KeyTuple(s, rt, status));
               if (checkTotalNormal || checkNaturalNormal) {
@@ -250,6 +251,7 @@ public class CommonItemResult extends ItemResult {
                 rt = createNewEmptyResultTuple();
               }
               // 根据RealBeginDate做伸缩
+              rt = rt.duplicate();
               rt.expandOrContract(scaleRate);
               ktList.add(new KeyTuple(s, rt, status));
               if (checkTotalNormal || checkNaturalNormal) {
@@ -261,6 +263,7 @@ public class CommonItemResult extends ItemResult {
             for (Entry<Object, ResultTuple> entry : tupleMap.entrySet()) {
               rt = entry.getValue();
               // 根据RealBeginDate做伸缩
+              rt = rt.duplicate();
               rt.expandOrContract(scaleRate);
               ktList.add(new KeyTuple(entry.getKey(), rt, status));
               if (checkTotalNormal || checkNaturalNormal) {
@@ -276,6 +279,7 @@ public class CommonItemResult extends ItemResult {
           for (Entry<Object, ResultTuple> entry : tupleMap.entrySet()) {
             rt = entry.getValue();
             // 根据RealBeginDate做伸缩
+            rt = rt.duplicate();
             rt.expandOrContract(scaleRate);
             kt = new KeyTuple(displayString, displayString, rt, status);
             ktList.add(kt);
@@ -406,6 +410,7 @@ public class CommonItemResult extends ItemResult {
           for (Entry<Object, ResultTuple> entry : m.entrySet()) {
             entryKey = entry.getKey();
             rt = entry.getValue();
+            rt = rt.duplicate();
             rt.expandOrContract(scaleRate);
             if (interval.getDays() < 1) {
               keyTuple = new KeyTuple(entryKey, entryKey, rt, status);
@@ -491,6 +496,7 @@ public class CommonItemResult extends ItemResult {
         }
         for (Entry<Object, ResultTuple> entry : map.entrySet()) {
           rt = entry.getValue();
+          rt = rt.duplicate();
           rt.expandOrContract(scaleRate);
           setTotalAggregation(new KeyTuple(TOTAL, rt, totalStatus));
         }
@@ -589,6 +595,7 @@ public class CommonItemResult extends ItemResult {
         naturalStatus = getStatusFromCacheState(cacheState);
         for (Entry<Object, ResultTuple> entry : map.entrySet()) {
           rt = entry.getValue();
+          rt = rt.duplicate();
           rt.expandOrContract(scaleRate);
           setNaturalAggregation(new KeyTuple(NATURAL, rt, naturalStatus));
           break;

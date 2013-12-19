@@ -148,7 +148,7 @@ public class GroupByItemResult extends ItemResult {
 
     boolean allKilled = true;
     List<Map<Object, ResultTuple>> dataList = null;
-    Map<Object, ResultTuple> tupleMap;
+    Map<Object, ResultTuple> tupleMap, tupleMapDuplicated = null;
 
     String inputDate;
     boolean needCheckIntersection = this.groupByAggregationPolicy.needCheckIntersection();
@@ -210,9 +210,12 @@ public class GroupByItemResult extends ItemResult {
         }
         continue;
       }
-
+      ResultTuple rt;
+      tupleMapDuplicated = new HashMap<Object, ResultTuple>(tupleMap.size());
       for (Entry<Object, ResultTuple> entry : tupleMap.entrySet()) {
-        entry.getValue().expandOrContract(scaleRate);
+        rt = entry.getValue().duplicate();
+        rt.expandOrContract(scaleRate);
+        tupleMapDuplicated.put(entry.getKey(), rt);
       }
       if (LOGGER.isDebugEnabled()) {
         LOGGER.debug("[GROUP-BY-ITEM-RESULT] - " + fqd.getKey() + " added to AG-LIST.");
@@ -220,21 +223,21 @@ public class GroupByItemResult extends ItemResult {
       if (dataList == null) {
         dataList = new ArrayList<Map<Object, ResultTuple>>();
       }
-      dataList.add(tupleMap);
+      dataList.add(tupleMapDuplicated);
     }
 
-    tupleMap = doAggregation(dataList, this.groupByAggregationPolicy);
+    tupleMapDuplicated = doAggregation(dataList, this.groupByAggregationPolicy);
 
     Set<KeyTuple> ktList;
     KeyTuple kt;
-    if (tupleMap == null) {
+    if (tupleMapDuplicated == null) {
       ktList = new HashSet<KeyTuple>(1);
       kt = allKilled ? new KeyTuple(NotAvailable.INSTANCE, NA_RESULT_TUPLE)
                      : new KeyTuple(Pending.INSTANCE, PENDING_RESULT_TUPLE);
       ktList.add(kt);
     } else {
-      ktList = new HashSet<KeyTuple>(tupleMap.size());
-      for (Entry<Object, ResultTuple> entry : tupleMap.entrySet()) {
+      ktList = new HashSet<KeyTuple>(tupleMapDuplicated.size());
+      for (Entry<Object, ResultTuple> entry : tupleMapDuplicated.entrySet()) {
         ktList.add(new KeyTuple(entry.getKey(), entry.getValue()));
       }
     }
