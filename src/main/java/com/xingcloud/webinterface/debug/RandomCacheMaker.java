@@ -59,7 +59,7 @@ public class RandomCacheMaker {
           break;
         default:
           tupleMap = new HashMap<Object, ResultTuple>(1);
-          tupleMap.put(PERIOD.name(), new ResultTuple(100, 100, 100));
+          tupleMap.put(PERIOD.name(), randomTuple());
           break;
       }
     } else {

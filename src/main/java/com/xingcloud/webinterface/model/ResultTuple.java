@@ -117,21 +117,21 @@ public class ResultTuple implements Serializable {
     if (this.tuple[0] == null) {
       return null;
     }
-    return Math.round(this.tuple[0].longValue() / samplingRate);
+    return Math.round(this.tuple[0].doubleValue() / samplingRate);
   }
 
   public Number getEstimateSum() {
     if (this.tuple[1] == null) {
       return null;
     }
-    return Math.round(this.tuple[1].longValue() / samplingRate);
+    return this.tuple[1].doubleValue() / samplingRate;
   }
 
   public Number getEstimateUsernum() {
     if (this.tuple[2] == null) {
       return null;
     }
-    return Math.round(this.tuple[2].longValue() / samplingRate);
+    return Math.round(this.tuple[2].doubleValue() / samplingRate);
   }
 
   public static ResultTuple doAccumulation(ResultTuple... rts) {
@@ -143,9 +143,7 @@ public class ResultTuple implements Serializable {
     Number accumulatedSum = null;
     Number accumulatedUserNum = null;
 
-    Number operatedCount = null;
-    Number operatedSum = null;
-    Number operatedUserNum = null;
+    Number operatedCount, operatedSum, operatedUserNum;
 
     for (ResultTuple rt : rts) {
       operatedCount = rt.getEstimateCount();
@@ -299,9 +297,17 @@ public class ResultTuple implements Serializable {
     if (isNAPlaceholder() || isPendingPlaceholder()) {
       return;
     }
-    this.tuple[0] = (long) (this.tuple[0].longValue() * rate);
-    this.tuple[1] = (long) (this.tuple[1].longValue() * rate);
-    this.tuple[2] = (long) (this.tuple[2].longValue() * rate);
+    if (this.tuple == null) {
+      return;
+    }
+    if (this.tuple[0] != null) {
+      this.tuple[0] = this.tuple[0].doubleValue() * rate;
+    }
+    if (this.tuple[1] != null) {
+      this.tuple[1] = this.tuple[1].doubleValue() * rate;
+    }
+    if (this.tuple[2] != null) {
+      this.tuple[2] = this.tuple[2].doubleValue() * rate;
+    }
   }
-
 }
