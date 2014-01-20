@@ -278,7 +278,7 @@ public class CommonIdResult extends IdResult {
 //          } else {
 //            value = Evaluator.evaluateNumber(formula, arity);
 //          }
-          LOGGER.info("[CALCULATION] - Key[" + key + "], current formula - " + formula + ", arity - " + arity);
+//          LOGGER.info("[CALCULATION] - Key[" + key + "], current formula - " + formula + ", arity - " + arity);
           value = Evaluator.evaluateNumber(formula, arity);
         } catch (Exception e) {
           value = NotAvailableNumber.INSTANCE;
