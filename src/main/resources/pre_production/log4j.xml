@@ -59,7 +59,7 @@
   </logger>
 
   <logger name="com.xingcloud.webinterface">
-    <level value="debug" />
+    <level value="info" />
     <appender-ref ref="CONSOLE" />
   </logger>
 
