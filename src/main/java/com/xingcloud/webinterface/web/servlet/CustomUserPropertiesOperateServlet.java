@@ -132,10 +132,25 @@ public class CustomUserPropertiesOperateServlet extends AbstractServlet {
         throw new Exception("Custom User Property - " + cup + " is not valid");
       }
       LOGGER.info("received cup - " + cup);
-      if (!manager.dbexists(cup.getProjectId())) {
-        manager.createDBIfNotExist(cup.getProjectId());
+      boolean success = false;
+      for (int i = 0; i < 3; i++) {
+        try {
+          if (!manager.dbexists(cup.getProjectId())) {
+            manager.createDBIfNotExist(cup.getProjectId());
+          }
+          manager.createTable(cup.getProjectId(), cup.getName(), cup.getType(), cup.getFunc());
+          success = true;
+        } catch (Exception e) {
+          e.printStackTrace();
+        } finally {
+          if (success) {
+            break;
+          }
+        }
       }
-      manager.createTable(cup.getProjectId(), cup.getName(), cup.getType(), cup.getFunc());
+      if (!success) {
+        throw new Exception();
+      }
     }
   }
 
