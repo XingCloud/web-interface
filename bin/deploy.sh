@@ -16,16 +16,14 @@ else
   branch=$2
 fi
 
-if [ "8081" = ${tport} ];then
+if [ "8080" = ${tport} ];then
   xa_env="production"
   # Tomcat home
-  tomcat_home=/home/hadoop/catalina/apache-tomcat-7.0.42.8081
-  redis_queue_port=10000
+  tomcat_home=/home/hadoop/catalina/apache-tomcat-7.0.50.webinterface
 else
-  xa_env="pre_production"
+  xa_env="production"
   # Tomcat home
-  tomcat_home=/home/hadoop/catalina/apache-tomcat-7.0.42.8082
-  redis_queue_port=10001
+  tomcat_home=/home/hadoop/catalina/apache-tomcat-7.0.50.webinterface
 fi
 
 echo "[CHECK-POINT] - Begin deploying data driller web interface."
@@ -88,14 +86,6 @@ echo "Tomcat is shutdown."
 echo "[CHECK-POINT] - Clean application - ${aid}"
 rm -rf ${tomcat_home}/webapps/${aid}
 rm -rf ${tomcat_home}/webapps/${aid}*.war
-
-#echo "[CHECK-POINT] - Clean redis tags(db=0)."
-#python /home/hadoop/xa/scripts/clear_query_tag.py --host=192.168.1.61 --port=${redis_queue_port} --db=0
-#echo "[CHECK-POINT] - Clean redis tags(db=1)."
-#python /home/hadoop/xa/scripts/clear_query_tag.py --host=192.168.1.61 --port=${redis_queue_port} --db=1
-#echo "[CHECK-POINT] - Clean redis tags(db=2)."
-#python /home/hadoop/xa/scripts/clear_query_tag.py --host=192.168.1.61 --port=${redis_queue_port} --db=2
-#sleep 1
 
 echo "[CHECK-POINT] - Copy application - ${aid}"
 cp ${code_home}/target/${aid}.war ${tomcat_home}/webapps
