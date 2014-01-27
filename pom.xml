@@ -444,7 +444,7 @@
     <dependency>
       <groupId>org.apache.drill</groupId>
       <artifactId>common</artifactId>
-      <classifier>rebuffed</classifier>
+      <!--<classifier>rebuffed</classifier>-->
       <version>1.0-SNAPSHOT</version>
       <exclusions>
         <exclusion>
