@@ -46,26 +46,12 @@ else
   echo "Git Update/checkout successfully."
 fi
 
-# echo ${line}
-# echo "[CHECK-POINT] - Clean local adhoc repository."
-# rm -rf /home/hadoop/.m2/repository/com/xingcloud/AdhocProcessorRPC
-
-# echo ${line}
-# echo "[------copy adhoc-processor jar to local repo------]"
-# if [ "production" = ${xa_env} ];then
-#   rm -rf /home/hadoop/local_repo/production/*
-#   mvn install:install-file -Dfile=/home/hadoop/AdhocProcessorRPC/target/AdhocProcessorRPC-4.3.jar -DgroupId=com.xingcloud -DartifactId=AdhocProcessorRPC -Dversion=4.3 -Dpackaging=jar -DlocalRepositoryPath=/home/hadoop/local_repo/production
-# else
-#   rm -rf /home/hadoop/local_repo/pre_production/*
-#   mvn install:install-file -Dfile=/home/hadoop/AdhocProcessorRPC/target/AdhocProcessorRPC-4.3.jar -DgroupId=com.xingcloud -DartifactId=AdhocProcessorRPC -Dversion=4.3 -Dpackaging=jar -DlocalRepositoryPath=/home/hadoop/local_repo/pre_production
-# fi
-
 echo "[CHECK-POINT] - Packaging."
 mvn -f ${code_home}/pom.xml clean package -Dxa_env=${xa_env} -Dtport=${tport} -Daid=${aid} -DskipTests=true
 
 echo "[CHECK-POINT] - Shutdown tomcat."
 sh ${tomcat_home}/bin/shutdown.sh
-java_bin=/usr/java/jdk1.7.0_25/
+java_bin=/usr/java/jdk1.7.0_45
 for((i=1;i<=10;i++));do
     proc=`ps aux | grep ${java_bin} | grep tomcat | grep -v "grep" | grep ${tport} | awk '{print $2}'`
     if [ "" = "$proc" ]

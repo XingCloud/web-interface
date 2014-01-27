@@ -71,7 +71,7 @@
   </cache>
 
   <web-services>
-    <web-service>QUERY-LP@query_master:8182/qm/q</web-service>
+    <web-service>QUERY-LP@query_master:8081/qm/q</web-service>
   </web-services>
 
   <quartz>
