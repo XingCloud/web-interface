@@ -11,25 +11,10 @@
     </layout>
   </appender>
 
-  <!-- For error log mail -->
-  <appender name="MAIL" class="org.apache.log4j.net.SMTPAppender">
-    <param name="From" value="xamonitor@xingcloud.com" />
-    <param name="SMTPHost" value="smtp.exmail.qq.com" />
-    <param name="Subject"
-           value="[EXCEPTION] - WebInterface exception email notification" />
-    <param name="To" value="wuzijing@xingcloud.com,wangchangli@xingcloud.com" />
-    <param name="SMTPUsername" value="xamonitor@xingcloud.com" />
-    <param name="SMTPPassword" value="22C1NziwxZI5F" />
-    <layout class="org.apache.log4j.PatternLayout">
-      <param name="ConversionPattern"
-             value="%-d{yyyy-MM-dd HH:mm:ss.SSS} [%p]-[%c] %m%n" />
-    </layout>
-  </appender>
-
   <!-- For logical plan string log -->
   <appender name="LOG_LOGICAL_PLAN_STRING"
             class="org.apache.log4j.DailyRollingFileAppender">
-    <param name="File" value="/data/catalina/8082/logs/plan.log" />
+    <param name="File" value="/data/catalina/webinterface/logs/plan.log" />
     <param name="Append" value="true" />
     <param name="Threshold" value="info" />
     <param name="DatePattern" value="'.'yyyy-MM-dd" />
@@ -41,7 +26,7 @@
   <!-- For input to servlet log -->
   <appender name="LOG_PARAMETERS"
             class="org.apache.log4j.DailyRollingFileAppender">
-    <param name="File" value="/data/catalina/8081/logs/parameters.log" />
+    <param name="File" value="/data/catalina/webinterface/logs/parameters.log" />
     <param name="Append" value="true" />
     <param name="Threshold" value="info" />
     <param name="DatePattern" value="'.'yyyy-MM-dd" />
@@ -53,7 +38,7 @@
   <!-- For inaccurate cache log -->
   <appender name="LOG_INACCURATE_CACHE"
             class="org.apache.log4j.DailyRollingFileAppender">
-    <param name="File" value="/data/catalina/8081/logs/inaccurate.log" />
+    <param name="File" value="/data/catalina/webinterface/logs/inaccurate.log" />
     <param name="Append" value="true" />
     <param name="Threshold" value="info" />
     <param name="DatePattern" value="'.'yyyy-MM-dd" />
