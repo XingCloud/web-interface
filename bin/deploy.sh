@@ -10,10 +10,19 @@ tport=$1
 aid=dd
 # Web interface env
 xa_env="production"
-# Tomcat home
-tomcat_home=/home/hadoop/catalina/apache-tomcat-7.0.50.wi
 # Java binary
 java_bin=/usr/java/jdk1.7.0_25/
+
+if [ "" = "$1" ];then
+  tport=18080
+  # Tomcat home
+  tomcat_home=/home/hadoop/catalina/apache-tomcat-7.0.50.te
+else
+  echo "User defined tomcat port found($1)"
+  tport=$1
+  # Tomcat home
+  tomcat_home=/home/hadoop/catalina/apache-tomcat-7.0.50.wi
+fi
 
 if [ "" = "$2" ];then
   branch=master
@@ -31,7 +40,6 @@ echo "[TOMCAT-PORT] - "${tport}
 echo "[JAVA-BIN] - "${java_bin}
 echo ${line}
 echo "[CHECK-POINT] - Update code from VCS"
-
 
 cd ${code_home}
 git pull
