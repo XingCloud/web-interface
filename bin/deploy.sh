@@ -15,17 +15,14 @@ java_bin=/usr/java/jdk1.7.0_25/
 
 if [ "" = "$1" ];then
   tport=18080
-  # Tomcat home
   tomcat_home=/home/hadoop/catalina/apache-tomcat-7.0.50.te
 else
-  echo "User defined tomcat port found($1)"
   tport=$1
-  # Tomcat home
   tomcat_home=/home/hadoop/catalina/apache-tomcat-7.0.50.wi
 fi
 
 if [ "" = "$2" ];then
-  branch=master
+  branch=i2
 else
   echo "User defined branch found($2)"
   branch=$2
