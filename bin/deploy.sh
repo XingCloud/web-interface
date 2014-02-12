@@ -33,6 +33,7 @@ echo ${line}
 echo "[CODE-HOME] - "${code_home}
 echo "[CURRENT-BRANCH] - "${branch}
 echo "[XA_ENV] - "${xa_env}
+echo "[TOMCAT-HOME] - "${tomcat_home}
 echo "[TOMCAT-PORT] - "${tport}
 echo "[JAVA-BIN] - "${java_bin}
 echo ${line}
