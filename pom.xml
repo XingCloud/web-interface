@@ -7,7 +7,6 @@
   <packaging>war</packaging>
   <version>1.0</version>
   <name>DataDriller web interface</name>
-  <url>http://65.255.35.141:${tport}</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -35,7 +34,7 @@
   <build>
     <defaultGoal>package</defaultGoal>
 
-    <finalName>dd</finalName>
+    <finalName>${aid}</finalName>
 
     <!-- Resources of app -->
     <resources>
@@ -293,7 +292,7 @@
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
-      <version>2.1</version>
+      <version>2.4</version>
     </dependency>
     <dependency>
       <groupId>commons-dbcp</groupId>
@@ -344,11 +343,6 @@
       <groupId>commons-beanutils</groupId>
       <artifactId>commons-beanutils</artifactId>
       <version>1.7.0</version>
-    </dependency>
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-      <version>2.4</version>
     </dependency>
 
     <!-- Google common-->
