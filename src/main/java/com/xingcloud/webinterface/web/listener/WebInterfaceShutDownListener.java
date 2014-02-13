@@ -14,8 +14,8 @@ import org.quartz.SchedulerException;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
-public class ShutDownListener implements ServletContextListener {
-  private static final Logger LOGGER = Logger.getLogger(ShutDownListener.class);
+public class WebInterfaceShutDownListener implements ServletContextListener {
+  private static final Logger LOGGER = Logger.getLogger(WebInterfaceShutDownListener.class);
 
   public void contextDestroyed(ServletContextEvent arg0) {
     MongoDBOperation.getInstance().getMongoDBManager().close();

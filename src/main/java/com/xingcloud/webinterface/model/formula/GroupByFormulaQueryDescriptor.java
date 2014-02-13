@@ -1,6 +1,7 @@
 package com.xingcloud.webinterface.model.formula;
 
 import static com.xingcloud.basic.Constants.SEPARATOR_CHAR_CACHE;
+import static com.xingcloud.webinterface.enums.GroupByType.EVENT_VAL;
 import static com.xingcloud.webinterface.enums.GroupByType.USER_PROPERTIES;
 import static com.xingcloud.webinterface.plan.Plans.DFR;
 import static com.xingcloud.webinterface.plan.Plans.KEY_WORD_DIMENSION;
@@ -9,7 +10,6 @@ import static com.xingcloud.webinterface.plan.Plans.KEY_WORD_SGMT;
 import static com.xingcloud.webinterface.plan.Plans.KEY_WORD_UID;
 import static com.xingcloud.webinterface.plan.Plans.KEY_WORD_VALUE;
 import static com.xingcloud.webinterface.plan.Plans.buildPlanProperties;
-import static com.xingcloud.webinterface.plan.Plans.getChainedMysqlSegmentScan;
 import static com.xingcloud.webinterface.plan.Plans.getEventScan;
 import static com.xingcloud.webinterface.plan.Plans.getStore;
 import static com.xingcloud.webinterface.plan.Plans.getUserScan;
@@ -21,11 +21,11 @@ import static org.apache.drill.common.util.FieldReferenceBuilder.buildColumn;
 import com.xingcloud.mysql.PropType;
 import com.xingcloud.mysql.UserProp;
 import com.xingcloud.webinterface.enums.GroupByType;
-import com.xingcloud.webinterface.enums.Operator;
 import com.xingcloud.webinterface.exception.PlanException;
 import com.xingcloud.webinterface.model.Filter;
 import com.xingcloud.webinterface.segment.XSegment;
 import com.xingcloud.webinterface.utils.UserPropertiesInfoManager;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionCall;
@@ -72,6 +72,19 @@ public class GroupByFormulaQueryDescriptor extends FormulaQueryDescriptor {
     this.groupByType = groupByType;
   }
 
+  public GroupByFormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
+                                       String sqlSegments, Filter filter, GroupByType groupByType) {
+    super(projectId, realBeginDate, realEndDate, event, sqlSegments, filter);
+    this.groupByType = groupByType;
+  }
+
+  public GroupByFormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
+                                       String sqlSegments, Filter filter, String inputBeginDate, String inputEndDate,
+                                       GroupByType groupByType) {
+    super(projectId, realBeginDate, realEndDate, event, sqlSegments, filter, inputBeginDate, inputEndDate);
+    this.groupByType = groupByType;
+  }
+
   public String toKey() {
     return toKey(true);
   }
@@ -90,8 +103,10 @@ public class GroupByFormulaQueryDescriptor extends FormulaQueryDescriptor {
 
     sb.append(SEPARATOR_CHAR_CACHE);
     sb.append(getGroupByType());
-    sb.append(SEPARATOR_CHAR_CACHE);
-    sb.append(getGroupBy());
+    if (StringUtils.isNotBlank(getGroupBy())) {
+      sb.append(SEPARATOR_CHAR_CACHE);
+      sb.append(getGroupBy());
+    }
 
     if (!ignore) {
       toStringGeneric(sb);
@@ -153,7 +168,9 @@ public class GroupByFormulaQueryDescriptor extends FormulaQueryDescriptor {
   public LogicalPlan toLogicalPlain() throws PlanException {
     List<LogicalOperator> logicalOperators = new ArrayList<LogicalOperator>();
     boolean userPropertyGroupBy = USER_PROPERTIES.equals(this.groupByType);
-    String[] additionalProjectionOfEventTable = userPropertyGroupBy ? null : new String[]{KEY_WORD_EVENT + groupBy};
+    boolean eventValGroupBy = EVENT_VAL.equals(this.getGroupByType());
+    String[] additionalProjectionOfEventTable =
+      (userPropertyGroupBy || eventValGroupBy) ? null : new String[]{KEY_WORD_EVENT + groupBy};
 
     LogicalOperator eventTableScan = getEventScan(this.projectId, this.event, this.realBeginDate, this.realEndDate,
                                                   additionalProjectionOfEventTable);
@@ -164,7 +181,7 @@ public class GroupByFormulaQueryDescriptor extends FormulaQueryDescriptor {
     LogicalOperator scanRoot, segmentLogicalOperator, userTableScan;
 
     FieldReference uidFR = buildColumn(KEY_WORD_UID);
-    XSegment xSegment ;
+    XSegment xSegment;
     if (userPropertyGroupBy) {
       userTableScan = getUserScan(this.projectId, this.groupBy);
       logicalOperators.add(userTableScan);
@@ -221,6 +238,8 @@ public class GroupByFormulaQueryDescriptor extends FormulaQueryDescriptor {
       } else {
         groupByExpr = groupBy;
       }
+    } else if (eventValGroupBy) {
+      groupByExpr = KEY_WORD_VALUE;
     } else {
       groupByExpr = KEY_WORD_EVENT + groupBy;
     }

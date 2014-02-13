@@ -10,13 +10,13 @@
 
   <!-- Start monitor threads -->
   <listener>
-    <listener-class>com.xingcloud.webinterface.web.listener.StartUpListener
+    <listener-class>com.xingcloud.webinterface.web.listener.WebInterfaceStartUpListener
     </listener-class>
   </listener>
 
   <!-- Shutdown hbase, mongodb, etc. -->
   <listener>
-    <listener-class>com.xingcloud.webinterface.web.listener.ShutDownListener
+    <listener-class>com.xingcloud.webinterface.web.listener.WebInterfaceShutDownListener
     </listener-class>
   </listener>
 
