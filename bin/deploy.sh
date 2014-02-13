@@ -51,7 +51,7 @@ else
 fi
 
 echo "[CHECK-POINT] - Packaging."
-mvn -f ${code_home}/pom.xml clean package -Dxa_env=${xa_env} -Dtport=${tport} -Daid=${aid} -DskipTests=true
+mvn -f ${code_home}/pom.xml clean package -DskipTests=true -Daid=${aid} -Dxa_env=${xa_env}
 
 echo "[CHECK-POINT] - Shutdown tomcat."
 sh ${tomcat_home}/bin/shutdown.sh

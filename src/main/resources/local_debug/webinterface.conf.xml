@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Root>
   <!-- Common configuration -->
-  <common debug="false">
+  <common debug="true">
     <check-ui enabled="false" />
     <new-segment enabled="true" />
   </common>

@@ -1,10 +1,7 @@
 package com.xingcloud.webinterface.debug;
 
 import static com.xingcloud.basic.Constants.DEFAULT_TIME_ZONE;
-import static com.xingcloud.basic.utils.DateUtils.date2Short;
-import static com.xingcloud.basic.utils.DateUtils.today;
 import static com.xingcloud.webinterface.enums.Interval.PERIOD;
-import static com.xingcloud.webinterface.utils.WebInterfaceRandomUtils.randomDate;
 import static com.xingcloud.webinterface.utils.WebInterfaceRandomUtils.randomTuple;
 
 import com.xingcloud.webinterface.enums.CacheReference;
@@ -21,6 +18,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 public class RandomCacheMaker {
 
@@ -63,10 +61,12 @@ public class RandomCacheMaker {
           break;
       }
     } else {
-      int cnt = 3;
+      int cnt = 500;
       tupleMap = new HashMap<Object, ResultTuple>(cnt);
+      Random random = new Random();
       for (int i = 0; i < cnt; i++) {
-        tupleMap.put(date2Short(randomDate(today(), 5)), randomTuple());
+//        tupleMap.put(date2Short(randomDate(today(), 5)), randomTuple());
+        tupleMap.put(String.valueOf(random.nextInt(2000)), randomTuple());
       }
     }
     StatefulCache sc = new StatefulCache(CacheReference.OFFLINE, CacheState.ACCURATE, tupleMap, 0);

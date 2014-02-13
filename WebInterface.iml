@@ -204,7 +204,6 @@
     <orderEntry type="library" name="Maven: com.xingcloud.xa:event-service:1.1" level="project" />
     <orderEntry type="library" name="Maven: com.xingcloud.xa:memory-cache-service:0.1" level="project" />
     <orderEntry type="library" name="Maven: com.xingcloud.xa:mongodb:1.0" level="project" />
-    <orderEntry type="library" name="Maven: org.mortbay.jetty:servlet-api:2.5-20081211" level="project" />
   </component>
 </module>
 

@@ -119,11 +119,11 @@ public class GroupByFormulaParameterItem extends FormulaParameterItem {
   @Override
   public void validate(FormulaParameterContainer fpc) throws XParameterException, NumberOfDayException {
     super.validate(fpc);
-    if (Strings.isNullOrEmpty(groupBy)) {
-      throw new XParameterException("Group by string cannot be null or empty.");
-    }
     if (this.groupByType == null) {
       throw new XParameterException("Group by type cannot be null.");
+    }
+    if ((!this.groupByType.equals(GroupByType.EVENT_VAL)) && Strings.isNullOrEmpty(groupBy)) {
+      throw new XParameterException("Group by string cannot be null or empty.");
     }
   }
 
