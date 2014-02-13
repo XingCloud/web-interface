@@ -1,6 +1,7 @@
 package com.xingcloud.webinterface.model.formula;
 
 import static com.xingcloud.basic.Constants.SEPARATOR_CHAR_CACHE;
+import static com.xingcloud.webinterface.enums.GroupByType.EVENT_VAL;
 import static com.xingcloud.webinterface.enums.GroupByType.USER_PROPERTIES;
 import static com.xingcloud.webinterface.plan.Plans.DFR;
 import static com.xingcloud.webinterface.plan.Plans.KEY_WORD_DIMENSION;
@@ -25,6 +26,7 @@ import com.xingcloud.webinterface.enums.Operator;
 import com.xingcloud.webinterface.exception.PlanException;
 import com.xingcloud.webinterface.model.Filter;
 import com.xingcloud.webinterface.utils.UserPropertiesInfoManager;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionCall;
@@ -54,6 +56,19 @@ public class GroupByFormulaQueryDescriptor extends FormulaQueryDescriptor {
 
   public GroupByFormulaQueryDescriptor() {
     super();
+  }
+
+  public GroupByFormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
+                                       String segment, Filter filter, double samplingRate, GroupByType groupByType) {
+    super(projectId, realBeginDate, realEndDate, event, segment, filter, samplingRate);
+    this.groupByType = groupByType;
+  }
+
+  public GroupByFormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
+                                       String segment, Filter filter, double samplingRate, String inputBeginDate,
+                                       String inputEndDate, GroupByType groupByType) {
+    super(projectId, realBeginDate, realEndDate, event, segment, filter, samplingRate, inputBeginDate, inputEndDate);
+    this.groupByType = groupByType;
   }
 
   public GroupByFormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
@@ -90,8 +105,10 @@ public class GroupByFormulaQueryDescriptor extends FormulaQueryDescriptor {
 
     sb.append(SEPARATOR_CHAR_CACHE);
     sb.append(getGroupByType());
-    sb.append(SEPARATOR_CHAR_CACHE);
-    sb.append(getGroupBy());
+    if (StringUtils.isNotBlank(getGroupBy())) {
+      sb.append(SEPARATOR_CHAR_CACHE);
+      sb.append(getGroupBy());
+    }
 
     if (!ignore) {
       toStringGeneric(sb);
@@ -153,7 +170,10 @@ public class GroupByFormulaQueryDescriptor extends FormulaQueryDescriptor {
   public LogicalPlan toLogicalPlain() throws PlanException {
     List<LogicalOperator> logicalOperators = new ArrayList<LogicalOperator>();
     boolean userPropertyGroupBy = USER_PROPERTIES.equals(this.groupByType);
-    String[] additionalProjectionOfEventTable = userPropertyGroupBy ? null : new String[]{KEY_WORD_EVENT + groupBy};
+    boolean eventValGroupBy = EVENT_VAL.equals(this.getGroupByType());
+
+    String[] additionalProjectionOfEventTable =
+      (userPropertyGroupBy || eventValGroupBy) ? null : new String[]{KEY_WORD_EVENT + groupBy};
 
     LogicalOperator eventTableScan = getEventScan(this.projectId, this.event, this.realBeginDate, this.realEndDate,
                                                   additionalProjectionOfEventTable);
@@ -222,6 +242,8 @@ public class GroupByFormulaQueryDescriptor extends FormulaQueryDescriptor {
       } else {
         groupByExpr = groupBy;
       }
+    } else if (eventValGroupBy) {
+      groupByExpr = KEY_WORD_VALUE;
     } else {
       groupByExpr = KEY_WORD_EVENT + groupBy;
     }
