@@ -1,7 +1,9 @@
 *.class
+
 # Intellij idea
 *.iml
 .idea/*
+WebInterface.iml
 
 # Package Files #
 *.jar
