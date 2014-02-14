@@ -18,7 +18,7 @@ public class TestCommonQueryLogicalPlanNoSeg extends TestLogicalPlanBase {
   public void testBuildPlan() throws Exception {
     String name = "common.day.noseg.json";
     FormulaQueryDescriptor fqd = new CommonFormulaQueryDescriptor("age", TEST_REAL_BEGIN_DATE, TEST_REAL_END_DATE,
-                                                                  "visit.*", null, Filter.ALL, 1d, "2013-03-10",
+                                                                  "visit.*", null, Filter.ALL, "2013-03-10",
                                                                   "2013-03-12", Interval.MIN5, CommonQueryType.NORMAL);
     SegmentEvaluator.evaluate(fqd);
     LogicalPlan logicalPlan = fqd.toLogicalPlain();

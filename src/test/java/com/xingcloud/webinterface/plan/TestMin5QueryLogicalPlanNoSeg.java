@@ -40,8 +40,8 @@ public class TestMin5QueryLogicalPlanNoSeg extends TestLogicalPlanBase {
       s1 = DateUtils.date2Short(d1);
       s2 = DateUtils.date2Short(d2);
       event = r.nextBoolean() ? TEST_EVENT_VISIT : TEST_EVENT_VISIT;
-      fqd = new CommonFormulaQueryDescriptor(TEST_TABLE, s1, s2, event, null, Filter.ALL, 1d, "2013-03-10",
-                                             "2013-03-12", Interval.HOUR, CommonQueryType.NORMAL);
+      fqd = new CommonFormulaQueryDescriptor(TEST_TABLE, s1, s2, event, null, Filter.ALL, "2013-03-10", "2013-03-12",
+                                             Interval.HOUR, CommonQueryType.NORMAL);
 
       SegmentEvaluator.evaluate(fqd);
       LogicalPlan logicalPlan = fqd.toLogicalPlain();

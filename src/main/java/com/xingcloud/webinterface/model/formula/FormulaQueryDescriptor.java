@@ -63,7 +63,6 @@ public abstract class FormulaQueryDescriptor {
   protected Filter filter;
 
   // 其他信息
-  protected double samplingRate;
   protected Set<Function> functions = EnumSet.noneOf(Function.class);
   protected long dayDistance;
   protected DateTruncateType dateTruncateType;
@@ -93,7 +92,7 @@ public abstract class FormulaQueryDescriptor {
   }
 
   public FormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
-                                String segment, Filter filter, double samplingRate) {
+                                String segment, Filter filter) {
     super();
     this.projectId = projectId;
     this.realBeginDate = realBeginDate;
@@ -101,7 +100,6 @@ public abstract class FormulaQueryDescriptor {
     this.event = event;
     this.segment = segment;
     this.filter = filter;
-    this.samplingRate = samplingRate;
     try {
       setDayDistance(span(realBeginDate, realEndDate));
     } catch (ParseException e) {
@@ -115,8 +113,7 @@ public abstract class FormulaQueryDescriptor {
   }
 
   public FormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
-                                String segment, Filter filter, double samplingRate, String inputBeginDate,
-                                String inputEndDate) {
+                                String segment, Filter filter, String inputBeginDate, String inputEndDate) {
     super();
     this.projectId = projectId;
     this.realBeginDate = realBeginDate;
@@ -124,7 +121,6 @@ public abstract class FormulaQueryDescriptor {
     this.event = event;
     this.segment = segment;
     this.filter = filter;
-    this.samplingRate = samplingRate;
     try {
       setDayDistance(span(realBeginDate, realEndDate));
     } catch (ParseException e) {
@@ -175,8 +171,6 @@ public abstract class FormulaQueryDescriptor {
     sb.append(getInputEndDate());
     sb.append(SEPARATOR_CHAR_CACHE);
     sb.append(getFunctions());
-    sb.append(SEPARATOR_CHAR_CACHE);
-    sb.append(getSamplingRate());
     sb.append(SEPARATOR_CHAR_CACHE);
     sb.append(getDateTruncateType());
   }
@@ -298,14 +292,6 @@ public abstract class FormulaQueryDescriptor {
 
   public void setFilter(Filter filter) {
     this.filter = filter;
-  }
-
-  public double getSamplingRate() {
-    return samplingRate;
-  }
-
-  public void setSamplingRate(double samplingRate) {
-    this.samplingRate = samplingRate;
   }
 
   public Set<Function> getFunctions() {

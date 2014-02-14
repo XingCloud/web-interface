@@ -32,21 +32,21 @@ public class TestMultiDescriptor {
     String segment5 = "{\"register_time\":[{\"op\":\"gte\",\"expr\":\"2013-08-14\",\"type\":\"CONST\"},{\"op\":\"lte\",\"expr\":\"2013-08-17\",\"type\":\"CONST\"}]}";
     FormulaQueryDescriptor[] descriptors = new FormulaQueryDescriptor[6];
     descriptors[0] = new CommonFormulaQueryDescriptor(table, "2013-08-14", "2013-08-14", event, segment1, Filter.ALL,
-                                                      1d, "2013-03-10", "2013-03-12", Interval.PERIOD,
+                                                      "2013-03-10", "2013-03-12", Interval.PERIOD,
                                                       CommonQueryType.NORMAL);
     descriptors[1] = new CommonFormulaQueryDescriptor(table, "2013-08-15", "2013-08-15", event, segment2, Filter.ALL,
-                                                      1d, "2013-08-15", "2013-08-15", Interval.PERIOD,
+                                                      "2013-08-15", "2013-08-15", Interval.PERIOD,
                                                       CommonQueryType.NORMAL);
     descriptors[2] = new CommonFormulaQueryDescriptor(table, "2013-08-16", "2013-08-16", event, segment3, Filter.ALL,
-                                                      1d, "2013-08-16", "2013-08-16", Interval.PERIOD,
+                                                      "2013-08-16", "2013-08-16", Interval.PERIOD,
                                                       CommonQueryType.NORMAL);
     descriptors[3] = new CommonFormulaQueryDescriptor(table, "2013-08-17", "2013-08-17", event, segment4, Filter.ALL,
-                                                      1d, "2013-08-17", "2013-08-17", Interval.PERIOD,
+                                                      "2013-08-17", "2013-08-17", Interval.PERIOD,
                                                       CommonQueryType.NORMAL);
     descriptors[4] = new CommonFormulaQueryDescriptor(table, "2013-08-14", "2013-08-17", event, segment5, Filter.ALL,
-                                                      1d, "2013-08-14", "2013-08-17", Interval.PERIOD,
+                                                      "2013-08-14", "2013-08-17", Interval.PERIOD,
                                                       CommonQueryType.NORMAL);
-    descriptors[5] = new CommonFormulaQueryDescriptor(table, "2013-08-14", "2013-08-17", event, null, Filter.ALL, 1d,
+    descriptors[5] = new CommonFormulaQueryDescriptor(table, "2013-08-14", "2013-08-17", event, null, Filter.ALL,
                                                       "2013-08-14", "2013-08-17", Interval.PERIOD,
                                                       CommonQueryType.NORMAL);
 

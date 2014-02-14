@@ -54,35 +54,39 @@ public class GroupByFormulaQueryDescriptor extends FormulaQueryDescriptor {
 
   private GroupByType groupByType;
 
+  // 定义参考GroupByFormulaParameterItem.combineValue
+  private boolean combineValue;
+
   public GroupByFormulaQueryDescriptor() {
     super();
   }
 
   public GroupByFormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
-                                       String segment, Filter filter, double samplingRate, GroupByType groupByType) {
-    super(projectId, realBeginDate, realEndDate, event, segment, filter, samplingRate);
+                                       String segment, Filter filter, GroupByType groupByType, boolean combineValue) {
+    super(projectId, realBeginDate, realEndDate, event, segment, filter);
     this.groupByType = groupByType;
+    this.combineValue = combineValue;
   }
 
   public GroupByFormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
-                                       String segment, Filter filter, double samplingRate, String inputBeginDate,
-                                       String inputEndDate, GroupByType groupByType) {
-    super(projectId, realBeginDate, realEndDate, event, segment, filter, samplingRate, inputBeginDate, inputEndDate);
+                                       String segment, Filter filter, String inputBeginDate, String inputEndDate,
+                                       GroupByType groupByType, boolean combineValue) {
+    super(projectId, realBeginDate, realEndDate, event, segment, filter, inputBeginDate, inputEndDate);
     this.groupByType = groupByType;
+    this.combineValue = combineValue;
   }
 
   public GroupByFormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
-                                       String segment, Filter filter, double samplingRate, String groupBy,
-                                       GroupByType groupByType) {
-    super(projectId, realBeginDate, realEndDate, event, segment, filter, samplingRate);
+                                       String segment, Filter filter, String groupBy, GroupByType groupByType) {
+    super(projectId, realBeginDate, realEndDate, event, segment, filter);
     this.groupBy = groupBy;
     this.groupByType = groupByType;
   }
 
   public GroupByFormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
-                                       String segment, Filter filter, double samplingRate, String inputBeginDate,
-                                       String inputEndDate, String groupBy, GroupByType groupByType) {
-    super(projectId, realBeginDate, realEndDate, event, segment, filter, samplingRate, inputBeginDate, inputEndDate);
+                                       String segment, Filter filter, String inputBeginDate, String inputEndDate,
+                                       String groupBy, GroupByType groupByType) {
+    super(projectId, realBeginDate, realEndDate, event, segment, filter, inputBeginDate, inputEndDate);
     this.groupBy = groupBy;
     this.groupByType = groupByType;
   }

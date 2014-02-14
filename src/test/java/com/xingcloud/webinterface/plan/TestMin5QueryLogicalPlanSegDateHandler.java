@@ -21,7 +21,7 @@ public class TestMin5QueryLogicalPlanSegDateHandler extends TestLogicalPlanBase 
     String segment = "{\"first_pay_time\":[{\"op\":\"eq\",\"expr\":\"2013-08-31\",\"type\":\"CONST\"}]," + "\"register_time\":[{\"op\":\"gte\",\"expr\":\"$date_add(0)\",\"type\":\"VAR\"},{\"op\":\"lte\",\"expr\":\"$date_add(0)\",\"type\":\"VAR\"}]}";
     segment = "{\"register_time\":[{\"op\":\"gte\",\"expr\":\"$date_add(0)\",\"type\":\"VAR\"},{\"op\":\"lte\",\"expr\":\"$date_add(0)\",\"type\":\"VAR\"}]}";
     FormulaQueryDescriptor fqd = new CommonFormulaQueryDescriptor(TEST_TABLE, TEST_REAL_BEGIN_DATE, TEST_REAL_END_DATE,
-                                                                  TEST_EVENT_VISIT, segment, Filter.ALL, 1d, "2013-03-10",
+                                                                  TEST_EVENT_VISIT, segment, Filter.ALL, "2013-03-10",
                                                                   "2013-03-12", Interval.HOUR, CommonQueryType.NORMAL);
     SegmentEvaluator.evaluate(fqd);
     LogicalPlan logicalPlan = fqd.toLogicalPlain();

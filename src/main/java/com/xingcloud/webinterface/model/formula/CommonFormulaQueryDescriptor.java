@@ -62,17 +62,17 @@ public class CommonFormulaQueryDescriptor extends FormulaQueryDescriptor {
   }
 
   public CommonFormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
-                                      String segment, Filter filter, double samplingRate, Interval interval,
+                                      String segment, Filter filter, Interval interval,
                                       CommonQueryType commonQueryType) {
-    super(projectId, realBeginDate, realEndDate, event, segment, filter, samplingRate);
+    super(projectId, realBeginDate, realEndDate, event, segment, filter);
     this.interval = interval;
     this.commonQueryType = commonQueryType;
   }
 
   public CommonFormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
-                                      String segment, Filter filter, double samplingRate, String inputBeginDate,
-                                      String inputEndDate, Interval interval, CommonQueryType commonQueryType) {
-    super(projectId, realBeginDate, realEndDate, event, segment, filter, samplingRate, inputBeginDate, inputEndDate);
+                                      String segment, Filter filter, String inputBeginDate, String inputEndDate,
+                                      Interval interval, CommonQueryType commonQueryType) {
+    super(projectId, realBeginDate, realEndDate, event, segment, filter, inputBeginDate, inputEndDate);
     this.interval = interval;
     this.commonQueryType = commonQueryType;
   }

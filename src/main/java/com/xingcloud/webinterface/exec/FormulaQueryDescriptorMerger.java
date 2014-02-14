@@ -70,7 +70,7 @@ public class FormulaQueryDescriptorMerger {
     Collection<FormulaQueryDescriptor> descriptors = new ArrayList<FormulaQueryDescriptor>();
     descriptors.add(
       new CommonFormulaQueryDescriptor("a", "2013-01-01", "2013-01-01", "visit.*", WebInterfaceConstants.TOTAL_USER,
-                                       Filter.ALL, 1d, Interval.DAY, CommonQueryType.NORMAL));
+                                       Filter.ALL, Interval.DAY, CommonQueryType.NORMAL));
     Map<EventAndFilterBEPair, Collection<FormulaQueryDescriptor>> map = mergeDescriptor(descriptors);
 
     System.out.println("---------------------------------");
@@ -86,13 +86,13 @@ public class FormulaQueryDescriptorMerger {
     List<FormulaQueryDescriptor> descriptors = new ArrayList<FormulaQueryDescriptor>();
     descriptors.add(
       new CommonFormulaQueryDescriptor("a", "2013-01-10", "2013-01-10", "visit.*", WebInterfaceConstants.TOTAL_USER,
-                                       Filter.ALL, 1d, Interval.DAY, CommonQueryType.NORMAL));
+                                       Filter.ALL, Interval.DAY, CommonQueryType.NORMAL));
     descriptors.add(
       new CommonFormulaQueryDescriptor("a", "2013-01-12", "2013-01-13", "visit.*", WebInterfaceConstants.TOTAL_USER,
-                                       Filter.ALL, 1d, Interval.DAY, CommonQueryType.NORMAL));
+                                       Filter.ALL, Interval.DAY, CommonQueryType.NORMAL));
     descriptors.add(
       new CommonFormulaQueryDescriptor("a", "2013-01-16", "2013-01-20", "visit.*", WebInterfaceConstants.TOTAL_USER,
-                                       Filter.ALL, 1d, Interval.DAY, CommonQueryType.NORMAL));
+                                       Filter.ALL, Interval.DAY, CommonQueryType.NORMAL));
     Collections.shuffle(descriptors);
 
     Map<EventAndFilterBEPair, Collection<FormulaQueryDescriptor>> map = mergeDescriptor(descriptors);
@@ -110,13 +110,13 @@ public class FormulaQueryDescriptorMerger {
     List<FormulaQueryDescriptor> descriptors = new ArrayList<FormulaQueryDescriptor>();
     descriptors.add(
       new CommonFormulaQueryDescriptor("a", "2013-01-10", "2013-01-10", "visit.*", WebInterfaceConstants.TOTAL_USER,
-                                       Filter.ALL, 1d, Interval.DAY, CommonQueryType.NORMAL));
+                                       Filter.ALL, Interval.DAY, CommonQueryType.NORMAL));
     descriptors.add(
       new CommonFormulaQueryDescriptor("a", "2013-01-11", "2013-01-11", "visit.*", WebInterfaceConstants.TOTAL_USER,
-                                       Filter.ALL, 1d, Interval.DAY, CommonQueryType.NORMAL));
+                                       Filter.ALL, Interval.DAY, CommonQueryType.NORMAL));
     descriptors.add(
       new CommonFormulaQueryDescriptor("a", "2013-01-12", "2013-01-12", "visit.*", WebInterfaceConstants.TOTAL_USER,
-                                       Filter.ALL, 1d, Interval.DAY, CommonQueryType.NORMAL));
+                                       Filter.ALL, Interval.DAY, CommonQueryType.NORMAL));
     Collections.shuffle(descriptors);
     Map<EventAndFilterBEPair, Collection<FormulaQueryDescriptor>> map = mergeDescriptor(descriptors);
 
@@ -133,22 +133,22 @@ public class FormulaQueryDescriptorMerger {
     List<FormulaQueryDescriptor> descriptors = new ArrayList<FormulaQueryDescriptor>();
     descriptors.add(
       new CommonFormulaQueryDescriptor("a", "2013-01-01", "2013-01-07", "visit.*", WebInterfaceConstants.TOTAL_USER,
-                                       Filter.ALL, 1d, Interval.DAY, CommonQueryType.NORMAL));
+                                       Filter.ALL, Interval.DAY, CommonQueryType.NORMAL));
     descriptors.add(
       new CommonFormulaQueryDescriptor("a", "2013-01-02", "2013-01-03", "visit.*", WebInterfaceConstants.TOTAL_USER,
-                                       Filter.ALL, 1d, Interval.DAY, CommonQueryType.NORMAL));
+                                       Filter.ALL, Interval.DAY, CommonQueryType.NORMAL));
     descriptors.add(
       new CommonFormulaQueryDescriptor("a", "2013-01-05", "2013-01-10", "visit.*", WebInterfaceConstants.TOTAL_USER,
-                                       Filter.ALL, 1d, Interval.DAY, CommonQueryType.NORMAL));
+                                       Filter.ALL, Interval.DAY, CommonQueryType.NORMAL));
     descriptors.add(
       new CommonFormulaQueryDescriptor("a", "2013-01-12", "2013-01-12", "visit.*", WebInterfaceConstants.TOTAL_USER,
-                                       Filter.ALL, 1d, Interval.DAY, CommonQueryType.NORMAL));
+                                       Filter.ALL, Interval.DAY, CommonQueryType.NORMAL));
     descriptors.add(
       new CommonFormulaQueryDescriptor("a", "2013-01-13", "2013-01-16", "visit.*", WebInterfaceConstants.TOTAL_USER,
-                                       Filter.ALL, 1d, Interval.DAY, CommonQueryType.NORMAL));
+                                       Filter.ALL, Interval.DAY, CommonQueryType.NORMAL));
     descriptors.add(
       new CommonFormulaQueryDescriptor("a", "2013-01-14", "2013-01-20", "c.*", WebInterfaceConstants.TOTAL_USER,
-                                       Filter.ALL, 1d, Interval.DAY, CommonQueryType.NORMAL));
+                                       Filter.ALL, Interval.DAY, CommonQueryType.NORMAL));
     Collections.shuffle(descriptors);
 
     Map<EventAndFilterBEPair, Collection<FormulaQueryDescriptor>> map = mergeDescriptor(descriptors);

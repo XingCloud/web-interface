@@ -1,6 +1,5 @@
 package com.xingcloud.webinterface.plan;
 
-import com.xingcloud.qm.service.Submit;
 import com.xingcloud.webinterface.enums.GroupByType;
 import com.xingcloud.webinterface.model.Filter;
 import com.xingcloud.webinterface.model.formula.FormulaQueryDescriptor;
@@ -18,8 +17,8 @@ public class TestEventValueGroupByQueryLogicalPlanNoSeg extends TestLogicalPlanB
   public void testBuildPlan() throws Exception {
     String name = "groupby.event.val.noseg.json";
     FormulaQueryDescriptor fqd = new GroupByFormulaQueryDescriptor(TEST_TABLE, TEST_REAL_BEGIN_DATE, TEST_REAL_END_DATE,
-                                                                   TEST_EVENT, null, Filter.ALL, 1d,
-                                                                   GroupByType.EVENT_VAL);
+                                                                   TEST_EVENT, null, Filter.ALL, GroupByType.EVENT_VAL,
+                                                                   false);
     SegmentEvaluator.evaluate(fqd);
     LogicalPlan logicalPlan = fqd.toLogicalPlain();
     String planString = Plans.DEFAULT_DRILL_CONFIG.getMapper().writeValueAsString(logicalPlan);

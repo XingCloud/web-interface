@@ -19,7 +19,7 @@ public class TestEventValueGroupByQueryLogicalPlanSeg extends TestLogicalPlanBas
     String name = "groupby.event.val.withseg.json";
     String segment = "{\"language\":[{\"op\":\"eq\",\"expr\":\"en\",\"type\":\"CONST\"}]}";
     FormulaQueryDescriptor fqd = new GroupByFormulaQueryDescriptor(TEST_TABLE, TEST_REAL_BEGIN_DATE, TEST_REAL_END_DATE,
-                                                                   "*.*", segment, Filter.ALL, 1d, "event0",
+                                                                   "*.*", segment, Filter.ALL, "event0",
                                                                    GroupByType.EVENT);
     SegmentEvaluator.evaluate(fqd);
     LogicalPlan logicalPlan = fqd.toLogicalPlain();

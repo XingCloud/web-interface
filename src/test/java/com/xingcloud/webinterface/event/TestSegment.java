@@ -21,8 +21,7 @@ public class TestSegment {
   public void test() throws SegmentException {
     String segment = "{\"register_time\":[{\"op\":\"gte\",\"expr\":\"$date_add(0)\",\"type\":\"VAR\"},{\"op\":\"lte\",\"expr\":\"$date_add(0)\",\"type\":\"VAR\"}]}";
     FormulaQueryDescriptor fqd = new CommonFormulaQueryDescriptor("age", "2013-09-01", "2013-09-01", "visit.*", segment,
-                                                                  Filter.ALL, 1d, Interval.HOUR,
-                                                                  CommonQueryType.NORMAL);
+                                                                  Filter.ALL, Interval.HOUR, CommonQueryType.NORMAL);
 
     SegmentEvaluator.evaluate(fqd);
     System.out.println(fqd);

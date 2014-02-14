@@ -313,7 +313,7 @@ public class AllProjectPayAmountJob implements Job {
         continue;
       }
       descriptor = new CommonFormulaQueryDescriptor(projectId, operationDate, operationDate, "pay.gross.*", TOTAL_USER,
-                                                    Filter.ALL, 1.0d, DAY, NORMAL);
+                                                    Filter.ALL, DAY, NORMAL);
       descriptor.addFunction(SUM);
       descriptor.setDateTruncateType(PASS);
       payAmountJob = new PayAmountJob(projectId, descriptor);

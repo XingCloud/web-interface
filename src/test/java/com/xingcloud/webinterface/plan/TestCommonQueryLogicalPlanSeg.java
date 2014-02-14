@@ -29,8 +29,8 @@ public class TestCommonQueryLogicalPlanSeg extends TestLogicalPlanBase {
     System.out.println(segment);
 
     FormulaQueryDescriptor fqd = new CommonFormulaQueryDescriptor("sof-qqsplayer", "2013-11-28", "2013-12-09",
-                                                                  "install.*", segment, Filter.ALL, 1d,
-                                                                  "2013-11-28", "2013-12-08", Interval.PERIOD,
+                                                                  "install.*", segment, Filter.ALL, "2013-11-28",
+                                                                  "2013-12-08", Interval.PERIOD,
                                                                   CommonQueryType.NORMAL);
     SegmentEvaluator.evaluate(fqd);
 
@@ -39,7 +39,7 @@ public class TestCommonQueryLogicalPlanSeg extends TestLogicalPlanBase {
     System.out.println(planString);
     write2File(name, planString);
 
-    logicalPlan=Plans.DEFAULT_DRILL_CONFIG.getMapper().readValue(planString,LogicalPlan.class);
+    logicalPlan = Plans.DEFAULT_DRILL_CONFIG.getMapper().readValue(planString, LogicalPlan.class);
     System.out.println(logicalPlan);
 //    Submit submit = (Submit) SERVICE;
 //    submit.submit(fqd.getKey(), planString, Submit.SubmitQueryType.PLAN);
