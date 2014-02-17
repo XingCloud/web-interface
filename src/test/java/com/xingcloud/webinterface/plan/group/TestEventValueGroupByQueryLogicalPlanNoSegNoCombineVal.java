@@ -19,7 +19,7 @@ public class TestEventValueGroupByQueryLogicalPlanNoSegNoCombineVal extends Test
   @Test
   public void testBuildPlan() throws Exception {
     String name = "groupby.event.val.noseg.json";
-    FormulaQueryDescriptor fqd = new GroupByFormulaQueryDescriptor(TEST_TABLE, "2014-02-01", "2014-02-01",
+    FormulaQueryDescriptor fqd = new GroupByFormulaQueryDescriptor(TEST_TABLE, "2014-02-06", "2014-02-06",
                                                                    "event_val_test", null, Filter.ALL,
                                                                    GroupByType.EVENT_VAL, false);
     SegmentEvaluator.evaluate(fqd);
