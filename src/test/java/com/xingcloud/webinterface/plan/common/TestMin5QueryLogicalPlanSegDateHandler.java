@@ -1,4 +1,4 @@
-package com.xingcloud.webinterface.plan;
+package com.xingcloud.webinterface.plan.common;
 
 import com.xingcloud.qm.service.Submit;
 import com.xingcloud.webinterface.enums.CommonQueryType;
@@ -6,6 +6,8 @@ import com.xingcloud.webinterface.enums.Interval;
 import com.xingcloud.webinterface.model.Filter;
 import com.xingcloud.webinterface.model.formula.CommonFormulaQueryDescriptor;
 import com.xingcloud.webinterface.model.formula.FormulaQueryDescriptor;
+import com.xingcloud.webinterface.plan.Plans;
+import com.xingcloud.webinterface.plan.TestLogicalPlanBase;
 import com.xingcloud.webinterface.segment.SegmentEvaluator;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.junit.Test;

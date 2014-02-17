@@ -38,7 +38,7 @@ public class TestLogicalPlanBase {
     URI uri;
 
     builder.setScheme("http");
-    builder.setHost("69.28.58.61");
+    builder.setHost("10.1.18.126");
     builder.setPort(8182);
     builder.setPath("/qm/q");
 

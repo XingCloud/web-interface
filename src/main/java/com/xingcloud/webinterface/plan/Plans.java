@@ -64,9 +64,13 @@ public class Plans {
   public static final String KEY_WORD_USER = "user";
   public static final String KEY_WORD_VALUE = "value";
   public static final String KEY_WORD_VAL = "val";
+  public static final String KEY_WORD_SUM_VAL_PER_UID = "sum_val_per_uid";
   public static final String KEY_WORD_DIMENSION = "dimension";
   public static final String KEY_WORD_SGMT = "sgmt";
   public static final String KEY_WORD_TIMESTAMP = "timestamp";
+  public static final char EVENT_VAL_SEP = '_';
+  public static final char EVENT_VAL_GROUPBY_COMBINE = 'C';
+  public static final char EVENT_VAL_GROUPBY_INDEPENDENT = 'I';
 
   public static FunctionRegistry DFR = new FunctionRegistry(DrillConfig.create());
 
