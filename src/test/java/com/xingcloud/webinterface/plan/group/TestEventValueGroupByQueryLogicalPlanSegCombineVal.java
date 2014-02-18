@@ -1,9 +1,11 @@
-package com.xingcloud.webinterface.plan;
+package com.xingcloud.webinterface.plan.group;
 
 import com.xingcloud.webinterface.enums.GroupByType;
 import com.xingcloud.webinterface.model.Filter;
 import com.xingcloud.webinterface.model.formula.FormulaQueryDescriptor;
 import com.xingcloud.webinterface.model.formula.GroupByFormulaQueryDescriptor;
+import com.xingcloud.webinterface.plan.Plans;
+import com.xingcloud.webinterface.plan.TestLogicalPlanBase;
 import com.xingcloud.webinterface.sql.SqlSegmentParser;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.junit.Test;
@@ -11,11 +13,11 @@ import org.junit.Test;
 /**
  * User: Z J Wu Date: 13-8-6 Time: 下午4:36 Package: com.xingcloud.webinterface.plan
  */
-public class TestEventGroupByQueryLogicalPlanSeg extends TestLogicalPlanBase {
+public class TestEventValueGroupByQueryLogicalPlanSegCombineVal extends TestLogicalPlanBase {
 
   @Test
   public void testBuildPlan() throws Exception {
-    String name = "groupby.event.withseg.json";
+    String name = "groupby.event.val.noseg.combine.json";
     String sqlSegment;
     // user segment
     sqlSegment = "select uid from user where grade > '100'";
@@ -37,8 +39,8 @@ public class TestEventGroupByQueryLogicalPlanSeg extends TestLogicalPlanBase {
     sqlSegment = "select uid from ((select uid from deu_age where event='buy.banana.*' and date>=date_add('s',2) and date<=date_add('e',0)) as deu1 anti join (select uid from deu_age where event='buy.apple.*' and date>=date_add('s',0) and date<= date_add('e',-2)) as deu2 on deu1.uid=deu2.uid)";
 
     FormulaQueryDescriptor fqd = new GroupByFormulaQueryDescriptor(TEST_TABLE, TEST_REAL_BEGIN_DATE, TEST_REAL_END_DATE,
-                                                                   "*.*", sqlSegment, Filter.ALL, "0",
-                                                                   GroupByType.EVENT);
+                                                                   TEST_EVENT, sqlSegment, Filter.ALL,
+                                                                   GroupByType.EVENT_VAL, true);
     SqlSegmentParser.getInstance().evaluate(fqd);
     LogicalPlan logicalPlan = fqd.toLogicalPlain();
     String planString = Plans.DEFAULT_DRILL_CONFIG.getMapper().writeValueAsString(logicalPlan);

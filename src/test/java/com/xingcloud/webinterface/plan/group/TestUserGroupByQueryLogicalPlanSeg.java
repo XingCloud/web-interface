@@ -1,11 +1,12 @@
-package com.xingcloud.webinterface.plan;
+package com.xingcloud.webinterface.plan.group;
 
 import com.xingcloud.qm.service.Submit;
-import com.xingcloud.webinterface.enums.CommonQueryType;
-import com.xingcloud.webinterface.enums.Interval;
+import com.xingcloud.webinterface.enums.GroupByType;
 import com.xingcloud.webinterface.model.Filter;
-import com.xingcloud.webinterface.model.formula.CommonFormulaQueryDescriptor;
 import com.xingcloud.webinterface.model.formula.FormulaQueryDescriptor;
+import com.xingcloud.webinterface.model.formula.GroupByFormulaQueryDescriptor;
+import com.xingcloud.webinterface.plan.Plans;
+import com.xingcloud.webinterface.plan.TestLogicalPlanBase;
 import com.xingcloud.webinterface.sql.SqlSegmentParser;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.junit.Test;
@@ -13,11 +14,11 @@ import org.junit.Test;
 /**
  * User: Z J Wu Date: 13-8-6 Time: 下午4:36 Package: com.xingcloud.webinterface.plan
  */
-public class TestMin5QueryLogicalPlanSeg extends TestLogicalPlanBase {
+public class TestUserGroupByQueryLogicalPlanSeg extends TestLogicalPlanBase {
 
   @Test
   public void testBuildPlan() throws Exception {
-    String name = "common.hour.withseg.json";
+    String name = "groupby.prop.withseg.json";
     String sqlSegment;
     // user segment
     sqlSegment = "select uid from user where grade > '100'";
@@ -37,16 +38,15 @@ public class TestMin5QueryLogicalPlanSeg extends TestLogicalPlanBase {
 //    sqlSegment = "select uid from deu where event='pay.*' and date >= '2013-10-01' and date <= '2013-10-07'";
 //    sqlSegment = "select uid from deu where event='pay.*' and date = '2013-10-01';select uid from deu where event='buy.*' and date = '2013-10-02'";
     sqlSegment = "select uid from ((select uid from deu_age where event='buy.banana.*' and date>=date_add('s',2) and date<=date_add('e',0)) as deu1 anti join (select uid from deu_age where event='buy.apple.*' and date>=date_add('s',0) and date<= date_add('e',-2)) as deu2 on deu1.uid=deu2.uid)";
-
-    FormulaQueryDescriptor fqd = new CommonFormulaQueryDescriptor(TEST_TABLE, TEST_REAL_BEGIN_DATE, TEST_REAL_END_DATE,
-                                                                  TEST_EVENT, sqlSegment, Filter.ALL, "2013-03-10",
-                                                                  "2013-03-12", Interval.HOUR, CommonQueryType.NORMAL);
+    FormulaQueryDescriptor fqd = new GroupByFormulaQueryDescriptor(TEST_TABLE, TEST_REAL_BEGIN_DATE, TEST_REAL_END_DATE,
+                                                                   TEST_EVENT, sqlSegment, Filter.ALL, "geoip",
+                                                                   GroupByType.USER_PROPERTIES);
     SqlSegmentParser.getInstance().evaluate(fqd);
     LogicalPlan logicalPlan = fqd.toLogicalPlain();
     String planString = Plans.DEFAULT_DRILL_CONFIG.getMapper().writeValueAsString(logicalPlan);
     System.out.println(planString);
-//    write2File(name, planString);
-//    Submit submit = (Submit) SERVICE;
-//    submit.submit(fqd.getKey(), planString, Submit.SubmitQueryType.PLAN);
+    write2File(name, planString);
+    Submit submit = (Submit) SERVICE;
+    submit.submit(fqd.getKey(), planString, Submit.SubmitQueryType.PLAN);
   }
 }

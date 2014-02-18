@@ -1,10 +1,11 @@
-package com.xingcloud.webinterface.plan;
+package com.xingcloud.webinterface.plan.group;
 
-import com.xingcloud.qm.service.Submit;
 import com.xingcloud.webinterface.enums.GroupByType;
 import com.xingcloud.webinterface.model.Filter;
 import com.xingcloud.webinterface.model.formula.FormulaQueryDescriptor;
 import com.xingcloud.webinterface.model.formula.GroupByFormulaQueryDescriptor;
+import com.xingcloud.webinterface.plan.Plans;
+import com.xingcloud.webinterface.plan.TestLogicalPlanBase;
 import com.xingcloud.webinterface.sql.SqlSegmentParser;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.junit.Test;
@@ -12,11 +13,11 @@ import org.junit.Test;
 /**
  * User: Z J Wu Date: 13-8-6 Time: 下午4:36 Package: com.xingcloud.webinterface.plan
  */
-public class TestEventValueGroupByQueryLogicalPlanSeg extends TestLogicalPlanBase {
+public class TestEventValueGroupByQueryLogicalPlanSegNoCombineVal extends TestLogicalPlanBase {
 
   @Test
   public void testBuildPlan() throws Exception {
-    String name = "groupby.event.val.noseg.json";
+    String name = "groupby.event.val.noseg.nocombine.json";
     String sqlSegment;
     // user segment
     sqlSegment = "select uid from user where grade > '100'";
@@ -39,7 +40,7 @@ public class TestEventValueGroupByQueryLogicalPlanSeg extends TestLogicalPlanBas
 
     FormulaQueryDescriptor fqd = new GroupByFormulaQueryDescriptor(TEST_TABLE, TEST_REAL_BEGIN_DATE, TEST_REAL_END_DATE,
                                                                    TEST_EVENT, sqlSegment, Filter.ALL,
-                                                                   GroupByType.EVENT_VAL);
+                                                                   GroupByType.EVENT_VAL, false);
     SqlSegmentParser.getInstance().evaluate(fqd);
     LogicalPlan logicalPlan = fqd.toLogicalPlain();
     String planString = Plans.DEFAULT_DRILL_CONFIG.getMapper().writeValueAsString(logicalPlan);

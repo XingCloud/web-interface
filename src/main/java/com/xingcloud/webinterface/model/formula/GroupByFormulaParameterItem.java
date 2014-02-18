@@ -24,6 +24,23 @@ public class GroupByFormulaParameterItem extends FormulaParameterItem {
   @Expose
   private GroupByType groupByType;
 
+  /*
+    这个属性是为GroupByType=EVENT_VAL准备的.
+    当按照事件的值细分时, 有两种可能性
+    1. 每个事件独立计算uid
+    2. 相同uid合并后, 根据合并后的值做细分
+    例如, 用户A在1日发生了一系列事件pay(30), pay(50), pay(100)
+    那么可以有2种方法细分
+    按第一种, 每一次事件都有用户A
+    即细分项30, 50, 100, A计算3次uid
+    按第二种, 先把A发生的所有pay的值加总=180, 生成1个细分项
+    180, 用户A计算1次
+  */
+  @JsonName("combine_val")
+  @SerializedName("combine_val")
+  @Expose
+  private boolean combineValue;
+
   // 长度, 用于离线计算 离线计算不传输日期, 因此需要指定长度
   @JsonName("length")
   private Integer length;
@@ -57,6 +74,14 @@ public class GroupByFormulaParameterItem extends FormulaParameterItem {
     if (this.groupByType == null) {
       this.groupByType = GroupByType.USER_PROPERTIES;
     }
+  }
+
+  public boolean isCombineValue() {
+    return combineValue;
+  }
+
+  public void setCombineValue(boolean combineValue) {
+    this.combineValue = combineValue;
   }
 
   public String getGroupBy() {
