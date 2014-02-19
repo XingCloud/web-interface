@@ -29,7 +29,7 @@
   <!-- For logical plan string log -->
   <appender name="LOG_LOGICAL_PLAN_STRING"
             class="org.apache.log4j.DailyRollingFileAppender">
-    <param name="File" value="/data/catalina/8082/logs/plan.log" />
+    <param name="File" value="/data/catalina/wi/plan.log" />
     <param name="Append" value="true" />
     <param name="Threshold" value="info" />
     <param name="DatePattern" value="'.'yyyy-MM-dd" />
@@ -41,7 +41,7 @@
   <!-- For input to servlet log -->
   <appender name="LOG_PARAMETERS"
             class="org.apache.log4j.DailyRollingFileAppender">
-    <param name="File" value="/data/catalina/8081/logs/parameters.log" />
+    <param name="File" value="/data/catalina/wi/parameters.log" />
     <param name="Append" value="true" />
     <param name="Threshold" value="info" />
     <param name="DatePattern" value="'.'yyyy-MM-dd" />
@@ -53,7 +53,7 @@
   <!-- For inaccurate cache log -->
   <appender name="LOG_INACCURATE_CACHE"
             class="org.apache.log4j.DailyRollingFileAppender">
-    <param name="File" value="/data/catalina/8081/logs/inaccurate.log" />
+    <param name="File" value="/data/catalina/wi/inaccurate.log" />
     <param name="Append" value="true" />
     <param name="Threshold" value="info" />
     <param name="DatePattern" value="'.'yyyy-MM-dd" />
