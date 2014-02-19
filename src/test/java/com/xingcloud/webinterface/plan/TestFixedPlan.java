@@ -31,9 +31,9 @@ public class TestFixedPlan extends TestLogicalPlanBase {
                                                CommonQueryType.NORMAL);
     fqds[3] = new CommonFormulaQueryDescriptor(projectId, d1, d1, e2, null, Filter.ALL, d1, d1, Interval.HOUR,
                                                CommonQueryType.NORMAL);
-    fqds[4] = new GroupByFormulaQueryDescriptor(projectId, d2, d2, e3, null, Filter.ALL, "1", GroupByType.EVENT);
-    fqds[5] = new GroupByFormulaQueryDescriptor(projectId, d2, d2, e4, null, Filter.ALL, "1", GroupByType.EVENT);
-    fqds[6] = new GroupByFormulaQueryDescriptor(projectId, d2, d2, e5, null, Filter.ALL, "1", GroupByType.EVENT);
+    fqds[4] = new GroupByFormulaQueryDescriptor(projectId, d2, d2, e3, null, Filter.ALL, "1", GroupByType.EVENT, true);
+    fqds[5] = new GroupByFormulaQueryDescriptor(projectId, d2, d2, e4, null, Filter.ALL, "1", GroupByType.EVENT, true);
+    fqds[6] = new GroupByFormulaQueryDescriptor(projectId, d2, d2, e5, null, Filter.ALL, "1", GroupByType.EVENT, true);
 
     String name = "fixedplan";
     String planString;

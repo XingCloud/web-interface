@@ -73,7 +73,7 @@ public class TestRandomFQDSubmitter extends TestLogicalPlanBase {
         }
       } else {
         descriptor = new GroupByFormulaQueryDescriptor(TEST_TABLE, s1, s2, event, seg, Filter.ALL, "ref",
-                                                       GroupByType.USER_PROPERTIES);
+                                                       GroupByType.USER_PROPERTIES, true);
       }
       SegmentEvaluator.evaluate(descriptor);
       LogicalPlan logicalPlan = descriptor.toLogicalPlain();

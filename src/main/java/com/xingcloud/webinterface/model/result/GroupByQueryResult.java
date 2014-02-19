@@ -375,7 +375,7 @@ public class GroupByQueryResult extends QueryResult {
           continue;
         }
         keys.add(obj.toString());
-        LOGGER.info("[FORMATTER] - Known key: " + obj);
+//        LOGGER.info("[FORMATTER] - Known key: " + obj);
       }
       Collections.sort(keys);
       setKeys(keys);

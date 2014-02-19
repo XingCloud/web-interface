@@ -80,19 +80,37 @@ public class GroupByFormulaQueryDescriptor extends FormulaQueryDescriptor {
   }
 
   public GroupByFormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
-                                       String segment, Filter filter, String groupBy, GroupByType groupByType) {
+                                       String segment, Filter filter, String groupBy, GroupByType groupByType,
+                                       boolean combineValue) {
     super(projectId, realBeginDate, realEndDate, event, segment, filter);
     this.groupBy = groupBy;
     this.groupByType = groupByType;
+    this.combineValue = combineValue;
   }
 
   public GroupByFormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
                                        String segment, Filter filter, String inputBeginDate, String inputEndDate,
-                                       String groupBy, GroupByType groupByType) {
+                                       String groupBy, GroupByType groupByType, boolean combineValue) {
     super(projectId, realBeginDate, realEndDate, event, segment, filter, inputBeginDate, inputEndDate);
     this.groupBy = groupBy;
     this.groupByType = groupByType;
+    this.combineValue = combineValue;
   }
+
+//  public GroupByFormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
+//                                       String segment, Filter filter, String groupBy, GroupByType groupByType) {
+//    super(projectId, realBeginDate, realEndDate, event, segment, filter);
+//    this.groupBy = groupBy;
+//    this.groupByType = groupByType;
+//  }
+//
+//  public GroupByFormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
+//                                       String segment, Filter filter, String inputBeginDate, String inputEndDate,
+//                                       String groupBy, GroupByType groupByType) {
+//    super(projectId, realBeginDate, realEndDate, event, segment, filter, inputBeginDate, inputEndDate);
+//    this.groupBy = groupBy;
+//    this.groupByType = groupByType;
+//  }
 
   public String toKey() {
     return toKey(true);

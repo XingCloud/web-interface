@@ -22,7 +22,7 @@ public class TestEventGroupByQueryLogicalPlanSeg extends TestLogicalPlanBase {
     String segment = "{\"language\":[{\"op\":\"eq\",\"expr\":\"en\",\"type\":\"CONST\"}]}";
     FormulaQueryDescriptor fqd = new GroupByFormulaQueryDescriptor(TEST_TABLE, TEST_REAL_BEGIN_DATE, TEST_REAL_END_DATE,
                                                                    "*.*", segment, Filter.ALL, "event0",
-                                                                   GroupByType.EVENT);
+                                                                   GroupByType.EVENT, true);
     SegmentEvaluator.evaluate(fqd);
     LogicalPlan logicalPlan = fqd.toLogicalPlain();
     String planString = Plans.DEFAULT_DRILL_CONFIG.getMapper().writeValueAsString(logicalPlan);

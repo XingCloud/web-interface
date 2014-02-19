@@ -404,15 +404,15 @@ public class IdResultBuilder {
     SliceType sliceType = container.getSliceType();
 
     Map<String, Function> functionMap = extractFunctionMap(container);
-    String event = null;
-    String name, segment, groupBy, scale;
+    String event, name, segment, groupBy, scale;
     ScaleGroup scaleGroup;
     Filter filter;
     Integer nd, ndo;
-    Function function = null;
+    Function function;
     GroupByType groupByType;
     DateTruncateType dtt;
     AggregationPolicy ap;
+    boolean combineValue;
 
 //    double samplingRate = resolveSamplingRateByEvent(event, function);
     List<BeginEndDatePair> pairs = null;
@@ -521,6 +521,7 @@ public class IdResultBuilder {
       scaleGroup = ScaleGroup.buildScaleGroup(scale);
       splitSegments = SegmentSeparator.generateNewSegments(segment);
       groupByItemResults = new ArrayList<GroupByItemResult>(splitSegments.length);
+      combineValue=gbfpi.isCombineValue();
 
       averageMetric = isAverage(nd, ndo);
       // 三种认为可以直接累加结果的情形
@@ -557,7 +558,7 @@ public class IdResultBuilder {
           if (INTERNAL_NA.equals(latestAvailableGroupByDate)) {
             descriptors = new ArrayList<FormulaQueryDescriptor>(1);
             descriptor = new GroupByFormulaQueryDescriptor(projectId, beginDate, endDate, event, splitSegmentPart,
-                                                           filter, groupBy, groupByType);
+                                                           filter, groupBy, groupByType,combineValue);
             descriptor.setDateTruncateType(KILL);
             descriptors.add(descriptor);
             putMonitorInfo(MI_DESCRIPTOR_BUILD);
@@ -575,7 +576,7 @@ public class IdResultBuilder {
               tmpPair = getRealBeginEndDatePair(p.getBeginDate(), p.getEndDate(), nd, ndo);
               descriptor = new GroupByFormulaQueryDescriptor(projectId, tmpPair.getBeginDate(), tmpPair.getEndDate(),
                                                              event, splitSegmentPart, filter, p.getBeginDate(),
-                                                             p.getEndDate(), groupBy, groupByType);
+                                                             p.getEndDate(), groupBy, groupByType,combineValue);
               descriptor.setDateTruncateType(PASS);
 
               // ======================================
@@ -608,7 +609,7 @@ public class IdResultBuilder {
             tmpPair = getRealBeginEndDatePair(p.getBeginDate(), p.getEndDate(), nd, ndo);
             descriptor = new GroupByFormulaQueryDescriptor(projectId, tmpPair.getBeginDate(), tmpPair.getEndDate(),
                                                            event, splitSegmentPart, filter, p.getBeginDate(),
-                                                           p.getEndDate(), groupBy, groupByType);
+                                                           p.getEndDate(), groupBy, groupByType,combineValue);
             truncateDate(descriptor, targetTrimDate, dateTruncateLevel);
             descriptor.addFunction(function);
             descriptors.add(descriptor);
@@ -619,7 +620,7 @@ public class IdResultBuilder {
         } else {
           descriptors = new ArrayList<FormulaQueryDescriptor>(1);
           descriptor = new GroupByFormulaQueryDescriptor(projectId, beginDate, endDate, event, splitSegmentPart, filter,
-                                                         groupBy, groupByType);
+                                                         groupBy, groupByType,combineValue);
           truncateDate(descriptor, targetTrimDate, dateTruncateLevel);
           descriptor.addFunction(function);
           // 处理Segment

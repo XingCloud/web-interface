@@ -21,7 +21,7 @@ public class TestUserGroupByQueryLogicalPlanNoSeg extends TestLogicalPlanBase {
     String name = "groupby.prop.noseg.json";
     FormulaQueryDescriptor fqd = new GroupByFormulaQueryDescriptor(TEST_TABLE, TEST_REAL_BEGIN_DATE, TEST_REAL_END_DATE,
                                                                    TEST_EVENT, null, Filter.ALL, "register_time",
-                                                                   GroupByType.USER_PROPERTIES);
+                                                                   GroupByType.USER_PROPERTIES, true);
     SegmentEvaluator.evaluate(fqd);
     LogicalPlan logicalPlan = fqd.toLogicalPlain();
     String planString = Plans.DEFAULT_DRILL_CONFIG.getMapper().writeValueAsString(logicalPlan);
