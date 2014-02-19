@@ -212,8 +212,8 @@ public class QueryServlet extends AbstractServlet {
     long t2 = System.currentTimeMillis();
 
     putMonitorInfo(new MonitorInfo(MI_STR_TIME_USE_WHOLE_QUERY, t2 - t1));
-    LOGGER.info("[SERVLET-RESULT] - RQR=" + rqr.getClass().getName() + ", ResultJson=Empty=" + StringUtils
-      .isBlank(json) + ", RemoteUser=" + request.getRemoteUser() + ", QueryString=" + parameterJson);
+//    LOGGER.info("[SERVLET-RESULT] - RQR=" + rqr.getClass().getName() + ", ResultJson=Empty=" + StringUtils
+//      .isBlank(json) + ", RemoteUser=" + request.getRemoteUser() + ", QueryString=" + parameterJson);
     LOGGER.info("[SERVLET] - Servlet finished in " + (t2 - t1) + " milliseconds");
   }
 
