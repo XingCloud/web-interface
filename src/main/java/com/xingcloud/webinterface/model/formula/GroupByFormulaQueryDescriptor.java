@@ -79,6 +79,24 @@ public class GroupByFormulaQueryDescriptor extends FormulaQueryDescriptor {
   }
 
   public GroupByFormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
+                                       String sqlSegments, Filter filter, String groupBy, GroupByType groupByType,
+                                       boolean combineValue) {
+    super(projectId, realBeginDate, realEndDate, event, sqlSegments, filter);
+    this.groupBy = groupBy;
+    this.groupByType = groupByType;
+    this.combineValue = combineValue;
+  }
+
+  public GroupByFormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
+                                       String sqlSegments, Filter filter, String inputBeginDate, String inputEndDate,
+                                       String groupBy, GroupByType groupByType, boolean combineValue) {
+    super(projectId, realBeginDate, realEndDate, event, sqlSegments, filter, inputBeginDate, inputEndDate);
+    this.groupBy = groupBy;
+    this.groupByType = groupByType;
+    this.combineValue = combineValue;
+  }
+
+  public GroupByFormulaQueryDescriptor(String projectId, String realBeginDate, String realEndDate, String event,
                                        String sqlSegments, Filter filter, GroupByType groupByType,
                                        boolean combineValue) {
     super(projectId, realBeginDate, realEndDate, event, sqlSegments, filter);
