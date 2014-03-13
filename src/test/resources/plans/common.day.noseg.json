@@ -4,19 +4,19 @@
     version : 1,
     generator : {
       type : "AUTO",
-      info : "xaa"
+      info : "sof-apptools"
     }
   },
   storage : { },
   query : [ {
     op : "scan",
     @id : 1,
-    memo : "deu_xaa,2013-10-01,2013-10-02,response.*.*.*.show.*",
+    memo : "deu_sof-apptools,2014-02-20,2014-02-20,stat.connect.normal.finialsuccess.wifi.recordphone",
     storageengine : "hbase",
     selection : [ {
-      table : "deu_xaa",
+      table : "deu_sof-apptools",
       filter : {
-        expression : " ( ( (event4)  == ('show') )  && ( (date)  == ('20131001') ) )  && ( (event0)  == ('response') ) "
+        expression : " ( ( ( ( ( ( (event2)  == ('normal') )  && ( (event3)  == ('finialsuccess') ) )  && ( (event4)  == ('wifi') ) )  && ( (event5)  == ('recordphone') ) )  && ( (date)  == ('20140220') ) )  && ( (event0)  == ('stat') ) )  && ( (event1)  == ('connect') ) "
       },
       projections : [ {
         ref : "uid",
@@ -24,43 +24,16 @@
       }, {
         ref : "value",
         expr : "value"
-      }, {
-        ref : "timestamp",
-        expr : "timestamp"
-      } ]
-    }, {
-      table : "deu_xaa",
-      filter : {
-        expression : " ( ( (event4)  == ('show') )  && ( (date)  == ('20131002') ) )  && ( (event0)  == ('response') ) "
-      },
-      projections : [ {
-        ref : "uid",
-        expr : "uid"
-      }, {
-        ref : "value",
-        expr : "value"
-      }, {
-        ref : "timestamp",
-        expr : "timestamp"
       } ]
     } ],
     ref : "event"
   }, {
-    op : "segment",
+    op : "collapsingaggregate",
     @id : 2,
     input : 1,
-    exprs : [ {
-      ref : "dimension",
-      expr : "div300(timestamp)"
-    } ],
-    name : "sgmt"
-  }, {
-    op : "collapsingaggregate",
-    @id : 3,
-    input : 2,
-    within : "sgmt",
+    within : null,
     target : null,
-    carryovers : [ "dimension" ],
+    carryovers : null,
     aggregations : [ {
       ref : "count",
       expr : "count(uid) "
@@ -73,14 +46,14 @@
     } ]
   }, {
     op : "project",
-    @id : 4,
-    input : 3,
+    @id : 3,
+    input : 2,
     projections : [ {
       ref : "query_id",
-      expr : "'COMMON,xaa,2013-10-01,2013-10-02,response.*.*.*.show.*,TOTAL_USER,VF-ALL-0-0,MIN5'"
+      expr : "'COMMON,sof-apptools,2014-02-20,2014-02-20,stat.connect.normal.finialsuccess.wifi.recordphone,TOTAL_USER,VF-ALL-0-0,DAY'"
     }, {
       ref : "dimension",
-      expr : "min5(dimension)"
+      expr : "'2014-02-20 00:00'"
     }, {
       ref : "count",
       expr : "count"
@@ -93,8 +66,8 @@
     } ]
   }, {
     op : "store",
-    @id : 5,
-    input : 4,
+    @id : 4,
+    input : 3,
     target : null,
     partition : null,
     storageEngine : "DEFAULT-STORE"

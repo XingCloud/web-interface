@@ -64,7 +64,7 @@
           <artifactId>maven-war-plugin</artifactId>
           <version>2.1.1</version>
           <configuration>
-            <warName>dd</warName>
+            <warName>${aid}</warName>
             <packagingExcludes>WEB-INF/web.xml</packagingExcludes>
           </configuration>
         </plugin>
